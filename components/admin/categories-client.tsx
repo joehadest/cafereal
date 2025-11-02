@@ -82,8 +82,8 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-orange-900">Categorias</h1>
-          <p className="text-orange-700">Gerencie as categorias do cardápio</p>
+          <h1 className="text-3xl font-bold text-purple-900">Categorias</h1>
+          <p className="text-purple-700">Gerencie as categorias do cardápio</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -92,21 +92,21 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                 setEditingCategory(null)
                 setFormData({ name: "", description: "", display_order: 0 })
               }}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="bg-purple-600 hover:bg-purple-700"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Categoria
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-orange-200">
+          <DialogContent className="bg-white border-purple-200">
             <DialogHeader>
-              <DialogTitle className="text-orange-900">
+              <DialogTitle className="text-purple-900">
                 {editingCategory ? "Editar Categoria" : "Nova Categoria"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-orange-900">
+                <Label htmlFor="name" className="text-purple-900">
                   Nome
                 </Label>
                 <Input
@@ -114,22 +114,22 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="border-orange-200"
+                  className="border-purple-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-orange-900">
+                <Label htmlFor="description" className="text-purple-900">
                   Descrição
                 </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="border-orange-200"
+                  className="border-purple-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="display_order" className="text-orange-900">
+                <Label htmlFor="display_order" className="text-purple-900">
                   Ordem de Exibição
                 </Label>
                 <Input
@@ -142,10 +142,10 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                       display_order: Number.parseInt(e.target.value),
                     })
                   }
-                  className="border-orange-200"
+                  className="border-purple-200"
                 />
               </div>
-              <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700">
+              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
                 {editingCategory ? "Atualizar" : "Criar"}
               </Button>
             </form>
@@ -155,16 +155,16 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((category) => (
-          <Card key={category.id} className="border-orange-200">
+          <Card key={category.id} className="border-purple-200">
             <CardHeader>
-              <CardTitle className="text-orange-900 flex items-center justify-between">
+              <CardTitle className="text-purple-900 flex items-center justify-between">
                 <span>{category.name}</span>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleEdit(category)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-orange-600 hover:bg-orange-50"
+                    className="h-8 w-8 text-purple-600 hover:bg-purple-50"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -180,8 +180,8 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-orange-700">{category.description || "Sem descrição"}</p>
-              <p className="text-xs text-orange-600 mt-2">Ordem: {category.display_order}</p>
+              <p className="text-sm text-purple-700">{category.description || "Sem descrição"}</p>
+              <p className="text-xs text-purple-600 mt-2">Ordem: {category.display_order}</p>
             </CardContent>
           </Card>
         ))}

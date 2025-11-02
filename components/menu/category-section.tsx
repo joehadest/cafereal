@@ -32,15 +32,17 @@ export function CategorySection({
   return (
     <section className="space-y-6">
       <div className="space-y-2 animate-in fade-in slide-in-from-left duration-500">
-        <h2 className="text-3xl font-bold text-orange-900 hover:text-orange-600 transition-colors duration-300 inline-block">
+        <h2 className="text-2xl sm:text-3xl font-bold text-purple-900 hover:text-purple-600 transition-colors duration-300 inline-block">
           {category.name}
         </h2>
         {category.description && (
-          <p className="text-orange-700 text-pretty animate-in fade-in duration-700">{category.description}</p>
+          <p className="text-sm sm:text-base text-purple-700 text-pretty animate-in fade-in duration-700">
+            {category.description}
+          </p>
         )}
-        <div className="h-1 w-20 bg-gradient-to-r from-orange-600 to-transparent rounded-full animate-in slide-in-from-left duration-500" />
+        <div className="h-1 w-20 bg-gradient-to-r from-purple-600 to-transparent rounded-full animate-in slide-in-from-left duration-500" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {activeProducts.map((product, index) => (
           <div
             key={product.id}

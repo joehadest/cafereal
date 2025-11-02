@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, UtensilsCrossed, Package, LayoutGrid, ClipboardList, LogOut } from "lucide-react"
+import { LayoutDashboard, UtensilsCrossed, Package, LayoutGrid, ClipboardList, LogOut, Settings } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 const menuItems = [
@@ -32,6 +32,11 @@ const menuItems = [
     label: "Pedidos",
     icon: ClipboardList,
   },
+  {
+    href: "/admin/settings",
+    label: "Configurações",
+    icon: Settings,
+  },
 ]
 
 export function AdminSidebar({ user }: { user: any }) {
@@ -46,15 +51,15 @@ export function AdminSidebar({ user }: { user: any }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-white to-orange-50/30 border-r border-orange-200 shadow-xl flex flex-col animate-in slide-in-from-left duration-500">
-      <div className="p-6 border-b border-orange-200 bg-gradient-to-r from-orange-50 to-transparent">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-white to-purple-50/30 border-r border-purple-200 shadow-xl flex flex-col animate-in slide-in-from-left duration-500">
+      <div className="p-6 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
         <div className="flex items-center gap-3 animate-in fade-in duration-700">
-          <div className="bg-gradient-to-br from-orange-600 to-orange-500 p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300">
+          <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300">
             <UtensilsCrossed className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h2 className="font-bold text-orange-900">Admin Panel</h2>
-            <p className="text-xs text-orange-700 truncate">{user.email}</p>
+            <h2 className="font-bold text-purple-900">Admin Panel</h2>
+            <p className="text-xs text-purple-700 truncate">{user.email}</p>
           </div>
         </div>
       </div>
@@ -70,8 +75,8 @@ export function AdminSidebar({ user }: { user: any }) {
                 variant={isActive ? "default" : "ghost"}
                 className={`w-full justify-start transition-all duration-300 animate-in slide-in-from-left ${
                   isActive
-                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:from-orange-700 hover:to-orange-600 shadow-lg scale-105"
-                    : "text-orange-900 hover:bg-orange-50 hover:scale-105 hover:shadow-md"
+                    ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg scale-105"
+                    : "text-purple-900 hover:bg-purple-50 hover:scale-105 hover:shadow-md"
                 }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -83,11 +88,11 @@ export function AdminSidebar({ user }: { user: any }) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-orange-200 bg-gradient-to-r from-orange-50 to-transparent">
+      <div className="p-4 border-t border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
         <Button
           onClick={handleLogout}
           variant="outline"
-          className="w-full justify-start border-orange-300 text-orange-900 hover:bg-orange-50 hover:border-orange-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300"
+          className="w-full justify-start border-purple-300 text-purple-900 hover:bg-purple-50 hover:border-purple-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300"
         >
           <LogOut className="h-5 w-5 mr-3" />
           Sair
