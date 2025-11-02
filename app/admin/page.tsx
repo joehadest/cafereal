@@ -1,0 +1,212 @@
+import { createClient } from "@/lib/supabase/server"
+import { StatsCard } from "@/components/admin/stats-card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { DollarSign, ShoppingBag, UtensilsCrossed, Package, Clock, CheckCircle2, Bike } from "lucide-react"
+
+export const revalidate = 0
+
+export default async function AdminDashboard() {
+  const supabase = await createClient()
+
+  // Get statistics
+  const { count: totalOrders } = await supabase.from("orders").select("*", { count: "exact", head: true })
+
+  const { count: activeOrders } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["pending", "preparing", "ready", "out_for_delivery"])
+
+  const { count: totalProducts } = await supabase
+    .from("products")
+    .select("*", { count: "exact", head: true })
+    .eq("active", true)
+
+  const { count: totalTables } = await supabase.from("restaurant_tables").select("*", { count: "exact", head: true })
+
+  // Get today's data
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const { data: todayOrders } = await supabase
+    .from("orders")
+    .select("total, status, order_type")
+    .gte("created_at", today.toISOString())
+
+  const todayRevenue = todayOrders?.reduce((sum, order) => sum + order.total, 0) || 0
+  const todayCompletedOrders = todayOrders?.filter((o) => o.status === "delivered").length || 0
+  const todayDeliveryOrders = todayOrders?.filter((o) => o.order_type === "delivery").length || 0
+
+  const { data: recentOrders } = await supabase
+    .from("orders")
+    .select("id, table_number, total, created_at, status, order_type, customer_name")
+    .order("created_at", { ascending: false })
+    .limit(6)
+
+  const { data: completedOrders } = await supabase
+    .from("orders")
+    .select("id, table_number, total, created_at, order_type, customer_name")
+    .eq("status", "delivered")
+    .gte("created_at", today.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(6)
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+      pending: { label: "Pendente", variant: "secondary" },
+      preparing: { label: "Preparando", variant: "default" },
+      ready: { label: "Pronto", variant: "outline" },
+      out_for_delivery: { label: "Saiu p/ Entrega", variant: "default" },
+      delivered: { label: "Entregue", variant: "outline" },
+    }
+    return statusMap[status] || { label: status, variant: "secondary" }
+  }
+
+  return (
+    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-orange-700 text-lg">Visão geral do restaurante em tempo real</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Receita Hoje"
+          value={`R$ ${todayRevenue.toFixed(2)}`}
+          icon={DollarSign}
+          trend={`${todayCompletedOrders} pedidos concluídos`}
+        />
+        <StatsCard
+          title="Pedidos Ativos"
+          value={activeOrders?.toString() || "0"}
+          icon={ShoppingBag}
+          trend={`${totalOrders} total`}
+        />
+        <StatsCard
+          title="Delivery Hoje"
+          value={todayDeliveryOrders.toString()}
+          icon={Bike}
+          trend={`${todayOrders?.length || 0} pedidos hoje`}
+        />
+        <StatsCard title="Produtos Ativos" value={totalProducts?.toString() || "0"} icon={Package} />
+      </div>
+
+      {/* Recent and Completed Orders Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Orders */}
+        <Card className="border-orange-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-orange-600" />
+              <CardTitle className="text-orange-900">Pedidos Recentes</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {recentOrders?.map((order, index) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-white rounded-lg border border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      {order.order_type === "delivery" ? (
+                        <>
+                          <Bike className="h-4 w-4 text-orange-600" />
+                          <p className="font-semibold text-orange-900">{order.customer_name || "Cliente"}</p>
+                        </>
+                      ) : (
+                        <>
+                          <UtensilsCrossed className="h-4 w-4 text-orange-600" />
+                          <p className="font-semibold text-orange-900">Mesa {order.table_number}</p>
+                        </>
+                      )}
+                    </div>
+                    <Badge variant={getStatusBadge(order.status).variant} className="text-xs">
+                      {getStatusBadge(order.status).label}
+                    </Badge>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="font-bold text-orange-600 text-lg">R$ {order.total.toFixed(2)}</p>
+                    <p className="text-xs text-orange-700">
+                      {new Date(order.created_at).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {(!recentOrders || recentOrders.length === 0) && (
+                <div className="text-center py-12">
+                  <ShoppingBag className="h-12 w-12 text-orange-300 mx-auto mb-3" />
+                  <p className="text-orange-700">Nenhum pedido recente</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Completed Orders Today */}
+        <Card className="border-green-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-green-900">Concluídos Hoje</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {completedOrders?.map((order, index) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-white rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-right"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      {order.order_type === "delivery" ? (
+                        <>
+                          <Bike className="h-4 w-4 text-green-600" />
+                          <p className="font-semibold text-green-900">{order.customer_name || "Cliente"}</p>
+                        </>
+                      ) : (
+                        <>
+                          <UtensilsCrossed className="h-4 w-4 text-green-600" />
+                          <p className="font-semibold text-green-900">Mesa {order.table_number}</p>
+                        </>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-xs border-green-300 text-green-700">
+                      Entregue
+                    </Badge>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="font-bold text-green-600 text-lg">R$ {order.total.toFixed(2)}</p>
+                    <p className="text-xs text-green-700">
+                      {new Date(order.created_at).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {(!completedOrders || completedOrders.length === 0) && (
+                <div className="text-center py-12">
+                  <CheckCircle2 className="h-12 w-12 text-green-300 mx-auto mb-3" />
+                  <p className="text-green-700">Nenhum pedido concluído hoje</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
