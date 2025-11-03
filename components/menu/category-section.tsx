@@ -46,7 +46,7 @@ export function CategorySection({
         {activeProducts.map((product, index) => (
           <div
             key={product.id}
-            className="animate-in fade-in zoom-in duration-500"
+            className="animate-in fade-in zoom-in duration-500 h-full"
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <ProductCard product={product} onAddToCart={onAddToCart} />

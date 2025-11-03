@@ -58,12 +58,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-stone-50">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-br from-slate-50 to-stone-50">
       <div className="w-full max-w-sm">
-        <Card className="border-purple-200">
+        <Card className="border-slate-200">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-purple-900">Painel Administrativo</CardTitle>
-            <CardDescription className="text-purple-700">
+            <CardTitle className="text-2xl font-bold text-slate-900">Painel Administrativo</CardTitle>
+            <CardDescription className="text-slate-700">
               Entre com suas credenciais para acessar o sistema
             </CardDescription>
           </CardHeader>
@@ -77,7 +77,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin}>
               <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-purple-900">
+                  <Label htmlFor="email" className="text-slate-900">
                     Email
                   </Label>
                   <Input
@@ -87,11 +87,11 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border-purple-200 focus:border-purple-400"
+                    className="border-slate-200 focus:border-slate-400"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password" className="text-purple-900">
+                  <Label htmlFor="password" className="text-slate-900">
                     Senha
                   </Label>
                   <Input
@@ -100,11 +100,11 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border-purple-200 focus:border-purple-400"
+                    className="border-slate-200 focus:border-slate-400"
                   />
                 </div>
                 {error && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700" disabled={isLoading}>
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
               </div>

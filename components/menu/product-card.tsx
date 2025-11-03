@@ -30,8 +30,8 @@ export function ProductCard({
   }
 
   return (
-    <Card className="group overflow-hidden border-slate-200 hover:shadow-2xl hover:scale-[1.02] hover:border-slate-400 transition-all duration-300 ease-out">
-      <div className="aspect-square sm:aspect-video bg-gradient-to-br from-stone-100 via-stone-50 to-slate-50 relative overflow-hidden">
+    <Card className="group h-full flex flex-col overflow-hidden border-slate-200 hover:shadow-2xl hover:scale-[1.02] hover:border-slate-400 transition-all duration-300 ease-out">
+      <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-br from-stone-100 via-stone-50 to-slate-50 relative overflow-hidden flex-shrink-0">
         {product.image_url ? (
           <Image
             src={product.image_url || "/placeholder.svg"}
@@ -47,18 +47,18 @@ export function ProductCard({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
-      <CardContent className="p-2 sm:p-4 space-y-1 sm:space-y-2">
-        <h3 className="font-bold text-sm sm:text-lg text-slate-900 text-balance group-hover:text-slate-600 transition-colors duration-300 line-clamp-2">
+      <CardContent className="p-2 sm:p-4 space-y-1 sm:space-y-2 flex-1 flex flex-col">
+        <h3 className="font-bold text-sm sm:text-lg text-slate-900 text-balance group-hover:text-slate-600 transition-colors duration-300 line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem]">
           {product.name}
         </h3>
-        <p className="text-xs sm:text-sm text-slate-700 line-clamp-2 text-pretty hidden sm:block">
+        <p className="text-xs sm:text-sm text-slate-700 line-clamp-2 text-pretty hidden sm:block min-h-[2.5rem]">
           {product.description}
         </p>
-        <p className="text-lg sm:text-2xl font-bold text-slate-600 group-hover:scale-105 transition-transform duration-300 inline-block">
+        <p className="text-lg sm:text-2xl font-bold text-slate-600 group-hover:scale-105 transition-transform duration-300 inline-block mt-auto">
           R$ {product.price.toFixed(2)}
         </p>
       </CardContent>
-      <CardFooter className="p-2 sm:p-4 sm:pt-0">
+      <CardFooter className="p-2 sm:p-4 sm:pt-0 flex-shrink-0">
         <Button
           onClick={handleAddToCart}
           disabled={isAdding}

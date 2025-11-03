@@ -37,7 +37,7 @@ export function CategoryNavBar({
   }, [activeCategory])
 
   return (
-    <div className="sticky top-[56px] sm:top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-md animate-in slide-in-from-top duration-300">
+    <div className="sticky top-[48px] sm:top-[76px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-md animate-in slide-in-from-top duration-300">
       <div
         ref={navRef}
         className="container mx-auto px-2 sm:px-4 py-2 overflow-x-auto scrollbar-hide"

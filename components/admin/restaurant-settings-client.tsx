@@ -119,30 +119,34 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
   }
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-purple-400 p-8 shadow-2xl">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 via-slate-500 to-slate-400 p-6 sm:p-8 shadow-2xl">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="relative flex items-center gap-4">
-          <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl shadow-lg">
-            <Store className="h-8 w-8 text-white" />
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="bg-white/20 backdrop-blur-sm p-3 sm:p-4 rounded-xl shadow-lg">
+            <Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Configurações do Restaurante</h1>
-            <p className="text-purple-50 text-lg">Personalize as informações e preferências do seu estabelecimento</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Configurações do Restaurante
+            </h1>
+            <p className="text-slate-50 text-sm sm:text-base lg:text-lg">
+              Personalize as informações e preferências do seu estabelecimento
+            </p>
           </div>
         </div>
       </div>
 
-      <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-            <ImageIcon className="h-5 w-5 text-white" />
+      <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300">
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+            <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
           Logo do Restaurante
         </h2>
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-          <div className="flex-1 space-y-4">
-            <Label htmlFor="logo-upload" className="text-base font-medium text-purple-900">
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-6 items-start">
+          <div className="flex-1 space-y-3 sm:space-y-4 w-full">
+            <Label htmlFor="logo-upload" className="text-sm sm:text-base font-medium text-slate-900">
               Fazer Upload do Logo
             </Label>
             <div className="flex gap-3">
@@ -151,15 +155,15 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 type="file"
                 accept="image/png,image/jpeg,image/jpg"
                 onChange={handleLogoChange}
-                className="border-purple-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 transition-colors"
+                className="border-slate-200 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition-colors"
               />
             </div>
-            <p className="text-sm text-purple-600">Formatos aceitos: PNG, JPEG, JPG</p>
+            <p className="text-xs sm:text-sm text-slate-600">Formatos aceitos: PNG, JPEG, JPG</p>
           </div>
           {logoPreview && (
             <div className="flex-shrink-0 animate-in zoom-in duration-300">
-              <Label className="text-sm font-medium text-purple-900 mb-2 block">Preview</Label>
-              <div className="relative w-48 h-48 rounded-xl overflow-hidden border-4 border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
+              <Label className="text-sm font-medium text-slate-900 mb-2 block">Preview</Label>
+              <div className="relative w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden border-4 border-slate-200 shadow-lg hover:shadow-xl transition-shadow">
                 <Image
                   src={logoPreview || "/placeholder.svg"}
                   alt="Logo preview"
@@ -172,36 +176,36 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
         </div>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-          <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-              <Store className="h-5 w-5 text-white" />
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+              <Store className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Informações Básicas
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-base font-medium text-purple-900">
+              <Label htmlFor="name" className="text-sm sm:text-base font-medium text-slate-900">
                 Nome do Restaurante
               </Label>
               <Input
                 id="name"
                 value={settings.name || ""}
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
                 placeholder="Ex: Restaurante Sabor & Arte"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address" className="text-base font-medium text-purple-900">
+              <Label htmlFor="address" className="text-sm sm:text-base font-medium text-slate-900">
                 Endereço Completo
               </Label>
               <Textarea
                 id="address"
                 value={settings.address || ""}
                 onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 min-h-[100px]"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
                 placeholder="Rua, número, bairro, cidade - estado"
                 rows={3}
               />
@@ -209,28 +213,28 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
           </div>
         </Card>
 
-        <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-          <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-              <Phone className="h-5 w-5 text-white" />
+        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+              <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Contato
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-base font-medium text-purple-900">
+              <Label htmlFor="phone" className="text-sm sm:text-base font-medium text-slate-900">
                 Telefone
               </Label>
               <Input
                 id="phone"
                 value={settings.phone || ""}
                 onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
                 placeholder="(00) 00000-0000"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-base font-medium text-purple-900">
+              <Label htmlFor="email" className="text-sm sm:text-base font-medium text-slate-900">
                 Email
               </Label>
               <Input
@@ -238,12 +242,15 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 type="email"
                 value={settings.email || ""}
                 onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
                 placeholder="contato@restaurante.com"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hours" className="flex items-center gap-2 text-base font-medium text-purple-900">
+              <Label
+                htmlFor="hours"
+                className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-900"
+              >
                 <Clock className="h-4 w-4" />
                 Horário de Funcionamento
               </Label>
@@ -251,7 +258,7 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="hours"
                 value={settings.opening_hours || ""}
                 onChange={(e) => setSettings({ ...settings, opening_hours: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 min-h-[100px]"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
                 placeholder="Seg-Sex: 11h-23h&#10;Sáb-Dom: 11h-00h"
                 rows={3}
               />
@@ -259,16 +266,16 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
           </div>
         </Card>
 
-        <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-          <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-              <DollarSign className="h-5 w-5 text-white" />
+        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Valores e Taxas
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="deliveryFee" className="text-base font-medium text-purple-900">
+              <Label htmlFor="deliveryFee" className="text-sm sm:text-base font-medium text-slate-900">
                 Taxa de Entrega (R$)
               </Label>
               <Input
@@ -277,11 +284,11 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 step="0.01"
                 value={settings.delivery_fee || 0}
                 onChange={(e) => setSettings({ ...settings, delivery_fee: Number.parseFloat(e.target.value) })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minOrder" className="text-base font-medium text-purple-900">
+              <Label htmlFor="minOrder" className="text-sm sm:text-base font-medium text-slate-900">
                 Pedido Mínimo (R$)
               </Label>
               <Input
@@ -290,22 +297,25 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 step="0.01"
                 value={settings.min_order_value || 0}
                 onChange={(e) => setSettings({ ...settings, min_order_value: Number.parseFloat(e.target.value) })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
               />
             </div>
           </div>
         </Card>
 
-        <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-          <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-              <Instagram className="h-5 w-5 text-white" />
+        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+              <Instagram className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             Redes Sociais
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="instagram" className="flex items-center gap-2 text-base font-medium text-purple-900">
+              <Label
+                htmlFor="instagram"
+                className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-900"
+              >
                 <Instagram className="h-4 w-4" />
                 Instagram
               </Label>
@@ -313,12 +323,15 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="instagram"
                 value={settings.instagram || ""}
                 onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
                 placeholder="https://instagram.com/seurestaurante"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="facebook" className="flex items-center gap-2 text-base font-medium text-purple-900">
+              <Label
+                htmlFor="facebook"
+                className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-900"
+              >
                 <Facebook className="h-4 w-4" />
                 Facebook
               </Label>
@@ -326,7 +339,7 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="facebook"
                 value={settings.facebook || ""}
                 onChange={(e) => setSettings({ ...settings, facebook: e.target.value })}
-                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400 h-12"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
                 placeholder="https://facebook.com/seurestaurante"
               />
             </div>
@@ -334,17 +347,17 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
         </Card>
       </div>
 
-      <Card className="p-8 border-purple-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg">
-            <Store className="h-5 w-5 text-white" />
+      <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300">
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
+            <Store className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
           Tipos de Pedido Aceitos
         </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-purple-100 hover:border-purple-300 transition-colors">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-slate-100 hover:border-slate-300 transition-colors">
             <div className="flex items-center justify-between">
-              <Label htmlFor="delivery" className="cursor-pointer text-base font-medium text-purple-900">
+              <Label htmlFor="delivery" className="cursor-pointer text-sm sm:text-base font-medium text-slate-900">
                 Delivery
               </Label>
               <Switch
@@ -353,11 +366,11 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 onCheckedChange={(checked) => setSettings({ ...settings, accepts_delivery: checked })}
               />
             </div>
-            <p className="text-sm text-purple-600">Entregas no endereço do cliente</p>
+            <p className="text-xs sm:text-sm text-slate-600">Entregas no endereço do cliente</p>
           </div>
-          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-purple-100 hover:border-purple-300 transition-colors">
+          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-slate-100 hover:border-slate-300 transition-colors">
             <div className="flex items-center justify-between">
-              <Label htmlFor="pickup" className="cursor-pointer text-base font-medium text-purple-900">
+              <Label htmlFor="pickup" className="cursor-pointer text-sm sm:text-base font-medium text-slate-900">
                 Retirada
               </Label>
               <Switch
@@ -366,11 +379,11 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 onCheckedChange={(checked) => setSettings({ ...settings, accepts_pickup: checked })}
               />
             </div>
-            <p className="text-sm text-purple-600">Cliente retira no local</p>
+            <p className="text-xs sm:text-sm text-slate-600">Cliente retira no local</p>
           </div>
-          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-purple-100 hover:border-purple-300 transition-colors">
+          <div className="flex flex-col gap-3 p-4 rounded-lg bg-white border-2 border-slate-100 hover:border-slate-300 transition-colors">
             <div className="flex items-center justify-between">
-              <Label htmlFor="dineIn" className="cursor-pointer text-base font-medium text-purple-900">
+              <Label htmlFor="dineIn" className="cursor-pointer text-sm sm:text-base font-medium text-slate-900">
                 No Local
               </Label>
               <Switch
@@ -379,26 +392,26 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 onCheckedChange={(checked) => setSettings({ ...settings, accepts_dine_in: checked })}
               />
             </div>
-            <p className="text-sm text-purple-600">Pedidos nas mesas</p>
+            <p className="text-xs sm:text-sm text-slate-600">Pedidos nas mesas</p>
           </div>
         </div>
       </Card>
 
-      <div className="flex justify-end sticky bottom-8 z-10">
+      <div className="flex justify-end sticky bottom-4 sm:bottom-8 z-10">
         <Button
           onClick={handleSave}
           disabled={isSaving || isUploading}
-          className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-12 py-7 text-lg font-semibold shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 rounded-xl"
+          className="bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white px-6 sm:px-8 lg:px-10 py-4 sm:py-5 lg:py-6 text-sm sm:text-base lg:text-lg font-semibold shadow-xl hover:shadow-slate-500/50 transition-all duration-300 hover:scale-105 rounded-lg sm:rounded-xl"
         >
           {isSaving || isUploading ? (
             <span className="flex items-center gap-2">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               {isUploading ? "Fazendo upload..." : "Salvando..."}
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Salvar Configurações
+              <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+              Salvar
             </span>
           )}
         </Button>

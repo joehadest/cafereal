@@ -217,7 +217,7 @@ export function MenuClient({
       },
       {
         threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-        rootMargin: "-120px 0px -40% 0px",
+        rootMargin: "-110px 0px -40% 0px",
       },
     )
 
@@ -234,7 +234,7 @@ export function MenuClient({
   const handleCategoryClick = useCallback((categoryId: string) => {
     const element = categoryRefs.current.get(categoryId)
     if (element) {
-      const headerOffset = 120 // Header + category nav height ajustado
+      const headerOffset = 110 // Header + category nav height ajustado
       const elementPosition = element.getBoundingClientRect().top
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset
 

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Printer } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Printer, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -61,6 +61,7 @@ const statusConfig = {
 export function OrderCard({ order }: { order: Order }) {
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [showPrint, setShowPrint] = useState(false)
   const config = statusConfig[order.status as keyof typeof statusConfig]
 
@@ -87,6 +88,32 @@ export function OrderCard({ order }: { order: Order }) {
     }
   }
 
+  const handleDeleteOrder = async () => {
+    if (!confirm("Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.")) {
+      return
+    }
+
+    setIsDeleting(true)
+    const supabase = createClient()
+
+    try {
+      // Primeiro deletar os itens do pedido
+      const { error: itemsError } = await supabase.from("order_items").delete().eq("order_id", order.id)
+      if (itemsError) throw itemsError
+
+      // Depois deletar o pedido
+      const { error: orderError } = await supabase.from("orders").delete().eq("id", order.id)
+      if (orderError) throw orderError
+
+      router.refresh()
+    } catch (error) {
+      console.error("Error deleting order:", error)
+      alert("Erro ao excluir pedido")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const handlePrint = () => {
     setShowPrint(true)
     setTimeout(() => {
@@ -106,7 +133,7 @@ export function OrderCard({ order }: { order: Order }) {
     <>
       <Card className="border-orange-200 hover:shadow-2xl hover:scale-[1.02] hover:border-orange-400 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               {isDelivery ? (
                 <div className="flex items-center gap-2 group">
@@ -133,6 +160,16 @@ export function OrderCard({ order }: { order: Order }) {
               >
                 <Printer className="h-4 w-4" />
               </Button>
+              <Button
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+                variant="outline"
+                size="icon"
+                className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent hover:scale-110 transition-all duration-300"
+                title="Excluir pedido"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <div className="flex items-center gap-1 text-sm text-orange-700">
                 <Clock className="h-4 w-4 animate-pulse" />
                 {timeAgo}
@@ -145,15 +182,15 @@ export function OrderCard({ order }: { order: Order }) {
           {isDelivery && (
             <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 space-y-1 text-sm animate-in slide-in-from-left duration-500 hover:bg-orange-100 transition-colors">
               <div className="flex items-center gap-2 text-orange-900">
-                <User className="h-4 w-4" />
+                <User className="h-5 w-5" />
                 <span className="font-semibold">{order.customer_name}</span>
               </div>
               <div className="flex items-center gap-2 text-orange-800">
-                <Phone className="h-4 w-4" />
+                <Phone className="h-5 w-5" />
                 <span>{order.customer_phone}</span>
               </div>
               <div className="flex items-start gap-2 text-orange-800">
-                <MapPin className="h-4 w-4 mt-0.5" />
+                <MapPin className="h-5 w-5 mt-0.5" />
                 <span className="text-xs">{order.delivery_address}</span>
               </div>
             </div>

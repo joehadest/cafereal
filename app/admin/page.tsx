@@ -66,10 +66,10 @@ export default async function AdminDashboard() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <p className="text-purple-700 text-sm sm:text-base lg:text-lg">Visão geral do restaurante em tempo real</p>
+        <p className="text-slate-700 text-sm sm:text-base lg:text-lg">Visão geral do restaurante em tempo real</p>
       </div>
 
       {/* Stats Grid */}
@@ -98,11 +98,11 @@ export default async function AdminDashboard() {
       {/* Recent and Completed Orders Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
-        <Card className="border-purple-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
+        <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-600" />
-              <CardTitle className="text-purple-900">Pedidos Recentes</CardTitle>
+              <Clock className="h-5 w-5 text-slate-600" />
+              <CardTitle className="text-slate-900">Pedidos Recentes</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -110,20 +110,20 @@ export default async function AdminDashboard() {
               {recentOrders?.map((order, index) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-white rounded-lg border border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2">
                       {order.order_type === "delivery" ? (
                         <>
-                          <Bike className="h-4 w-4 text-purple-600" />
-                          <p className="font-semibold text-purple-900">{order.customer_name || "Cliente"}</p>
+                          <Bike className="h-4 w-4 text-slate-600" />
+                          <p className="font-semibold text-slate-900">{order.customer_name || "Cliente"}</p>
                         </>
                       ) : (
                         <>
-                          <UtensilsCrossed className="h-4 w-4 text-purple-600" />
-                          <p className="font-semibold text-purple-900">Mesa {order.table_number}</p>
+                          <UtensilsCrossed className="h-4 w-4 text-slate-600" />
+                          <p className="font-semibold text-slate-900">Mesa {order.table_number}</p>
                         </>
                       )}
                     </div>
@@ -132,8 +132,8 @@ export default async function AdminDashboard() {
                     </Badge>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="font-bold text-purple-600 text-lg">R$ {order.total.toFixed(2)}</p>
-                    <p className="text-xs text-purple-700">
+                    <p className="font-bold text-slate-600 text-lg">R$ {order.total.toFixed(2)}</p>
+                    <p className="text-xs text-slate-700">
                       {new Date(order.created_at).toLocaleTimeString("pt-BR", {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -144,8 +144,8 @@ export default async function AdminDashboard() {
               ))}
               {(!recentOrders || recentOrders.length === 0) && (
                 <div className="text-center py-12">
-                  <ShoppingBag className="h-12 w-12 text-purple-300 mx-auto mb-3" />
-                  <p className="text-purple-700">Nenhum pedido recente</p>
+                  <ShoppingBag className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-700">Nenhum pedido recente</p>
                 </div>
               )}
             </div>
