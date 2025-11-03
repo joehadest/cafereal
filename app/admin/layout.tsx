@@ -21,7 +21,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50">
       <AdminSidebar user={user} />
-      <main className="flex-1 ml-64">{children}</main>
+      <main className="flex-1 w-full lg:ml-64">{children}</main>
     </div>
   )
 }

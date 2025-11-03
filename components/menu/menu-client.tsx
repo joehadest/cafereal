@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
 import { CategorySection } from "./category-section"
 import { Cart } from "./cart"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { CategoryNavBar } from "./category-nav-bar"
 
 type Product = {
   id: string
@@ -63,6 +64,10 @@ export function MenuClient({
   const [user, setUser] = useState<any>(null)
   const [isLoadingUserData, setIsLoadingUserData] = useState(false)
   const router = useRouter()
+
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const categoryRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const visibleSections = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     const supabase = createClient()
@@ -164,6 +169,75 @@ export function MenuClient({
     setUser(null)
     router.refresh()
   }
+
+  useEffect(() => {
+    if (!canShowMenu) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const categoryId = entry.target.getAttribute("data-category-id")
+          if (!categoryId) return
+
+          if (entry.isIntersecting) {
+            visibleSections.current.set(categoryId, entry.intersectionRatio)
+          } else {
+            visibleSections.current.delete(categoryId)
+          }
+        })
+
+        let maxRatio = 0
+        let mostVisibleCategory: string | null = null
+
+        visibleSections.current.forEach((ratio, categoryId) => {
+          if (ratio > maxRatio) {
+            maxRatio = ratio
+            mostVisibleCategory = categoryId
+          }
+        })
+
+        if (mostVisibleCategory && maxRatio > 0.15) {
+          setActiveCategory(mostVisibleCategory)
+        }
+      },
+      {
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        rootMargin: "-120px 0px -40% 0px",
+      },
+    )
+
+    categoryRefs.current.forEach((element) => {
+      observer.observe(element)
+    })
+
+    return () => {
+      observer.disconnect()
+      visibleSections.current.clear()
+    }
+  }, [canShowMenu, categories])
+
+  const handleCategoryClick = useCallback((categoryId: string) => {
+    const element = categoryRefs.current.get(categoryId)
+    if (element) {
+      const headerOffset = 120 // Header + category nav height ajustado
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      })
+      setActiveCategory(categoryId)
+    }
+  }, [])
+
+  const registerCategoryRef = useCallback((categoryId: string, element: HTMLElement | null) => {
+    if (element) {
+      categoryRefs.current.set(categoryId, element)
+    } else {
+      categoryRefs.current.delete(categoryId)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
@@ -332,12 +406,22 @@ export function MenuClient({
         </div>
       )}
 
+      {canShowMenu && categories.length > 0 && (
+        <CategoryNavBar
+          categories={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
+          activeCategory={activeCategory}
+          onCategoryClick={handleCategoryClick}
+        />
+      )}
+
       {canShowMenu && (
         <main className="container mx-auto px-4 py-8 animate-in fade-in duration-700">
           <div className="space-y-12">
             {categories.map((category, index) => (
               <div
                 key={category.id}
+                ref={(el) => registerCategoryRef(category.id, el)}
+                data-category-id={category.id}
                 className="animate-in slide-in-from-bottom duration-700"
                 style={{ animationDelay: `${index * 150}ms` }}
               >

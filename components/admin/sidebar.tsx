@@ -3,8 +3,19 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, UtensilsCrossed, Package, LayoutGrid, ClipboardList, LogOut, Settings } from "lucide-react"
+import {
+  LayoutDashboard,
+  UtensilsCrossed,
+  Package,
+  LayoutGrid,
+  ClipboardList,
+  LogOut,
+  Settings,
+  Menu,
+  X,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useState } from "react"
 
 const menuItems = [
   {
@@ -42,6 +53,7 @@ const menuItems = [
 export function AdminSidebar({ user }: { user: any }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -51,53 +63,77 @@ export function AdminSidebar({ user }: { user: any }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-white to-purple-50/30 border-r border-purple-200 shadow-xl flex flex-col animate-in slide-in-from-left duration-500">
-      <div className="p-6 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
-        <div className="flex items-center gap-3 animate-in fade-in duration-700">
-          <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300">
-            <UtensilsCrossed className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 className="font-bold text-purple-900">Admin Panel</h2>
-            <p className="text-xs text-purple-700 truncate">{user.email}</p>
+    <>
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-purple-200 hover:bg-purple-50 transition-colors"
+        aria-label="Toggle menu"
+      >
+        {isMobileMenuOpen ? <X className="h-6 w-6 text-purple-600" /> : <Menu className="h-6 w-6 text-purple-600" />}
+      </button>
+
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`
+        fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-white to-purple-50/30 
+        border-r border-purple-200 shadow-xl flex flex-col z-40
+        transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+      `}
+      >
+        <div className="p-6 pt-16 lg:pt-6 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
+          <div className="flex items-center gap-3 animate-in fade-in duration-700">
+            <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300">
+              <UtensilsCrossed className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-purple-900">Admin Panel</h2>
+              <p className="text-xs text-purple-700 truncate">{user.email}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
 
-          return (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant={isActive ? "default" : "ghost"}
-                className={`w-full justify-start transition-all duration-300 animate-in slide-in-from-left ${
-                  isActive
-                    ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg scale-105"
-                    : "text-purple-900 hover:bg-purple-50 hover:scale-105 hover:shadow-md"
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <Icon className={`h-5 w-5 mr-3 ${isActive ? "" : "group-hover:scale-110 transition-transform"}`} />
-                {item.label}
-              </Button>
-            </Link>
-          )
-        })}
-      </nav>
+            return (
+              <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  className={`w-full justify-start transition-all duration-300 animate-in slide-in-from-left ${
+                    isActive
+                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg scale-105"
+                      : "text-purple-900 hover:bg-purple-50 hover:scale-105 hover:shadow-md"
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <Icon className={`h-5 w-5 mr-3 ${isActive ? "" : "group-hover:scale-110 transition-transform"}`} />
+                  {item.label}
+                </Button>
+              </Link>
+            )
+          })}
+        </nav>
 
-      <div className="p-4 border-t border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className="w-full justify-start border-purple-300 text-purple-900 hover:bg-purple-50 hover:border-purple-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300"
-        >
-          <LogOut className="h-5 w-5 mr-3" />
-          Sair
-        </Button>
-      </div>
-    </aside>
+        <div className="p-4 border-t border-purple-200 bg-gradient-to-r from-purple-50 to-transparent">
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full justify-start border-purple-300 text-purple-900 hover:bg-purple-50 hover:border-purple-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300"
+          >
+            <LogOut className="h-5 w-5 mr-3" />
+            Sair
+          </Button>
+        </div>
+      </aside>
+    </>
   )
 }

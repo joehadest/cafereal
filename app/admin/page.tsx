@@ -63,17 +63,17 @@ export default async function AdminDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <p className="text-purple-700 text-lg">Visão geral do restaurante em tempo real</p>
+        <p className="text-purple-700 text-sm sm:text-base lg:text-lg">Visão geral do restaurante em tempo real</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Receita Hoje"
           value={`R$ ${todayRevenue.toFixed(2)}`}
@@ -96,7 +96,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Recent and Completed Orders Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
         <Card className="border-purple-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">

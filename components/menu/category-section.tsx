@@ -30,7 +30,7 @@ export function CategorySection({
   if (activeProducts.length === 0) return null
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6" id={`category-${category.id}`}>
       <div className="space-y-2 animate-in fade-in slide-in-from-left duration-500">
         <h2 className="text-2xl sm:text-3xl font-bold text-purple-900 hover:text-purple-600 transition-colors duration-300 inline-block">
           {category.name}
