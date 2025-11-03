@@ -63,6 +63,7 @@ export function MenuClient({
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isLoadingUserData, setIsLoadingUserData] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const router = useRouter()
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -125,6 +126,27 @@ export function MenuClient({
   }
 
   const addToCart = (product: Product) => {
+    if (!orderType) {
+      alert("Por favor, selecione o tipo de pedido primeiro (Delivery ou Comer no Local)")
+      return
+    }
+
+    if (orderType === "delivery" && !user) {
+      setShowLoginModal(true)
+      return
+    }
+
+    if (orderType === "delivery" && !deliveryInfo) {
+      alert("Por favor, complete seu cadastro com endereço de entrega")
+      router.push("/customer/profile")
+      return
+    }
+
+    if (orderType === "dinein" && !selectedTable) {
+      alert("Por favor, selecione uma mesa primeiro")
+      return
+    }
+
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id)
       if (existing) {
@@ -161,17 +183,10 @@ export function MenuClient({
     setSelectedTable(null)
   }
 
-  const canShowMenu = orderType === "delivery" ? deliveryInfo !== null : selectedTable !== null
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    router.refresh()
-  }
+  const showMenu = orderType !== null
 
   useEffect(() => {
-    if (!canShowMenu) return
+    if (!showMenu) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -214,7 +229,7 @@ export function MenuClient({
       observer.disconnect()
       visibleSections.current.clear()
     }
-  }, [canShowMenu, categories])
+  }, [showMenu, categories])
 
   const handleCategoryClick = useCallback((categoryId: string) => {
     const element = categoryRefs.current.get(categoryId)
@@ -239,9 +254,16 @@ export function MenuClient({
     }
   }, [])
 
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setUser(null)
+    router.refresh()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-200 shadow-lg animate-in slide-in-from-top duration-500">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-lg animate-in slide-in-from-top duration-500">
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-left duration-700 min-w-0 flex-1">
@@ -255,7 +277,7 @@ export function MenuClient({
                   />
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-1.5 sm:p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-1.5 sm:p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
                   {orderType === "delivery" ? (
                     <Bike className="h-4 w-4 sm:h-6 sm:w-6 text-white animate-bounce" />
                   ) : (
@@ -264,16 +286,16 @@ export function MenuClient({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-2xl font-bold text-purple-900 bg-gradient-to-r from-purple-900 to-purple-700 bg-clip-text text-transparent truncate">
+                <h1 className="text-base sm:text-2xl font-bold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
                   {restaurantName}
                 </h1>
                 {orderType === "delivery" && deliveryInfo && (
-                  <p className="text-xs sm:text-sm text-purple-700 animate-in fade-in duration-500 truncate">
+                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500 truncate">
                     Delivery - {deliveryInfo.customerName}
                   </p>
                 )}
                 {orderType === "dinein" && selectedTable && (
-                  <p className="text-xs sm:text-sm text-purple-700 animate-in fade-in duration-500">
+                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500">
                     Mesa {selectedTable}
                   </p>
                 )}
@@ -286,7 +308,7 @@ export function MenuClient({
                     variant="ghost"
                     size="sm"
                     onClick={() => router.push("/customer/profile")}
-                    className="text-purple-700 hover:text-purple-900 hover:bg-purple-100 px-2 sm:px-4"
+                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
                   >
                     <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                     <span className="hidden sm:inline">Perfil</span>
@@ -295,7 +317,7 @@ export function MenuClient({
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-purple-700 hover:text-purple-900 hover:bg-purple-100 px-2 sm:px-4"
+                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
                   >
                     <LogOut className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                     <span className="hidden sm:inline">Sair</span>
@@ -307,7 +329,7 @@ export function MenuClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => router.push("/customer/login")}
-                  className="text-purple-700 hover:text-purple-900 hover:bg-purple-100 px-2 sm:px-4"
+                  className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
                 >
                   <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                   <span className="hidden sm:inline">Entrar</span>
@@ -316,7 +338,7 @@ export function MenuClient({
               <Button
                 size="sm"
                 onClick={() => setIsCartOpen(true)}
-                className="relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-2 sm:px-4"
+                className="relative bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-2 sm:px-4"
               >
                 <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {totalItems > 0 && (
@@ -336,67 +358,19 @@ export function MenuClient({
         </div>
       )}
 
-      {orderType === "delivery" && !deliveryInfo && (
-        <div className="container mx-auto px-4 py-8 animate-in fade-in slide-in-from-right duration-500">
-          {isLoadingUserData ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-              <p className="mt-4 text-purple-700">Carregando seus dados...</p>
-            </div>
-          ) : !user ? (
-            <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 border-2 border-purple-200">
-              <div className="text-center space-y-4">
-                <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-purple-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-purple-900">Login Necessário</h2>
-                <p className="text-purple-700">
-                  Para fazer pedidos de delivery, você precisa estar logado com seus dados cadastrados.
-                </p>
-                <div className="space-y-2 pt-4">
-                  <Button
-                    onClick={() => router.push("/customer/login")}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
-                  >
-                    Fazer Login
-                  </Button>
-                  <Button
-                    onClick={() => router.push("/customer/sign-up")}
-                    variant="outline"
-                    className="w-full border-purple-300"
-                  >
-                    Criar Conta
-                  </Button>
-                  <Button onClick={handleBackToOrderType} variant="ghost" className="w-full text-purple-700">
-                    Voltar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 border-2 border-purple-200">
-              <div className="text-center space-y-4">
-                <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-purple-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-purple-900">Complete seu Cadastro</h2>
-                <p className="text-purple-700">
-                  Você precisa completar seu cadastro com nome, telefone e endereço para fazer pedidos de delivery.
-                </p>
-                <div className="space-y-2 pt-4">
-                  <Button
-                    onClick={() => router.push("/customer/profile")}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
-                  >
-                    Completar Cadastro
-                  </Button>
-                  <Button onClick={handleBackToOrderType} variant="ghost" className="w-full text-purple-700">
-                    Voltar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+      {orderType === "delivery" && !deliveryInfo && user && (
+        <div className="container mx-auto px-4 py-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <p className="text-yellow-800 text-sm">
+              Complete seu cadastro com endereço para finalizar pedidos de delivery.{" "}
+              <button
+                onClick={() => router.push("/customer/profile")}
+                className="underline font-semibold hover:text-yellow-900"
+              >
+                Ir para perfil
+              </button>
+            </p>
+          </div>
         </div>
       )}
 
@@ -406,7 +380,7 @@ export function MenuClient({
         </div>
       )}
 
-      {canShowMenu && categories.length > 0 && (
+      {showMenu && categories.length > 0 && (
         <CategoryNavBar
           categories={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
           activeCategory={activeCategory}
@@ -414,7 +388,7 @@ export function MenuClient({
         />
       )}
 
-      {canShowMenu && (
+      {showMenu && (
         <main className="container mx-auto px-4 py-8 animate-in fade-in duration-700">
           <div className="space-y-12">
             {categories.map((category, index) => (
@@ -430,6 +404,40 @@ export function MenuClient({
             ))}
           </div>
         </main>
+      )}
+
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full animate-in zoom-in duration-300">
+            <div className="text-center space-y-4">
+              <div className="bg-slate-100 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center">
+                <AlertCircle className="h-8 w-8 text-slate-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Login Necessário</h2>
+              <p className="text-slate-700">
+                Para adicionar itens ao carrinho e fazer pedidos de delivery, você precisa estar logado.
+              </p>
+              <div className="space-y-2 pt-4">
+                <Button
+                  onClick={() => router.push("/customer/login")}
+                  className="w-full bg-slate-600 hover:bg-slate-700"
+                >
+                  Fazer Login
+                </Button>
+                <Button
+                  onClick={() => router.push("/customer/sign-up")}
+                  variant="outline"
+                  className="w-full border-slate-300"
+                >
+                  Criar Conta
+                </Button>
+                <Button onClick={() => setShowLoginModal(false)} variant="ghost" className="w-full text-slate-700">
+                  Continuar Navegando
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <Cart

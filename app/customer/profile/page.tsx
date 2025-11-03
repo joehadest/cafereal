@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { User, MapPin, Plus, Trash2, ArrowLeft, Home } from "lucide-react"
+import { User, MapPin, Plus, Trash2, ArrowLeft, Home, Phone, Edit2, Save, X } from "lucide-react"
 
 export default function CustomerProfilePage() {
   const [profile, setProfile] = useState<any>(null)
@@ -128,7 +128,10 @@ export default function CustomerProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 flex items-center justify-center">
-        <div className="text-purple-700">Carregando...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-purple-700 font-medium">Carregando perfil...</p>
+        </div>
       </div>
     )
   }
@@ -162,85 +165,98 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 p-3 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 py-4 px-3 sm:py-8 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         <Button
           variant="ghost"
           onClick={() => router.push("/")}
-          className="text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+          className="text-purple-700 hover:text-purple-900 hover:bg-purple-100 transition-colors -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Cardápio
+          <span className="font-medium">Voltar ao Cardápio</span>
         </Button>
 
-        {/* Dados Pessoais */}
-        <Card className="border-2 border-purple-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-br from-purple-50 to-stone-50 p-4 sm:p-6">
-            <CardTitle className="text-xl sm:text-2xl text-purple-900 flex items-center gap-2">
-              <User className="h-5 w-5 sm:h-6 sm:w-6" />
-              Meus Dados
+        <Card className="border-2 border-purple-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-500 p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <User className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <span className="font-bold">Meus Dados</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 sm:pt-6 space-y-4 p-4 sm:p-6">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {isEditing ? (
               <>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-purple-900 text-sm">
+                    <Label htmlFor="name" className="text-purple-900 font-semibold text-sm flex items-center gap-2">
+                      <User className="h-4 w-4 text-purple-600" />
                       Nome Completo
                     </Label>
                     <Input
                       id="name"
                       value={editData.full_name}
                       onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
-                      className="border-purple-200"
+                      className="border-2 border-purple-200 focus:border-purple-500 transition-colors h-11"
+                      placeholder="Digite seu nome completo"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-purple-900 text-sm">
+                    <Label htmlFor="phone" className="text-purple-900 font-semibold text-sm flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-purple-600" />
                       Telefone
                     </Label>
                     <Input
                       id="phone"
                       value={editData.phone}
                       onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                      className="border-purple-200"
+                      className="border-2 border-purple-200 focus:border-purple-500 transition-colors h-11"
+                      placeholder="(00) 00000-0000"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 sm:gap-3 pt-2">
                   <Button
                     onClick={handleUpdateProfile}
-                    className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
+                    className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 flex-1 sm:flex-none h-11 font-semibold shadow-md transition-all"
                   >
-                    Salvar
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Alterações
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
-                    className="border-purple-300 flex-1 sm:flex-none"
+                    className="border-2 border-purple-300 hover:bg-purple-50 flex-1 sm:flex-none h-11 font-semibold transition-colors"
                   >
+                    <X className="h-4 w-4 mr-2" />
                     Cancelar
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs sm:text-sm text-purple-700">Nome</p>
-                    <p className="font-semibold text-purple-900 text-sm sm:text-base">{profile?.full_name}</p>
+                <div className="grid gap-4 sm:gap-6">
+                  <div className="bg-purple-50/50 rounded-lg p-4 border border-purple-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4 text-purple-600" />
+                      <p className="text-xs sm:text-sm text-purple-700 font-medium uppercase tracking-wide">Nome</p>
+                    </div>
+                    <p className="font-bold text-purple-900 text-base sm:text-lg">{profile?.full_name}</p>
                   </div>
-                  <div>
-                    <p className="text-xs sm:text-sm text-purple-700">Telefone</p>
-                    <p className="font-semibold text-purple-900 text-sm sm:text-base">{profile?.phone}</p>
+                  <div className="bg-purple-50/50 rounded-lg p-4 border border-purple-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Phone className="h-4 w-4 text-purple-600" />
+                      <p className="text-xs sm:text-sm text-purple-700 font-medium uppercase tracking-wide">Telefone</p>
+                    </div>
+                    <p className="font-bold text-purple-900 text-base sm:text-lg">{profile?.phone}</p>
                   </div>
                 </div>
                 <Button
                   onClick={() => setIsEditing(true)}
-                  variant="outline"
-                  className="border-purple-300 w-full sm:w-auto"
+                  className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 w-full sm:w-auto h-11 font-semibold shadow-md transition-all"
                 >
+                  <Edit2 className="h-4 w-4 mr-2" />
                   Editar Dados
                 </Button>
               </>
@@ -248,90 +264,121 @@ export default function CustomerProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Endereços */}
-        <Card className="border-2 border-purple-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-br from-purple-50 to-stone-50 p-4 sm:p-6">
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-xl sm:text-2xl text-purple-900 flex items-center gap-2">
-                <Home className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="truncate">Meus Endereços</span>
+        <Card className="border-2 border-purple-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-500 p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
+                  <Home className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <span className="font-bold truncate">Meus Endereços</span>
               </CardTitle>
               <Button
                 onClick={() => setShowNewAddress(!showNewAddress)}
                 size="sm"
-                className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
+                className="bg-white text-purple-600 hover:bg-purple-50 flex-shrink-0 h-9 sm:h-10 font-semibold shadow-md transition-all"
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Adicionar</span>
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-4 sm:pt-6 space-y-4 p-4 sm:p-6">
+          <CardContent className="p-4 sm:p-6 space-y-4">
             {showNewAddress && (
-              <Card className="border-purple-200 bg-purple-50/50">
-                <CardContent className="pt-4 sm:pt-6 space-y-4 p-4 sm:p-6">
-                  <h3 className="font-semibold text-purple-900 text-sm sm:text-base">Novo Endereço</h3>
-                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-                    <Input
-                      placeholder="Rua"
-                      value={newAddress.street}
-                      onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                      className="border-purple-200 text-sm"
-                    />
-                    <Input
-                      placeholder="Número"
-                      value={newAddress.number}
-                      onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
-                      className="border-purple-200 text-sm"
-                    />
+              <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-stone-50 shadow-md">
+                <CardContent className="p-4 sm:p-6 space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-purple-200">
+                    <MapPin className="h-5 w-5 text-purple-600" />
+                    <h3 className="font-bold text-purple-900 text-base sm:text-lg">Novo Endereço</h3>
                   </div>
-                  <Input
-                    placeholder="Complemento (opcional)"
-                    value={newAddress.complement}
-                    onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
-                    className="border-purple-200 text-sm"
-                  />
-                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-                    <Input
-                      placeholder="Bairro"
-                      value={newAddress.neighborhood}
-                      onChange={(e) => setNewAddress({ ...newAddress, neighborhood: e.target.value })}
-                      className="border-purple-200 text-sm"
-                    />
-                    <Input
-                      placeholder="Cidade"
-                      value={newAddress.city}
-                      onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                      className="border-purple-200 text-sm"
-                    />
+                  <div className="grid gap-3 sm:gap-4">
+                    <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Rua</Label>
+                        <Input
+                          placeholder="Nome da rua"
+                          value={newAddress.street}
+                          onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Número</Label>
+                        <Input
+                          placeholder="Nº"
+                          value={newAddress.number}
+                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">
+                        Complemento <span className="text-purple-500 font-normal">(opcional)</span>
+                      </Label>
+                      <Input
+                        placeholder="Apto, bloco, etc."
+                        value={newAddress.complement}
+                        onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
+                        className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                      />
+                    </div>
+                    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Bairro</Label>
+                        <Input
+                          placeholder="Nome do bairro"
+                          value={newAddress.neighborhood}
+                          onChange={(e) => setNewAddress({ ...newAddress, neighborhood: e.target.value })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Cidade</Label>
+                        <Input
+                          placeholder="Nome da cidade"
+                          value={newAddress.city}
+                          onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Estado</Label>
+                        <Input
+                          placeholder="UF"
+                          maxLength={2}
+                          value={newAddress.state}
+                          onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value.toUpperCase() })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors uppercase"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">CEP</Label>
+                        <Input
+                          placeholder="00000-000"
+                          value={newAddress.zip_code}
+                          onChange={(e) => setNewAddress({ ...newAddress, zip_code: e.target.value })}
+                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-                    <Input
-                      placeholder="Estado (UF)"
-                      maxLength={2}
-                      value={newAddress.state}
-                      onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value.toUpperCase() })}
-                      className="border-purple-200 text-sm"
-                    />
-                    <Input
-                      placeholder="CEP"
-                      value={newAddress.zip_code}
-                      onChange={(e) => setNewAddress({ ...newAddress, zip_code: e.target.value })}
-                      className="border-purple-200 text-sm"
-                    />
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 sm:gap-3 pt-2">
                     <Button
                       onClick={handleAddAddress}
-                      className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
+                      className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 flex-1 sm:flex-none h-10 font-semibold shadow-md transition-all"
                     >
+                      <Save className="h-4 w-4 mr-2" />
                       Salvar Endereço
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setShowNewAddress(false)}
-                      className="border-purple-300 flex-1 sm:flex-none"
+                      className="border-2 border-purple-300 hover:bg-purple-50 flex-1 sm:flex-none h-10 font-semibold transition-colors"
                     >
+                      <X className="h-4 w-4 mr-2" />
                       Cancelar
                     </Button>
                   </div>
@@ -340,26 +387,42 @@ export default function CustomerProfilePage() {
             )}
 
             {addresses.length === 0 ? (
-              <p className="text-center text-purple-700 py-8 text-sm">Nenhum endereço cadastrado</p>
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
+                  <MapPin className="h-8 w-8 text-purple-600" />
+                </div>
+                <p className="text-purple-700 font-medium text-sm sm:text-base">Nenhum endereço cadastrado</p>
+                <p className="text-purple-600 text-xs sm:text-sm mt-1">Adicione um endereço para continuar</p>
+              </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                 {addresses.map((address) => (
-                  <Card key={address.id} className="border-purple-200">
-                    <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
-                          <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mt-1 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-purple-900 text-sm sm:text-base break-words">
+                  <Card
+                    key={address.id}
+                    className="border-2 border-purple-200 hover:border-purple-400 transition-all hover:shadow-md bg-white"
+                  >
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                          <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0 mt-0.5">
+                            <MapPin className="h-4 w-4 text-purple-600" />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p className="font-bold text-purple-900 text-sm leading-tight break-words">
                               {address.street}, {address.number}
-                              {address.complement && ` - ${address.complement}`}
                             </p>
-                            <p className="text-xs sm:text-sm text-purple-700 break-words">
+                            {address.complement && (
+                              <p className="text-xs text-purple-700 break-words leading-relaxed">
+                                {address.complement}
+                              </p>
+                            )}
+                            <p className="text-xs text-purple-700 break-words leading-relaxed">
                               {address.neighborhood}, {address.city} - {address.state}
                             </p>
-                            <p className="text-xs sm:text-sm text-purple-700">CEP: {address.zip_code}</p>
+                            <p className="text-xs text-purple-600 font-medium">CEP: {address.zip_code}</p>
                             {address.is_default && (
-                              <span className="inline-block mt-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs font-bold rounded-full shadow-sm">
+                                <Home className="h-3 w-3" />
                                 Padrão
                               </span>
                             )}
@@ -369,7 +432,7 @@ export default function CustomerProfilePage() {
                           onClick={() => handleDeleteAddress(address.id)}
                           size="icon"
                           variant="ghost"
-                          className="text-red-600 hover:bg-red-50 flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 self-end sm:self-start transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

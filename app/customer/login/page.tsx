@@ -40,21 +40,21 @@ export default function CustomerLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Button
           variant="ghost"
           onClick={() => router.push("/")}
-          className="mb-4 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+          className="mb-4 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar ao Cardápio
         </Button>
 
-        <Card className="border-2 border-purple-200 shadow-xl animate-in fade-in slide-in-from-bottom duration-500">
-          <CardHeader className="space-y-1 bg-gradient-to-br from-purple-50 to-stone-50">
-            <CardTitle className="text-3xl font-bold text-purple-900">Entrar</CardTitle>
-            <CardDescription className="text-purple-700">
+        <Card className="border-2 border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom duration-500">
+          <CardHeader className="space-y-1 bg-gradient-to-br from-slate-50 to-stone-50">
+            <CardTitle className="text-3xl font-bold text-slate-900">Entrar</CardTitle>
+            <CardDescription className="text-slate-700">
               Entre com sua conta para acessar seus dados salvos
             </CardDescription>
           </CardHeader>
@@ -62,7 +62,7 @@ export default function CustomerLoginPage() {
             <form onSubmit={handleLogin}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-purple-900 flex items-center gap-2">
+                  <Label htmlFor="email" className="text-slate-900 flex items-center gap-2">
                     <Mail className="h-4 w-4" />
                     Email
                   </Label>
@@ -73,11 +73,11 @@ export default function CustomerLoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border-purple-200 focus:border-purple-500"
+                    className="border-slate-200 focus:border-slate-500"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password" className="text-purple-900 flex items-center gap-2">
+                  <Label htmlFor="password" className="text-slate-900 flex items-center gap-2">
                     <Lock className="h-4 w-4" />
                     Senha
                   </Label>
@@ -87,7 +87,7 @@ export default function CustomerLoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border-purple-200 focus:border-purple-500"
+                    className="border-slate-200 focus:border-slate-500"
                   />
                 </div>
                 {error && (
@@ -97,15 +97,15 @@ export default function CustomerLoginPage() {
                 )}
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
               </div>
-              <div className="mt-6 text-center text-sm text-purple-700">
+              <div className="mt-6 text-center text-sm text-slate-700">
                 Não tem uma conta?{" "}
-                <Link href="/customer/sign-up" className="font-semibold text-purple-900 hover:underline">
+                <Link href="/customer/sign-up" className="font-semibold text-slate-900 hover:underline">
                   Criar conta
                 </Link>
               </div>

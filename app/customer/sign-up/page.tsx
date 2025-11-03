@@ -130,21 +130,21 @@ export default function CustomerSignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <Button
           variant="ghost"
           onClick={() => router.push("/")}
-          className="mb-4 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+          className="mb-4 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar ao Cardápio
         </Button>
 
-        <Card className="border-2 border-purple-200 shadow-xl animate-in fade-in slide-in-from-bottom duration-500">
-          <CardHeader className="space-y-1 bg-gradient-to-br from-purple-50 to-stone-50">
-            <CardTitle className="text-3xl font-bold text-purple-900">Criar Conta</CardTitle>
-            <CardDescription className="text-purple-700">
+        <Card className="border-2 border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom duration-500">
+          <CardHeader className="space-y-1 bg-gradient-to-br from-slate-50 to-stone-50">
+            <CardTitle className="text-3xl font-bold text-slate-900">Criar Conta</CardTitle>
+            <CardDescription className="text-slate-700">
               Crie sua conta e cadastre seu endereço para facilitar pedidos futuros
             </CardDescription>
           </CardHeader>
@@ -153,13 +153,13 @@ export default function CustomerSignUpPage() {
               <div className="flex flex-col gap-4">
                 {/* Dados Pessoais */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <User className="h-5 w-5" />
                     Dados Pessoais
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="fullName" className="text-purple-900">
+                      <Label htmlFor="fullName" className="text-slate-900">
                         Nome Completo
                       </Label>
                       <Input
@@ -169,11 +169,11 @@ export default function CustomerSignUpPage() {
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="phone" className="text-purple-900">
+                      <Label htmlFor="phone" className="text-slate-900">
                         Telefone
                       </Label>
                       <Input
@@ -183,21 +183,21 @@ export default function CustomerSignUpPage() {
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Endereço */}
-                <div className="space-y-4 pt-4 border-t border-purple-200">
-                  <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                <div className="space-y-4 pt-4 border-t border-slate-200">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <Home className="h-5 w-5" />
                     Endereço de Entrega
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="street" className="text-purple-900">
+                      <Label htmlFor="street" className="text-slate-900">
                         Rua
                       </Label>
                       <Input
@@ -207,11 +207,11 @@ export default function CustomerSignUpPage() {
                         required
                         value={street}
                         onChange={(e) => setStreet(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="number" className="text-purple-900">
+                      <Label htmlFor="number" className="text-slate-900">
                         Número
                       </Label>
                       <Input
@@ -221,12 +221,12 @@ export default function CustomerSignUpPage() {
                         required
                         value={number}
                         onChange={(e) => setNumber(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="complement" className="text-purple-900">
+                    <Label htmlFor="complement" className="text-slate-900">
                       Complemento (opcional)
                     </Label>
                     <Input
@@ -235,12 +235,12 @@ export default function CustomerSignUpPage() {
                       placeholder="Apto, bloco, etc."
                       value={complement}
                       onChange={(e) => setComplement(e.target.value)}
-                      className="border-purple-200 focus:border-purple-500"
+                      className="border-slate-200 focus:border-slate-500"
                     />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="neighborhood" className="text-purple-900">
+                      <Label htmlFor="neighborhood" className="text-slate-900">
                         Bairro
                       </Label>
                       <Input
@@ -250,11 +250,11 @@ export default function CustomerSignUpPage() {
                         required
                         value={neighborhood}
                         onChange={(e) => setNeighborhood(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="city" className="text-purple-900">
+                      <Label htmlFor="city" className="text-slate-900">
                         Cidade
                       </Label>
                       <Input
@@ -264,13 +264,13 @@ export default function CustomerSignUpPage() {
                         required
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="state" className="text-purple-900">
+                      <Label htmlFor="state" className="text-slate-900">
                         Estado
                       </Label>
                       <Input
@@ -281,11 +281,11 @@ export default function CustomerSignUpPage() {
                         maxLength={2}
                         value={state}
                         onChange={(e) => setState(e.target.value.toUpperCase())}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="zipCode" className="text-purple-900">
+                      <Label htmlFor="zipCode" className="text-slate-900">
                         CEP
                       </Label>
                       <Input
@@ -295,20 +295,20 @@ export default function CustomerSignUpPage() {
                         required
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Dados de Acesso */}
-                <div className="space-y-4 pt-4 border-t border-purple-200">
-                  <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                <div className="space-y-4 pt-4 border-t border-slate-200">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <Lock className="h-5 w-5" />
                     Dados de Acesso
                   </h3>
                   <div className="grid gap-2">
-                    <Label htmlFor="email" className="text-purple-900">
+                    <Label htmlFor="email" className="text-slate-900">
                       Email
                     </Label>
                     <Input
@@ -318,12 +318,12 @@ export default function CustomerSignUpPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="border-purple-200 focus:border-purple-500"
+                      className="border-slate-200 focus:border-slate-500"
                     />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="password" className="text-purple-900">
+                      <Label htmlFor="password" className="text-slate-900">
                         Senha
                       </Label>
                       <Input
@@ -332,11 +332,11 @@ export default function CustomerSignUpPage() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="repeat-password" className="text-purple-900">
+                      <Label htmlFor="repeat-password" className="text-slate-900">
                         Repetir Senha
                       </Label>
                       <Input
@@ -345,7 +345,7 @@ export default function CustomerSignUpPage() {
                         required
                         value={repeatPassword}
                         onChange={(e) => setRepeatPassword(e.target.value)}
-                        className="border-purple-200 focus:border-purple-500"
+                        className="border-slate-200 focus:border-slate-500"
                       />
                     </div>
                   </div>
@@ -358,15 +358,15 @@ export default function CustomerSignUpPage() {
                 )}
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? "Criando conta..." : "Criar Conta"}
                 </Button>
               </div>
-              <div className="mt-6 text-center text-sm text-purple-700">
+              <div className="mt-6 text-center text-sm text-slate-700">
                 Já tem uma conta?{" "}
-                <Link href="/customer/login" className="font-semibold text-purple-900 hover:underline">
+                <Link href="/customer/login" className="font-semibold text-slate-900 hover:underline">
                   Entrar
                 </Link>
               </div>

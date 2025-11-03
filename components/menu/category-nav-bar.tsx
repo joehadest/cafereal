@@ -37,7 +37,7 @@ export function CategoryNavBar({
   }, [activeCategory])
 
   return (
-    <div className="sticky top-[56px] sm:top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-purple-200 shadow-md animate-in slide-in-from-top duration-300">
+    <div className="sticky top-[56px] sm:top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-md animate-in slide-in-from-top duration-300">
       <div
         ref={navRef}
         className="container mx-auto px-2 sm:px-4 py-2 overflow-x-auto scrollbar-hide"
@@ -60,8 +60,8 @@ export function CategoryNavBar({
                   whitespace-nowrap transition-all duration-300 flex-shrink-0
                   ${
                     isActive
-                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg scale-105 border-purple-600"
-                      : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400 hover:scale-105"
+                      ? "bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-lg scale-105 border-slate-600"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400 hover:scale-105"
                   }
                 `}
               >

@@ -30,8 +30,8 @@ export function ProductCard({
   }
 
   return (
-    <Card className="group overflow-hidden border-purple-200 hover:shadow-2xl hover:scale-[1.02] hover:border-purple-400 transition-all duration-300 ease-out">
-      <div className="aspect-square sm:aspect-video bg-gradient-to-br from-stone-100 via-stone-50 to-purple-50 relative overflow-hidden">
+    <Card className="group overflow-hidden border-slate-200 hover:shadow-2xl hover:scale-[1.02] hover:border-slate-400 transition-all duration-300 ease-out">
+      <div className="aspect-square sm:aspect-video bg-gradient-to-br from-stone-100 via-stone-50 to-slate-50 relative overflow-hidden">
         {product.image_url ? (
           <Image
             src={product.image_url || "/placeholder.svg"}
@@ -45,16 +45,16 @@ export function ProductCard({
             <span className="text-2xl sm:text-4xl animate-bounce">🍽️</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <CardContent className="p-2 sm:p-4 space-y-1 sm:space-y-2">
-        <h3 className="font-bold text-sm sm:text-lg text-purple-900 text-balance group-hover:text-purple-600 transition-colors duration-300 line-clamp-2">
+        <h3 className="font-bold text-sm sm:text-lg text-slate-900 text-balance group-hover:text-slate-600 transition-colors duration-300 line-clamp-2">
           {product.name}
         </h3>
-        <p className="text-xs sm:text-sm text-purple-700 line-clamp-2 text-pretty hidden sm:block">
+        <p className="text-xs sm:text-sm text-slate-700 line-clamp-2 text-pretty hidden sm:block">
           {product.description}
         </p>
-        <p className="text-lg sm:text-2xl font-bold text-purple-600 group-hover:scale-105 transition-transform duration-300 inline-block">
+        <p className="text-lg sm:text-2xl font-bold text-slate-600 group-hover:scale-105 transition-transform duration-300 inline-block">
           R$ {product.price.toFixed(2)}
         </p>
       </CardContent>
@@ -63,7 +63,7 @@ export function ProductCard({
           onClick={handleAddToCart}
           disabled={isAdding}
           size="sm"
-          className={`w-full bg-purple-600 hover:bg-purple-700 hover:shadow-lg transition-all duration-300 text-xs sm:text-sm ${
+          className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-xs sm:text-sm ${
             isAdding ? "animate-pulse scale-95" : "hover:scale-105"
           }`}
         >
