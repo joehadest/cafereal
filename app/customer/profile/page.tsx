@@ -127,10 +127,10 @@ export default function CustomerProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-purple-700 font-medium">Carregando perfil...</p>
+          <div className="h-8 w-8 border-4 border-slate-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-700 font-medium">Carregando perfil...</p>
         </div>
       </div>
     )
@@ -138,23 +138,23 @@ export default function CustomerProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 flex items-center justify-center p-6">
-        <Card className="max-w-md border-2 border-purple-200">
-          <CardHeader className="bg-gradient-to-br from-purple-50 to-stone-50">
-            <CardTitle className="text-2xl text-purple-900">Perfil não encontrado</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 flex items-center justify-center p-6">
+        <Card className="max-w-md border-2 border-slate-200">
+          <CardHeader className="bg-gradient-to-br from-slate-50 to-stone-50">
+            <CardTitle className="text-2xl text-slate-900">Perfil não encontrado</CardTitle>
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
-            <p className="text-purple-700">
+            <p className="text-slate-700">
               Você ainda não completou seu cadastro. Por favor, complete suas informações para continuar.
             </p>
             <div className="flex gap-2">
               <Button
                 onClick={() => router.push("/customer/sign-up")}
-                className="bg-purple-600 hover:bg-purple-700 flex-1"
+                className="bg-slate-600 hover:bg-slate-700 flex-1"
               >
                 Completar Cadastro
               </Button>
-              <Button variant="outline" onClick={() => router.push("/")} className="border-purple-300 flex-1">
+              <Button variant="outline" onClick={() => router.push("/")} className="border-slate-300 flex-1">
                 Voltar ao Cardápio
               </Button>
             </div>
@@ -165,19 +165,19 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-stone-50 to-purple-50 py-4 px-3 sm:py-8 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 py-4 px-3 sm:py-8 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         <Button
           variant="ghost"
           onClick={() => router.push("/")}
-          className="text-purple-700 hover:text-purple-900 hover:bg-purple-100 transition-colors -ml-2"
+          className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           <span className="font-medium">Voltar ao Cardápio</span>
         </Button>
 
-        <Card className="border-2 border-purple-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-500 p-4 sm:p-6">
+        <Card className="border-2 border-slate-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-500 p-4 sm:p-6">
             <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
                 <User className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -190,28 +190,28 @@ export default function CustomerProfilePage() {
               <>
                 <div className="grid gap-4 sm:gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-purple-900 font-semibold text-sm flex items-center gap-2">
-                      <User className="h-4 w-4 text-purple-600" />
+                    <Label htmlFor="name" className="text-slate-900 font-semibold text-sm flex items-center gap-2">
+                      <User className="h-4 w-4 text-slate-600" />
                       Nome Completo
                     </Label>
                     <Input
                       id="name"
                       value={editData.full_name}
                       onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
-                      className="border-2 border-purple-200 focus:border-purple-500 transition-colors h-11"
+                      className="border-2 border-slate-200 focus:border-slate-500 transition-colors h-11"
                       placeholder="Digite seu nome completo"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-purple-900 font-semibold text-sm flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-purple-600" />
+                    <Label htmlFor="phone" className="text-slate-900 font-semibold text-sm flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-slate-600" />
                       Telefone
                     </Label>
                     <Input
                       id="phone"
                       value={editData.phone}
                       onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                      className="border-2 border-purple-200 focus:border-purple-500 transition-colors h-11"
+                      className="border-2 border-slate-200 focus:border-slate-500 transition-colors h-11"
                       placeholder="(00) 00000-0000"
                     />
                   </div>
@@ -219,7 +219,7 @@ export default function CustomerProfilePage() {
                 <div className="flex gap-2 sm:gap-3 pt-2">
                   <Button
                     onClick={handleUpdateProfile}
-                    className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 flex-1 sm:flex-none h-11 font-semibold shadow-md transition-all"
+                    className="bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 flex-1 sm:flex-none h-11 font-semibold shadow-md transition-all"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Salvar Alterações
@@ -227,7 +227,7 @@ export default function CustomerProfilePage() {
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
-                    className="border-2 border-purple-300 hover:bg-purple-50 flex-1 sm:flex-none h-11 font-semibold transition-colors"
+                    className="border-2 border-slate-300 hover:bg-slate-50 flex-1 sm:flex-none h-11 font-semibold transition-colors"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Cancelar
@@ -237,24 +237,24 @@ export default function CustomerProfilePage() {
             ) : (
               <>
                 <div className="grid gap-4 sm:gap-6">
-                  <div className="bg-purple-50/50 rounded-lg p-4 border border-purple-100">
+                  <div className="bg-slate-50/50 rounded-lg p-4 border border-slate-100">
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="h-4 w-4 text-purple-600" />
-                      <p className="text-xs sm:text-sm text-purple-700 font-medium uppercase tracking-wide">Nome</p>
+                      <User className="h-4 w-4 text-slate-600" />
+                      <p className="text-xs sm:text-sm text-slate-700 font-medium uppercase tracking-wide">Nome</p>
                     </div>
-                    <p className="font-bold text-purple-900 text-base sm:text-lg">{profile?.full_name}</p>
+                    <p className="font-bold text-slate-900 text-base sm:text-lg">{profile?.full_name}</p>
                   </div>
-                  <div className="bg-purple-50/50 rounded-lg p-4 border border-purple-100">
+                  <div className="bg-slate-50/50 rounded-lg p-4 border border-slate-100">
                     <div className="flex items-center gap-2 mb-2">
-                      <Phone className="h-4 w-4 text-purple-600" />
-                      <p className="text-xs sm:text-sm text-purple-700 font-medium uppercase tracking-wide">Telefone</p>
+                      <Phone className="h-4 w-4 text-slate-600" />
+                      <p className="text-xs sm:text-sm text-slate-700 font-medium uppercase tracking-wide">Telefone</p>
                     </div>
-                    <p className="font-bold text-purple-900 text-base sm:text-lg">{profile?.phone}</p>
+                    <p className="font-bold text-slate-900 text-base sm:text-lg">{profile?.phone}</p>
                   </div>
                 </div>
                 <Button
                   onClick={() => setIsEditing(true)}
-                  className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 w-full sm:w-auto h-11 font-semibold shadow-md transition-all"
+                  className="bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 w-full sm:w-auto h-11 font-semibold shadow-md transition-all"
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
                   Editar Dados
@@ -264,8 +264,8 @@ export default function CustomerProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-500 p-4 sm:p-6">
+        <Card className="border-2 border-slate-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-500 p-4 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
@@ -276,7 +276,7 @@ export default function CustomerProfilePage() {
               <Button
                 onClick={() => setShowNewAddress(!showNewAddress)}
                 size="sm"
-                className="bg-white text-purple-600 hover:bg-purple-50 flex-shrink-0 h-9 sm:h-10 font-semibold shadow-md transition-all"
+                className="bg-white text-slate-600 hover:bg-slate-50 flex-shrink-0 h-9 sm:h-10 font-semibold shadow-md transition-all"
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Adicionar</span>
@@ -285,82 +285,82 @@ export default function CustomerProfilePage() {
           </CardHeader>
           <CardContent className="p-4 sm:p-6 space-y-4">
             {showNewAddress && (
-              <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-stone-50 shadow-md">
+              <Card className="border-2 border-slate-300 bg-gradient-to-br from-slate-50 to-stone-50 shadow-md">
                 <CardContent className="p-4 sm:p-6 space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-purple-200">
-                    <MapPin className="h-5 w-5 text-purple-600" />
-                    <h3 className="font-bold text-purple-900 text-base sm:text-lg">Novo Endereço</h3>
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                    <MapPin className="h-5 w-5 text-slate-600" />
+                    <h3 className="font-bold text-slate-900 text-base sm:text-lg">Novo Endereço</h3>
                   </div>
                   <div className="grid gap-3 sm:gap-4">
                     <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
                       <div className="sm:col-span-2">
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Rua</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">Rua</Label>
                         <Input
                           placeholder="Nome da rua"
                           value={newAddress.street}
                           onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Número</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">Número</Label>
                         <Input
                           placeholder="Nº"
                           value={newAddress.number}
                           onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">
-                        Complemento <span className="text-purple-500 font-normal">(opcional)</span>
+                      <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">
+                        Complemento <span className="text-slate-500 font-normal">(opcional)</span>
                       </Label>
                       <Input
                         placeholder="Apto, bloco, etc."
                         value={newAddress.complement}
                         onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
-                        className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                        className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                       />
                     </div>
                     <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                       <div>
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Bairro</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">Bairro</Label>
                         <Input
                           placeholder="Nome do bairro"
                           value={newAddress.neighborhood}
                           onChange={(e) => setNewAddress({ ...newAddress, neighborhood: e.target.value })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Cidade</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">Cidade</Label>
                         <Input
                           placeholder="Nome da cidade"
                           value={newAddress.city}
                           onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                         />
                       </div>
                     </div>
                     <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                       <div>
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">Estado</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">Estado</Label>
                         <Input
                           placeholder="UF"
                           maxLength={2}
                           value={newAddress.state}
                           onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value.toUpperCase() })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors uppercase"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors uppercase"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-purple-900 mb-1.5 block">CEP</Label>
+                        <Label className="text-xs font-semibold text-slate-900 mb-1.5 block">CEP</Label>
                         <Input
                           placeholder="00000-000"
                           value={newAddress.zip_code}
                           onChange={(e) => setNewAddress({ ...newAddress, zip_code: e.target.value })}
-                          className="border-2 border-purple-200 focus:border-purple-500 h-10 transition-colors"
+                          className="border-2 border-slate-200 focus:border-slate-500 h-10 transition-colors"
                         />
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export default function CustomerProfilePage() {
                   <div className="flex gap-2 sm:gap-3 pt-2">
                     <Button
                       onClick={handleAddAddress}
-                      className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 flex-1 sm:flex-none h-10 font-semibold shadow-md transition-all"
+                      className="bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 flex-1 sm:flex-none h-10 font-semibold shadow-md transition-all"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Salvar Endereço
@@ -376,7 +376,7 @@ export default function CustomerProfilePage() {
                     <Button
                       variant="outline"
                       onClick={() => setShowNewAddress(false)}
-                      className="border-2 border-purple-300 hover:bg-purple-50 flex-1 sm:flex-none h-10 font-semibold transition-colors"
+                      className="border-2 border-slate-300 hover:bg-slate-50 flex-1 sm:flex-none h-10 font-semibold transition-colors"
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancelar
@@ -388,40 +388,38 @@ export default function CustomerProfilePage() {
 
             {addresses.length === 0 ? (
               <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
-                  <MapPin className="h-8 w-8 text-purple-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                  <MapPin className="h-8 w-8 text-slate-600" />
                 </div>
-                <p className="text-purple-700 font-medium text-sm sm:text-base">Nenhum endereço cadastrado</p>
-                <p className="text-purple-600 text-xs sm:text-sm mt-1">Adicione um endereço para continuar</p>
+                <p className="text-slate-700 font-medium text-sm sm:text-base">Nenhum endereço cadastrado</p>
+                <p className="text-slate-600 text-xs sm:text-sm mt-1">Adicione um endereço para continuar</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                 {addresses.map((address) => (
                   <Card
                     key={address.id}
-                    className="border-2 border-purple-200 hover:border-purple-400 transition-all hover:shadow-md bg-white"
+                    className="border-2 border-slate-200 hover:border-slate-400 transition-all hover:shadow-md bg-white"
                   >
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
-                          <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0 mt-0.5">
-                            <MapPin className="h-4 w-4 text-purple-600" />
+                          <div className="p-1.5 sm:p-2 bg-slate-100 rounded-lg flex-shrink-0 mt-0.5">
+                            <MapPin className="h-4 w-4 text-slate-600" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
-                            <p className="font-bold text-purple-900 text-sm leading-tight break-words">
+                            <p className="font-bold text-slate-900 text-sm leading-tight break-words">
                               {address.street}, {address.number}
                             </p>
                             {address.complement && (
-                              <p className="text-xs text-purple-700 break-words leading-relaxed">
-                                {address.complement}
-                              </p>
+                              <p className="text-xs text-slate-700 break-words leading-relaxed">{address.complement}</p>
                             )}
-                            <p className="text-xs text-purple-700 break-words leading-relaxed">
+                            <p className="text-xs text-slate-700 break-words leading-relaxed">
                               {address.neighborhood}, {address.city} - {address.state}
                             </p>
-                            <p className="text-xs text-purple-600 font-medium">CEP: {address.zip_code}</p>
+                            <p className="text-xs text-slate-600 font-medium">CEP: {address.zip_code}</p>
                             {address.is_default && (
-                              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs font-bold rounded-full shadow-sm">
+                              <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 bg-gradient-to-r from-slate-600 to-slate-500 text-white text-xs font-bold rounded-full shadow-sm">
                                 <Home className="h-3 w-3" />
                                 Padrão
                               </span>
