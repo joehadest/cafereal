@@ -165,7 +165,7 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 py-4 px-3 sm:py-8 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 py-4 px-3 sm:py-8 sm:px-6 overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         <Button
           variant="ghost"
@@ -178,11 +178,11 @@ export default function CustomerProfilePage() {
 
         <Card className="border-2 border-slate-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
           <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-500 p-4 sm:p-6">
-            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3">
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="p-2 bg-white/20 rounded-lg">
                 <User className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <span className="font-bold">Meus Dados</span>
+              <span className="font-bold truncate">Meus Dados</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -242,14 +242,14 @@ export default function CustomerProfilePage() {
                       <User className="h-4 w-4 text-slate-600" />
                       <p className="text-xs sm:text-sm text-slate-700 font-medium uppercase tracking-wide">Nome</p>
                     </div>
-                    <p className="font-bold text-slate-900 text-base sm:text-lg">{profile?.full_name}</p>
+                    <p className="font-bold text-slate-900 text-base sm:text-lg break-words truncate max-w-full">{profile?.full_name}</p>
                   </div>
                   <div className="bg-slate-50/50 rounded-lg p-4 border border-slate-100">
                     <div className="flex items-center gap-2 mb-2">
                       <Phone className="h-4 w-4 text-slate-600" />
                       <p className="text-xs sm:text-sm text-slate-700 font-medium uppercase tracking-wide">Telefone</p>
                     </div>
-                    <p className="font-bold text-slate-900 text-base sm:text-lg">{profile?.phone}</p>
+                    <p className="font-bold text-slate-900 text-base sm:text-lg break-words truncate max-w-full">{profile?.phone}</p>
                   </div>
                 </div>
                 <Button

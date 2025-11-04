@@ -80,10 +80,10 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col items-center gap-4 text-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-purple-900">Categorias</h1>
-          <p className="text-sm sm:text-base text-purple-700">Gerencie as categorias do cardápio</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorias</h1>
+          <p className="text-sm sm:text-base text-slate-700">Gerencie as categorias do cardápio</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -92,21 +92,21 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                 setEditingCategory(null)
                 setFormData({ name: "", description: "", display_order: 0 })
               }}
-              className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Categoria
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-purple-200 w-[95vw] sm:w-full max-w-md">
+          <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-purple-900">
+              <DialogTitle className="text-slate-900">
                 {editingCategory ? "Editar Categoria" : "Nova Categoria"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-purple-900">
+                <Label htmlFor="name" className="text-slate-900">
                   Nome
                 </Label>
                 <Input
@@ -114,22 +114,22 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-purple-900">
+                <Label htmlFor="description" className="text-slate-900">
                   Descrição
                 </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="display_order" className="text-purple-900">
+                <Label htmlFor="display_order" className="text-slate-900">
                   Ordem de Exibição
                 </Label>
                 <Input
@@ -142,10 +142,10 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                       display_order: Number.parseInt(e.target.value),
                     })
                   }
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
-              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
+              <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700">
                 {editingCategory ? "Atualizar" : "Criar"}
               </Button>
             </form>
@@ -155,16 +155,16 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {categories.map((category) => (
-          <Card key={category.id} className="border-purple-200">
+          <Card key={category.id} className="border-slate-200">
             <CardHeader>
-              <CardTitle className="text-purple-900 flex items-center justify-between">
+              <CardTitle className="text-slate-900 flex items-center justify-between">
                 <span>{category.name}</span>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleEdit(category)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-purple-600 hover:bg-purple-50"
+                    className="h-8 w-8 text-slate-600 hover:bg-slate-50"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -180,8 +180,8 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-purple-700">{category.description || "Sem descrição"}</p>
-              <p className="text-xs text-purple-600 mt-2">Ordem: {category.display_order}</p>
+              <p className="text-sm text-slate-700">{category.description || "Sem descrição"}</p>
+              <p className="text-xs text-slate-600 mt-2">Ordem: {category.display_order}</p>
             </CardContent>
           </Card>
         ))}

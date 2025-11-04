@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -38,6 +38,99 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
   const [logoPreview, setLogoPreview] = useState<string | null>(settings.logo_url || null)
   const [isUploading, setIsUploading] = useState(false)
   const router = useRouter()
+
+  // Estados de texto para números (evitar prefixo 0 e permitir edição fluida)
+  const [deliveryFeeText, setDeliveryFeeText] = useState(
+    settings.delivery_fee !== undefined && settings.delivery_fee !== null ? String(settings.delivery_fee) : "",
+  )
+  const [minOrderText, setMinOrderText] = useState(
+    settings.min_order_value !== undefined && settings.min_order_value !== null
+      ? String(settings.min_order_value)
+      : "",
+  )
+
+  const sanitizeNumericText = (value: string) => {
+    if (value === "") return ""
+    // Troca vírgula por ponto
+    let v = value.replace(",", ".")
+    // Mantém apenas dígitos e no máximo um ponto
+    v = v.replace(/[^0-9.]/g, "")
+    const parts = v.split(".")
+    if (parts.length > 2) {
+      v = parts.shift()! + "." + parts.join("") // colapsa pontos extras
+    }
+    // Remove zeros à esquerda quando não for decimal do tipo 0.x
+    if (!v.startsWith("0.")) {
+      v = v.replace(/^0+(?=\d)/, "")
+    }
+    return v
+  }
+
+  // ----------------------
+  // Horário de funcionamento (UI selecionável)
+  // ----------------------
+  type DayKey = "Seg" | "Ter" | "Qua" | "Qui" | "Sex" | "Sáb" | "Dom"
+  type DaySchedule = { open: boolean; openTime: string; closeTime: string }
+  const dayOrder: { key: DayKey; label: string }[] = [
+    { key: "Seg", label: "Segunda" },
+    { key: "Ter", label: "Terça" },
+    { key: "Qua", label: "Quarta" },
+    { key: "Qui", label: "Quinta" },
+    { key: "Sex", label: "Sexta" },
+    { key: "Sáb", label: "Sábado" },
+    { key: "Dom", label: "Domingo" },
+  ]
+
+  const parseOpeningHoursText = (text: unknown): Record<DayKey, DaySchedule> => {
+    const base: Record<DayKey, DaySchedule> = {
+      Seg: { open: false, openTime: "09:00", closeTime: "18:00" },
+      Ter: { open: false, openTime: "09:00", closeTime: "18:00" },
+      Qua: { open: false, openTime: "09:00", closeTime: "18:00" },
+      Qui: { open: false, openTime: "09:00", closeTime: "18:00" },
+      Sex: { open: false, openTime: "09:00", closeTime: "18:00" },
+      Sáb: { open: false, openTime: "10:00", closeTime: "18:00" },
+      Dom: { open: false, openTime: "10:00", closeTime: "16:00" },
+    }
+    if (typeof text !== "string" || !text) return base
+    const lines = text.split(/\r?\n/)
+    const map: Partial<Record<DayKey, DaySchedule>> = {}
+    for (const line of lines) {
+      // Ex: "Seg: 11:00-23:00" ou "Sáb: Fechado"
+      const m = line.match(/^(Seg|Ter|Qua|Qui|Sex|Sáb|Dom)\s*:\s*(.*)$/)
+      if (!m) continue
+      const key = m[1] as DayKey
+      const rest = m[2].trim()
+      if (/fechad[oa]/i.test(rest)) {
+        map[key] = { open: false, openTime: base[key].openTime, closeTime: base[key].closeTime }
+      } else {
+        const t = rest.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/)
+        if (t) {
+          map[key] = { open: true, openTime: t[1], closeTime: t[2] }
+        }
+      }
+    }
+    return { ...base, ...(map as Record<DayKey, DaySchedule>) }
+  }
+
+  const [hoursByDay, setHoursByDay] = useState<Record<DayKey, DaySchedule>>(
+    parseOpeningHoursText(settings.opening_hours),
+  )
+
+  const formatOpeningHoursText = (hours: Record<DayKey, DaySchedule>) => {
+    return dayOrder
+      .map(({ key }) => {
+        const d = hours[key]
+        return `${key}: ${d.open ? `${d.openTime}-${d.closeTime}` : "Fechado"}`
+      })
+      .join("\n")
+  }
+
+  // Sincroniza textarea sempre que o usuário muda os seletores
+  useEffect(() => {
+    const text = formatOpeningHoursText(hoursByDay)
+    setSettings((s: any) => ({ ...s, opening_hours: text }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoursByDay])
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -246,22 +339,64 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 placeholder="contato@restaurante.com"
               />
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="hours"
-                className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-900"
-              >
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-900">
                 <Clock className="h-4 w-4" />
-                Horário de Funcionamento
+                Horário de Funcionamento (selecionável)
               </Label>
-              <Textarea
-                id="hours"
-                value={settings.opening_hours || ""}
-                onChange={(e) => setSettings({ ...settings, opening_hours: e.target.value })}
-                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                placeholder="Seg-Sex: 11h-23h&#10;Sáb-Dom: 11h-00h"
-                rows={3}
-              />
+              <div className="space-y-2">
+                {dayOrder.map(({ key, label }) => (
+                  <div key={key} className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div className="w-24 sm:w-28 text-slate-800 text-sm sm:text-base">{label}</div>
+                    <Switch
+                      id={`open-${key}`}
+                      checked={hoursByDay[key].open}
+                      onCheckedChange={(checked) =>
+                        setHoursByDay((prev) => ({ ...prev, [key]: { ...prev[key], open: checked } }))
+                      }
+                    />
+                    {hoursByDay[key].open ? (
+                      <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
+                        <div className="flex-1 min-w-[120px]">
+                          <Input
+                            type="time"
+                            value={hoursByDay[key].openTime}
+                            onChange={(e) =>
+                              setHoursByDay((prev) => ({ ...prev, [key]: { ...prev[key], openTime: e.target.value } }))
+                            }
+                            className="h-9 border-slate-200 w-full"
+                          />
+                        </div>
+                        <span className="text-slate-600">até</span>
+                        <div className="flex-1 min-w-[120px]">
+                          <Input
+                            type="time"
+                            value={hoursByDay[key].closeTime}
+                            onChange={(e) =>
+                              setHoursByDay((prev) => ({ ...prev, [key]: { ...prev[key], closeTime: e.target.value } }))
+                            }
+                            className="h-9 border-slate-200 w-full"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-slate-500 text-sm">Fechado</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="hours" className="text-xs font-medium text-slate-700">
+                  Resumo (somente leitura)
+                </Label>
+                <Textarea
+                  id="hours"
+                  value={settings.opening_hours || ""}
+                  readOnly
+                  className="border-slate-200 bg-slate-50 focus-visible:ring-0 min-h-[100px] text-xs sm:text-sm"
+                  rows={5}
+                />
+              </div>
             </div>
           </div>
         </Card>
@@ -282,8 +417,19 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="deliveryFee"
                 type="number"
                 step="0.01"
-                value={settings.delivery_fee || 0}
-                onChange={(e) => setSettings({ ...settings, delivery_fee: Number.parseFloat(e.target.value) })}
+                inputMode="decimal"
+                value={deliveryFeeText}
+                onChange={(e) => {
+                  const v = sanitizeNumericText(e.target.value)
+                  setDeliveryFeeText(v)
+                  const n = parseFloat(v)
+                  setSettings({ ...settings, delivery_fee: isNaN(n) ? 0 : n })
+                }}
+                onBlur={() => {
+                  const n = parseFloat(deliveryFeeText)
+                  const normalized = isNaN(n) ? "" : String(n)
+                  setDeliveryFeeText(normalized)
+                }}
                 className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
               />
             </div>
@@ -295,8 +441,19 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="minOrder"
                 type="number"
                 step="0.01"
-                value={settings.min_order_value || 0}
-                onChange={(e) => setSettings({ ...settings, min_order_value: Number.parseFloat(e.target.value) })}
+                inputMode="decimal"
+                value={minOrderText}
+                onChange={(e) => {
+                  const v = sanitizeNumericText(e.target.value)
+                  setMinOrderText(v)
+                  const n = parseFloat(v)
+                  setSettings({ ...settings, min_order_value: isNaN(n) ? 0 : n })
+                }}
+                onBlur={() => {
+                  const n = parseFloat(minOrderText)
+                  const normalized = isNaN(n) ? "" : String(n)
+                  setMinOrderText(normalized)
+                }}
                 className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
               />
             </div>

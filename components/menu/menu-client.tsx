@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import Image from "next/image"
 import { CategorySection } from "./category-section"
 import { Cart } from "./cart"
 import { TableSelector } from "./table-selector"
@@ -11,6 +10,7 @@ import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle } from "
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CategoryNavBar } from "./category-nav-bar"
+import { RestaurantInfoDialog } from "./restaurant-info-dialog"
 
 type Product = {
   id: string
@@ -50,11 +50,30 @@ export function MenuClient({
   tables,
   restaurantName,
   restaurantLogo,
+  deliveryFeeSetting,
+  restaurantInfo,
 }: {
   categories: Category[]
   tables: Table[]
   restaurantName: string
   restaurantLogo: string | null
+  deliveryFeeSetting?: number
+  restaurantInfo?: {
+    name: string
+    logoUrl: string | null
+    address?: string | null
+    phone?: string | null
+    email?: string | null
+    opening_hours?: string | null
+    instagram?: string | null
+    facebook?: string | null
+    whatsapp?: string | null
+    delivery_fee?: number | null
+    min_order_value?: number | null
+    accepts_delivery?: boolean | null
+    accepts_pickup?: boolean | null
+    accepts_dine_in?: boolean | null
+  }
 }) {
   const [orderType, setOrderType] = useState<"delivery" | "dinein" | null>(null)
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null)
@@ -171,7 +190,7 @@ export function MenuClient({
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-  const deliveryFee = orderType === "delivery" ? 5.0 : 0
+  const deliveryFee = orderType === "delivery" ? Number(deliveryFeeSetting ?? 0) : 0
 
   const handleDeliverySubmit = (info: DeliveryInfo) => {
     setDeliveryInfo(info)
@@ -267,24 +286,24 @@ export function MenuClient({
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-left duration-700 min-w-0 flex-1">
-              {restaurantLogo ? (
-                <div className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                  <Image
-                    src={restaurantLogo || "/placeholder.svg"}
-                    alt={restaurantName}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-1.5 sm:p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                  {orderType === "delivery" ? (
-                    <Bike className="h-4 w-4 sm:h-6 sm:w-6 text-white animate-bounce" />
-                  ) : (
-                    <UtensilsCrossed className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                  )}
-                </div>
-              )}
+              <RestaurantInfoDialog
+                info={{
+                  name: restaurantName,
+                  logoUrl: restaurantLogo,
+                  address: restaurantInfo?.address ?? undefined,
+                  phone: restaurantInfo?.phone ?? undefined,
+                  email: restaurantInfo?.email ?? undefined,
+                  opening_hours: restaurantInfo?.opening_hours ?? undefined,
+                  instagram: restaurantInfo?.instagram ?? undefined,
+                  facebook: restaurantInfo?.facebook ?? undefined,
+                  whatsapp: restaurantInfo?.whatsapp ?? undefined,
+                  delivery_fee: restaurantInfo?.delivery_fee ?? undefined,
+                  min_order_value: restaurantInfo?.min_order_value ?? undefined,
+                  accepts_delivery: restaurantInfo?.accepts_delivery ?? undefined,
+                  accepts_pickup: restaurantInfo?.accepts_pickup ?? undefined,
+                  accepts_dine_in: restaurantInfo?.accepts_dine_in ?? undefined,
+                }}
+              />
               <div className="min-w-0 flex-1">
                 <h1 className="text-base sm:text-2xl font-bold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
                   {restaurantName}
@@ -308,7 +327,7 @@ export function MenuClient({
                     variant="ghost"
                     size="sm"
                     onClick={() => router.push("/customer/profile")}
-                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
+                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
                   >
                     <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                     <span className="hidden sm:inline">Perfil</span>
@@ -317,7 +336,7 @@ export function MenuClient({
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
+                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
                   >
                     <LogOut className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                     <span className="hidden sm:inline">Sair</span>
@@ -329,7 +348,7 @@ export function MenuClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => router.push("/customer/login")}
-                  className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4"
+                  className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
                 >
                   <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                   <span className="hidden sm:inline">Entrar</span>
@@ -338,7 +357,7 @@ export function MenuClient({
               <Button
                 size="sm"
                 onClick={() => setIsCartOpen(true)}
-                className="relative bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-2 sm:px-4"
+                className="relative bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-2 sm:px-4 cursor-pointer"
               >
                 <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {totalItems > 0 && (

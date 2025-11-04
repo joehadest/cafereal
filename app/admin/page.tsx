@@ -3,6 +3,7 @@ import { StatsCard } from "@/components/admin/stats-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DollarSign, ShoppingBag, UtensilsCrossed, Package, Clock, CheckCircle2, Bike } from "lucide-react"
+import { DeleteOrderButton } from "@/components/orders/delete-order-button"
 
 export const revalidate = 0
 
@@ -65,7 +66,7 @@ export default async function AdminDashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="space-y-2">
+      <div className="space-y-2 text-center">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent">
           Dashboard
         </h1>
@@ -100,7 +101,7 @@ export default async function AdminDashboard() {
         {/* Recent Orders */}
         <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center text-center">
               <Clock className="h-5 w-5 text-slate-600" />
               <CardTitle className="text-slate-900">Pedidos Recentes</CardTitle>
             </div>
@@ -110,15 +111,17 @@ export default async function AdminDashboard() {
               {recentOrders?.map((order, index) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
+                  className="flex items-center justify-between gap-3 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="space-y-2 flex-1">
+                  <div className="space-y-2 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {order.order_type === "delivery" ? (
                         <>
                           <Bike className="h-4 w-4 text-slate-600" />
-                          <p className="font-semibold text-slate-900">{order.customer_name || "Cliente"}</p>
+                          <p className="font-semibold text-slate-900 truncate">
+                            {order.customer_name || "Cliente"}
+                          </p>
                         </>
                       ) : (
                         <>
@@ -131,14 +134,17 @@ export default async function AdminDashboard() {
                       {getStatusBadge(order.status).label}
                     </Badge>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="font-bold text-slate-600 text-lg">R$ {order.total.toFixed(2)}</p>
-                    <p className="text-xs text-slate-700">
-                      {new Date(order.created_at).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="text-right space-y-1">
+                      <p className="font-bold text-slate-600 text-lg">R$ {order.total.toFixed(2)}</p>
+                      <p className="text-xs text-slate-700">
+                        {new Date(order.created_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <DeleteOrderButton orderId={order.id} />
                   </div>
                 </div>
               ))}
@@ -155,7 +161,7 @@ export default async function AdminDashboard() {
         {/* Completed Orders Today */}
         <Card className="border-green-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center text-center">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
               <CardTitle className="text-green-900">Concluídos Hoje</CardTitle>
             </div>

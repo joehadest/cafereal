@@ -45,6 +45,7 @@ export function ProductsClient({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -162,14 +163,38 @@ export function ProductsClient({
     }
   }
 
+  const filteredProducts = products.filter((p) => {
+    if (categoryFilter === "all") return true
+    if (categoryFilter === "_none") return !p.category_id
+    return p.category_id === categoryFilter
+  })
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col items-center gap-4 text-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-purple-900">Produtos</h1>
-          <p className="text-sm sm:text-base text-purple-700">Gerencie os produtos do cardápio</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Produtos</h1>
+          <p className="text-sm sm:text-base text-slate-700">Gerencie os produtos do cardápio</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto items-center">
+          <div className="w-full sm:w-64">
+            <Label className="text-slate-900 text-xs sm:text-sm mb-1 block">Filtrar por categoria</Label>
+            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v)}>
+              <SelectTrigger className="border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="_none">Sem categoria</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -185,26 +210,26 @@ export function ProductsClient({
                   image_url: "",
                 })
               }}
-              className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Novo Produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-purple-200 w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-purple-900">
+              <DialogTitle className="text-slate-900">
                 {editingProduct ? "Editar Produto" : "Novo Produto"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-purple-900">
+                <Label htmlFor="image" className="text-slate-900">
                   Imagem do Produto
                 </Label>
                 <div className="flex flex-col gap-4">
                   {imagePreview && (
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-purple-200">
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-slate-200">
                       <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
                     </div>
                   )}
@@ -214,15 +239,15 @@ export function ProductsClient({
                       type="file"
                       accept="image/png,image/jpeg,image/jpg"
                       onChange={handleImageChange}
-                      className="border-purple-200"
+                      className="border-slate-200"
                     />
-                    <Upload className="h-5 w-5 text-purple-600" />
+                    <Upload className="h-5 w-5 text-slate-600" />
                   </div>
-                  <p className="text-xs text-purple-600">Formatos aceitos: PNG, JPEG, JPG</p>
+                  <p className="text-xs text-slate-600">Formatos aceitos: PNG, JPEG, JPG</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-purple-900">
+                <Label htmlFor="name" className="text-slate-900">
                   Nome
                 </Label>
                 <Input
@@ -230,22 +255,22 @@ export function ProductsClient({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-purple-900">
+                <Label htmlFor="description" className="text-slate-900">
                   Descrição
                 </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price" className="text-purple-900">
+                <Label htmlFor="price" className="text-slate-900">
                   Preço
                 </Label>
                 <Input
@@ -260,18 +285,18 @@ export function ProductsClient({
                     })
                   }
                   required
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-purple-900">
+                <Label htmlFor="category" className="text-slate-900">
                   Categoria
                 </Label>
                 <Select
                   value={formData.category_id}
                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
                 >
-                  <SelectTrigger className="border-purple-200">
+                  <SelectTrigger className="border-slate-200">
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -284,7 +309,7 @@ export function ProductsClient({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="display_order" className="text-purple-900">
+                <Label htmlFor="display_order" className="text-slate-900">
                   Ordem de Exibição
                 </Label>
                 <Input
@@ -297,39 +322,40 @@ export function ProductsClient({
                       display_order: Number.parseInt(e.target.value),
                     })
                   }
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
-              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isUploading}>
+              <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700" disabled={isUploading}>
                 {isUploading ? "Salvando..." : editingProduct ? "Atualizar" : "Criar"}
               </Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {products.map((product) => (
-          <Card key={product.id} className="border-purple-200 overflow-hidden">
+        {filteredProducts.map((product) => (
+          <Card key={product.id} className="border-slate-200 overflow-hidden">
             {product.image_url && (
               <div className="relative w-full h-48">
                 <Image src={product.image_url || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
               </div>
             )}
             {!product.image_url && (
-              <div className="relative w-full h-48 bg-purple-50 flex items-center justify-center">
-                <ImageIcon className="h-16 w-16 text-purple-300" />
+              <div className="relative w-full h-48 bg-slate-50 flex items-center justify-center">
+                <ImageIcon className="h-16 w-16 text-slate-300" />
               </div>
             )}
             <CardHeader>
-              <CardTitle className="text-purple-900 flex items-center justify-between">
+              <CardTitle className="text-slate-900 flex items-center justify-between">
                 <span className="text-balance">{product.name}</span>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleEdit(product)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-purple-600 hover:bg-purple-50"
+                    className="h-8 w-8 text-slate-600 hover:bg-slate-50"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -345,9 +371,9 @@ export function ProductsClient({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-purple-700 text-pretty">{product.description || "Sem descrição"}</p>
-              <p className="text-2xl font-bold text-purple-600">R$ {product.price.toFixed(2)}</p>
-              <p className="text-xs text-purple-600">Categoria: {product.categories?.name || "Sem categoria"}</p>
+              <p className="text-sm text-slate-700 text-pretty">{product.description || "Sem descrição"}</p>
+              <p className="text-2xl font-bold text-slate-600">R$ {product.price.toFixed(2)}</p>
+              <p className="text-xs text-slate-600">Categoria: {product.categories?.name || "Sem categoria"}</p>
             </CardContent>
           </Card>
         ))}

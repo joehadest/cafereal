@@ -80,10 +80,10 @@ export function TablesClient({ tables }: { tables: Table[] }) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col items-center gap-4 text-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-purple-900">Mesas</h1>
-          <p className="text-sm sm:text-base text-purple-700">Gerencie as mesas do restaurante</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Mesas</h1>
+          <p className="text-sm sm:text-base text-slate-700">Gerencie as mesas do restaurante</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -96,19 +96,19 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                   status: "available",
                 })
               }}
-              className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Mesa
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-purple-200 w-[95vw] sm:w-full max-w-md">
+          <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-purple-900">{editingTable ? "Editar Mesa" : "Nova Mesa"}</DialogTitle>
+              <DialogTitle className="text-slate-900">{editingTable ? "Editar Mesa" : "Nova Mesa"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="table_number" className="text-purple-900">
+                <Label htmlFor="table_number" className="text-slate-900">
                   Número da Mesa
                 </Label>
                 <Input
@@ -122,11 +122,11 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                     })
                   }
                   required
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="capacity" className="text-purple-900">
+                <Label htmlFor="capacity" className="text-slate-900">
                   Capacidade
                 </Label>
                 <Input
@@ -140,15 +140,15 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                     })
                   }
                   required
-                  className="border-purple-200"
+                  className="border-slate-200"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-purple-900">
+                <Label htmlFor="status" className="text-slate-900">
                   Status
                 </Label>
                 <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger className="border-purple-200">
+                  <SelectTrigger className="border-slate-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -158,7 +158,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
+              <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700">
                 {editingTable ? "Atualizar" : "Criar"}
               </Button>
             </form>
@@ -168,16 +168,16 @@ export function TablesClient({ tables }: { tables: Table[] }) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
         {tables.map((table) => (
-          <Card key={table.id} className="border-purple-200">
+          <Card key={table.id} className="border-slate-200">
             <CardHeader className="pb-3">
-              <CardTitle className="text-purple-900 flex items-center justify-between">
+              <CardTitle className="text-slate-900 flex items-center justify-between">
                 <span className="text-2xl">{table.table_number}</span>
                 <div className="flex gap-1">
                   <Button
                     onClick={() => handleEdit(table)}
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-purple-600 hover:bg-purple-50"
+                    className="h-7 w-7 text-slate-600 hover:bg-slate-50"
                   >
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -193,13 +193,13 @@ export function TablesClient({ tables }: { tables: Table[] }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex items-center gap-1 text-sm text-purple-700">
+              <div className="flex items-center gap-1 text-sm text-slate-700">
                 <Users className="h-4 w-4" />
                 {table.capacity} pessoas
               </div>
               <Badge
                 variant={table.status === "available" ? "outline" : "default"}
-                className={table.status === "available" ? "border-green-500 text-green-700" : "bg-purple-600"}
+                className={table.status === "available" ? "border-green-500 text-green-700" : "bg-slate-600"}
               >
                 {table.status === "available" ? "Disponível" : table.status === "occupied" ? "Ocupada" : "Reservada"}
               </Badge>
