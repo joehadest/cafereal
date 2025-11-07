@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { BulkPrintDialog } from "./bulk-print-dialog"
+import type { Order } from "@/types/order"
 
 type OrderItem = {
   id: string
@@ -15,21 +17,6 @@ type OrderItem = {
   quantity: number
   subtotal: number
   notes: string | null
-}
-
-type Order = {
-  id: string
-  order_type: string
-  table_number: number
-  status: string
-  total: number
-  notes: string | null
-  customer_name?: string | null
-  customer_phone?: string | null
-  delivery_address?: string | null
-  delivery_fee?: number
-  created_at: string
-  order_items: OrderItem[]
 }
 
 type Table = {
@@ -42,9 +29,15 @@ type Table = {
 export function OrdersClient({
   orders,
   tables,
+  restaurantInfo,
 }: {
   orders: Order[]
   tables: Table[]
+  restaurantInfo?: {
+    name: string
+    phone?: string
+    address?: string
+  }
 }) {
   const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -80,15 +73,18 @@ export function OrdersClient({
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="sm"
-              className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent w-full sm:w-auto"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-              Atualizar
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <BulkPrintDialog orders={orders} restaurantInfo={restaurantInfo} />
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                size="sm"
+                className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent"
+              >
+                <RefreshCw className={`h-4 w-4 sm:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Atualizar</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

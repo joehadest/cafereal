@@ -3,32 +3,20 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Printer, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { ThermalPrintReceipt } from "./thermal-print-receipt"
+import type { Order } from "@/types/order"
+import { PrintOrderReceipt } from "./print-order-receipt"
+import { PrintKitchenTicket } from "./print-kitchen-ticket"
 
 type OrderItem = {
   id: string
   product_name: string
   quantity: number
   notes: string | null
-}
-
-type Order = {
-  id: string
-  order_type: string
-  table_number: number
-  status: string
-  total: number
-  notes: string | null
-  customer_name?: string | null
-  customer_phone?: string | null
-  delivery_address?: string | null
-  delivery_fee?: number
-  created_at: string
-  order_items: OrderItem[]
 }
 
 const statusConfig = {
@@ -58,11 +46,15 @@ const statusConfig = {
   },
 }
 
-export function OrderCard({ order }: { order: Order }) {
+export function OrderCard({
+  order,
+  restaurantInfo,
+}: { order: Order; restaurantInfo?: { name: string; phone?: string; address?: string } }) {
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showPrint, setShowPrint] = useState(false)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
+  const [printType, setPrintType] = useState<"receipt" | "kitchen">("kitchen")
   const config = statusConfig[order.status as keyof typeof statusConfig]
 
   const isDelivery = order.order_type === "delivery"
@@ -97,11 +89,9 @@ export function OrderCard({ order }: { order: Order }) {
     const supabase = createClient()
 
     try {
-      // Primeiro deletar os itens do pedido
       const { error: itemsError } = await supabase.from("order_items").delete().eq("order_id", order.id)
       if (itemsError) throw itemsError
 
-      // Depois deletar o pedido
       const { error: orderError } = await supabase.from("orders").delete().eq("id", order.id)
       if (orderError) throw orderError
 
@@ -114,11 +104,11 @@ export function OrderCard({ order }: { order: Order }) {
     }
   }
 
-  const handlePrint = () => {
-    setShowPrint(true)
+  const handlePrint = (type: "receipt" | "kitchen") => {
+    setPrintType(type)
+    setShowPrintDialog(false)
     setTimeout(() => {
       window.print()
-      setShowPrint(false)
     }, 100)
   }
 
@@ -152,7 +142,7 @@ export function OrderCard({ order }: { order: Order }) {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                onClick={handlePrint}
+                onClick={() => setShowPrintDialog(true)}
                 variant="outline"
                 size="icon"
                 className="border-orange-300 text-orange-900 hover:bg-orange-50 bg-transparent hover:scale-110 hover:rotate-12 transition-all duration-300"
@@ -250,7 +240,61 @@ export function OrderCard({ order }: { order: Order }) {
         </CardFooter>
       </Card>
 
-      {showPrint && <ThermalPrintReceipt order={order} />}
+      <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 border-b border-slate-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-slate-600 rounded-lg">
+                <Printer className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Escolher Formato</h2>
+            </div>
+            <p className="text-sm text-slate-600 ml-14">Selecione o tipo de impressão para este pedido</p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <button
+              onClick={() => handlePrint("kitchen")}
+              className="group w-full p-5 flex items-start gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-600 hover:bg-slate-50 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            >
+              <div className="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition-colors">
+                <UtensilsCrossed className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-slate-700">Comanda de Cozinha</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Formato grande com foco nos itens e observações para a equipe da cozinha
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 mt-2 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
+            </button>
+
+            <button
+              onClick={() => handlePrint("receipt")}
+              className="group w-full p-5 flex items-start gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-600 hover:bg-slate-50 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            >
+              <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
+                <Printer className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-slate-700">Recibo Completo</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Com valores detalhados, informações do cliente e dados de entrega
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 mt-2 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="hidden print:block">
+        {printType === "kitchen" ? (
+          <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
+        ) : (
+          <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
+        )}
+      </div>
     </>
   )
 }

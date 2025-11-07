@@ -124,3 +124,47 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos de impressão para recibos térmicos e comandas */
+@media print {
+  /* Ocultar tudo exceto o conteúdo de impressão */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-receipt,
+  .print-receipt *,
+  .print-kitchen,
+  .print-kitchen * {
+    visibility: visible;
+  }
+
+  .print-receipt,
+  .print-kitchen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Remover margens de impressão */
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+
+  /* Garantir quebra de página entre múltiplos pedidos */
+  .page-break {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  /* Otimizar impressão em preto e branco */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
