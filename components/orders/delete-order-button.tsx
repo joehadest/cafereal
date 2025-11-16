@@ -32,7 +32,7 @@ export function DeleteOrderButton({ orderId, variant = "icon" }: { orderId: stri
 
   if (variant === "text") {
     return (
-      <Button onClick={handleDelete} variant="outline" size="sm" disabled={isDeleting} className="text-red-600">
+      <Button onClick={handleDelete} variant="outline" size="sm" disabled={isDeleting} className="text-red-600 cursor-pointer">
         <Trash2 className="h-4 w-4 mr-2" />
         {isDeleting ? "Excluindo..." : "Excluir"}
       </Button>
@@ -45,7 +45,7 @@ export function DeleteOrderButton({ orderId, variant = "icon" }: { orderId: stri
       variant="outline"
       size="icon"
       disabled={isDeleting}
-      className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
+      className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent cursor-pointer"
       title="Excluir pedido"
     >
       <Trash2 className="h-4 w-4" />

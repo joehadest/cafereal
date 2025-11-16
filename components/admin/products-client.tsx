@@ -68,11 +68,11 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
   })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col items-center gap-4 text-center">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col items-center gap-4 text-center animate-in slide-in-from-top duration-700">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Produtos</h1>
-          <p className="text-sm sm:text-base text-slate-700">Gerencie os produtos do cardápio com variedades e extras</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 animate-in fade-in slide-in-from-bottom duration-500">Produtos</h1>
+          <p className="text-sm sm:text-base text-slate-700 animate-in fade-in slide-in-from-bottom duration-700 delay-100">Gerencie os produtos do cardápio com variedades e extras</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto items-center">
           <div className="w-full sm:w-64">
@@ -97,7 +97,7 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
               setEditingProduct(null)
               setIsModalOpen(true)
             }}
-            className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
+            className="bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-300 w-full sm:w-auto animate-in fade-in slide-in-from-right duration-500 delay-200"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Produto
@@ -106,11 +106,20 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
+        {filteredProducts.map((product, index) => (
+          <Card 
+            key={product.id} 
+            className="border-slate-200 overflow-hidden hover:shadow-xl hover:scale-[1.02] hover:border-slate-400 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom duration-500 cursor-pointer"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
             {product.image_url && (
-              <div className="relative w-full h-48">
-                <Image src={product.image_url || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+              <div className="relative w-full h-48 overflow-hidden group">
+                <Image 
+                  src={product.image_url || "/placeholder.svg"} 
+                  alt={product.name} 
+                  fill 
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out" 
+                />
               </div>
             )}
             {!product.image_url && (
@@ -126,7 +135,7 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
                     onClick={() => handleEdit(product)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-slate-600 hover:bg-slate-50"
+                    className="h-8 w-8 text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -134,7 +143,7 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
                     onClick={() => handleDelete(product.id)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-red-600 hover:bg-red-50"
+                    className="h-8 w-8 text-red-600 hover:bg-red-50 cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

@@ -45,6 +45,21 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
                     <span className="text-3xl font-bold mr-4">{item.quantity}x</span>
                     <span className="text-xl font-bold flex-1 uppercase leading-tight">{item.product_name}</span>
                   </div>
+                  {item.variety_name && (
+                    <div className="ml-12 mt-1 mb-1">
+                      <p className="text-base font-bold">TAMANHO: {item.variety_name.toUpperCase()}</p>
+                    </div>
+                  )}
+                  {item.order_item_extras && item.order_item_extras.length > 0 && (
+                    <div className="ml-12 mt-1 mb-1">
+                      <p className="text-sm font-bold uppercase mb-1">EXTRAS:</p>
+                      {item.order_item_extras.map((extra) => (
+                        <p key={extra.id} className="text-base font-semibold">
+                          + {extra.extra_name.toUpperCase()} {extra.quantity > 1 && `(x${extra.quantity})`}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                   {item.notes && (
                     <div className="ml-12 mt-2 bg-yellow-100 border-l-4 border-yellow-500 p-2">
                       <p className="text-sm font-bold uppercase mb-1">OBSERVAÇÃO:</p>

@@ -190,13 +190,27 @@ export function OrderCard({
             {order.order_items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex justify-between text-sm bg-orange-50 p-2 rounded hover:bg-orange-100 transition-all duration-300 animate-in slide-in-from-right"
+                className="flex flex-col gap-1 text-sm bg-orange-50 p-2 rounded hover:bg-orange-100 transition-all duration-300 animate-in slide-in-from-right"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <span className="text-orange-900">
-                  {item.quantity}x {item.product_name}
-                </span>
-                {item.notes && <span className="text-orange-600 text-xs italic">{item.notes}</span>}
+                <div className="flex justify-between items-start">
+                  <span className="text-orange-900 font-medium">
+                    {item.quantity}x {item.product_name}
+                  </span>
+                </div>
+                {item.variety_name && (
+                  <div className="text-orange-700 text-xs ml-4">Tamanho: {item.variety_name}</div>
+                )}
+                {item.order_item_extras && item.order_item_extras.length > 0 && (
+                  <div className="text-orange-700 text-xs ml-4">
+                    {item.order_item_extras.map((extra) => (
+                      <div key={extra.id}>
+                        + {extra.extra_name} {extra.quantity > 1 && `(x${extra.quantity})`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {item.notes && <span className="text-orange-600 text-xs italic mt-1">{item.notes}</span>}
               </div>
             ))}
           </div>

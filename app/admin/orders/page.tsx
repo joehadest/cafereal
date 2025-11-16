@@ -6,10 +6,16 @@ export const revalidate = 0 // Disable caching for real-time updates
 export default async function AdminOrdersPage() {
   const supabase = await createClient()
 
-  // Fetch all orders with their items
+  // Fetch all orders with their items, varieties, and extras
   const { data: orders } = await supabase
     .from("orders")
-    .select("*, order_items(*)")
+    .select(`
+      *,
+      order_items(
+        *,
+        order_item_extras(*)
+      )
+    `)
     .in("status", ["pending", "preparing", "ready", "out_for_delivery"])
     .order("created_at", { ascending: false })
 

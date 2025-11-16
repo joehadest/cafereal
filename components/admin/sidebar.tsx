@@ -66,7 +66,7 @@ export function AdminSidebar({ user }: { user: any }) {
     <>
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-slate-200 hover:bg-slate-50 hover:scale-110 hover:shadow-xl transition-all duration-300 cursor-pointer"
         aria-label="Toggle menu"
       >
         {isMobileMenuOpen ? <X className="h-6 w-6 text-slate-600" /> : <Menu className="h-6 w-6 text-slate-600" />}
@@ -74,7 +74,7 @@ export function AdminSidebar({ user }: { user: any }) {
 
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200 cursor-pointer"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -89,7 +89,7 @@ export function AdminSidebar({ user }: { user: any }) {
       >
         <div className="p-6 pt-16 lg:pt-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-transparent">
           <div className="flex items-center gap-3 animate-in fade-in duration-700">
-            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg shadow-lg hover:scale-110 transition-transform duration-300">
+            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300">
               <UtensilsCrossed className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -105,17 +105,17 @@ export function AdminSidebar({ user }: { user: any }) {
             const isActive = pathname === item.href
 
             return (
-              <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className="cursor-pointer">
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full justify-start transition-all duration-300 animate-in slide-in-from-left ${
+                  className={`w-full justify-start transition-all duration-300 animate-in fade-in slide-in-from-left cursor-pointer ${
                     isActive
                       ? "bg-gradient-to-r from-slate-600 to-slate-500 text-white hover:from-slate-700 hover:to-slate-600 shadow-lg scale-105"
                       : "text-slate-900 hover:bg-slate-50 hover:scale-105 hover:shadow-md"
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <Icon className={`h-5 w-5 mr-3 ${isActive ? "" : "group-hover:scale-110 transition-transform"}`} />
+                  <Icon className={`h-5 w-5 mr-3 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
                   {item.label}
                 </Button>
               </Link>
@@ -127,7 +127,7 @@ export function AdminSidebar({ user }: { user: any }) {
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="w-full justify-start border-slate-300 text-slate-900 hover:bg-slate-50 hover:border-slate-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300"
+            className="w-full justify-start border-slate-300 text-slate-900 hover:bg-slate-50 hover:border-slate-500 bg-transparent hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer"
           >
             <LogOut className="h-5 w-5 mr-3" />
             Sair

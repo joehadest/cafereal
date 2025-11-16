@@ -5,21 +5,14 @@ import { CategorySection } from "./category-section"
 import { Cart } from "./cart"
 import { TableSelector } from "./table-selector"
 import { OrderTypeSelector } from "./order-type-selector"
+import { ProductOptionsModal } from "./product-options-modal"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CategoryNavBar } from "./category-nav-bar"
 import { RestaurantInfoDialog } from "./restaurant-info-dialog"
-
-type Product = {
-  id: string
-  name: string
-  description: string
-  price: number
-  image_url: string | null
-  active: boolean
-}
+import type { Product, ProductVariety, ProductExtra } from "@/types/product"
 
 type Category = {
   id: string
@@ -35,8 +28,16 @@ type Table = {
   status: string
 }
 
+type SelectedOptions = {
+  variety: ProductVariety | null
+  extras: { extra: ProductExtra; quantity: number }[]
+}
+
 type CartItem = Product & {
   quantity: number
+  selectedVariety?: ProductVariety | null
+  selectedExtras?: { extra: ProductExtra; quantity: number }[]
+  finalPrice: number
 }
 
 type DeliveryInfo = {
@@ -83,6 +84,8 @@ export function MenuClient({
   const [user, setUser] = useState<any>(null)
   const [isLoadingUserData, setIsLoadingUserData] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
   const router = useRouter()
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -144,7 +147,7 @@ export function MenuClient({
     }
   }
 
-  const addToCart = (product: Product) => {
+  const handleProductClick = (product: Product) => {
     if (!orderType) {
       alert("Por favor, selecione o tipo de pedido primeiro (Delivery ou Comer no Local)")
       return
@@ -166,29 +169,100 @@ export function MenuClient({
       return
     }
 
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id)
-      if (existing) {
-        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
+    // Verificar se o produto tem variedades ou extras
+    // Normalizar variedades e extras para array
+    let varieties: any[] = []
+    let extras: any[] = []
+    
+    if (product.varieties) {
+      if (Array.isArray(product.varieties)) {
+        varieties = product.varieties
+      } else if (typeof product.varieties === 'object') {
+        // Se for objeto, tentar converter para array
+        varieties = Object.values(product.varieties)
       }
-      return [...prev, { ...product, quantity: 1 }]
+    }
+    
+    if (product.extras) {
+      if (Array.isArray(product.extras)) {
+        extras = product.extras
+      } else if (typeof product.extras === 'object') {
+        // Se for objeto, tentar converter para array
+        extras = Object.values(product.extras)
+      }
+    }
+    
+    // Verificar se há variedades ou extras (mesmo que inativos, vamos mostrar o modal)
+    // Se tiver qualquer variedade ou extra, mostra o modal
+    const hasVarieties = varieties.length > 0
+    const hasExtras = extras.length > 0
+
+    if (hasVarieties || hasExtras) {
+      setSelectedProduct(product)
+      setIsOptionsModalOpen(true)
+    } else {
+      // Se não tem opções, adiciona diretamente
+      addToCart(product, { variety: null, extras: [] })
+    }
+  }
+
+  const addToCart = (product: Product, options: SelectedOptions) => {
+    const basePrice = options.variety ? options.variety.price : product.price
+    const extrasPrice = options.extras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
+    const finalPrice = basePrice + extrasPrice
+
+    setCart((prev) => {
+      // Criar uma chave única baseada no produto + variedade + extras
+      const itemKey = `${product.id}-${options.variety?.id || 'base'}-${options.extras.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      
+      const existing = prev.find((item) => {
+        const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+        return itemKey === itemKey2
+      })
+
+      if (existing) {
+        return prev.map((item) => {
+          const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+          if (itemKey === itemKey2) {
+            return { ...item, quantity: item.quantity + 1 }
+          }
+          return item
+        })
+      }
+      
+      return [...prev, { 
+        ...product, 
+        quantity: 1,
+        selectedVariety: options.variety,
+        selectedExtras: options.extras,
+        finalPrice
+      }]
     })
   }
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId))
+  const removeFromCart = (itemKey: string) => {
+    setCart((prev) => prev.filter((item) => {
+      const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      return currentKey !== itemKey
+    }))
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (itemKey: string, quantity: number) => {
     if (quantity === 0) {
-      removeFromCart(productId)
+      removeFromCart(itemKey)
       return
     }
-    setCart((prev) => prev.map((item) => (item.id === productId ? { ...item, quantity } : item)))
+    setCart((prev) => prev.map((item) => {
+      const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      if (currentKey === itemKey) {
+        return { ...item, quantity }
+      }
+      return item
+    }))
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalPrice = cart.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0)
 
   const deliveryFee = orderType === "delivery" ? Number(deliveryFeeSetting ?? 0) : 0
 
@@ -401,7 +475,9 @@ export function MenuClient({
 
       {showMenu && categories.length > 0 && (
         <CategoryNavBar
-          categories={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
+          categories={categories
+            .filter((cat) => cat.active !== false)
+            .map((cat) => ({ id: cat.id, name: cat.name }))}
           activeCategory={activeCategory}
           onCategoryClick={handleCategoryClick}
         />
@@ -418,7 +494,7 @@ export function MenuClient({
                 className="animate-in slide-in-from-bottom duration-700"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                <CategorySection category={category} onAddToCart={addToCart} />
+                <CategorySection category={category} onAddToCart={handleProductClick} />
               </div>
             ))}
           </div>
@@ -458,6 +534,16 @@ export function MenuClient({
           </div>
         </div>
       )}
+
+      <ProductOptionsModal
+        isOpen={isOptionsModalOpen}
+        onClose={() => {
+          setIsOptionsModalOpen(false)
+          setSelectedProduct(null)
+        }}
+        product={selectedProduct}
+        onAddToCart={addToCart}
+      />
 
       <Cart
         isOpen={isCartOpen}

@@ -11,12 +11,46 @@ export default async function HomePage() {
     )
     .single()
 
-  // Fetch categories with products
+  // Fetch categories with products (including inactive products for admin view)
   const { data: categories } = await supabase
     .from("categories")
     .select("*, products(*)")
     .eq("active", true)
     .order("display_order")
+  
+  
+  // Filter products to only show active ones, but keep all active categories
+  if (categories) {
+    categories.forEach((category: any) => {
+      if (category.products) {
+        category.products = category.products.filter((p: any) => p.active === true)
+      }
+    })
+  }
+
+  // Fetch all varieties and extras separately
+  const { data: allVarieties } = await supabase
+    .from("product_varieties")
+    .select("*")
+    .order("display_order")
+
+  const { data: allExtras } = await supabase
+    .from("product_extras")
+    .select("*")
+    .order("display_order")
+
+  // Map varieties and extras to products
+  if (categories && allVarieties && allExtras) {
+    categories.forEach((category) => {
+      if (category.products) {
+        category.products = category.products.map((product: any) => ({
+          ...product,
+          varieties: allVarieties.filter((v) => v.product_id === product.id),
+          extras: allExtras.filter((e) => e.product_id === product.id),
+        }))
+      }
+    })
+  }
 
   // Fetch available tables
   const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")

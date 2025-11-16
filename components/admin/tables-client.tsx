@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Pencil, Trash2, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -79,11 +79,11 @@ export function TablesClient({ tables }: { tables: Table[] }) {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col items-center gap-4 text-center">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col items-center gap-4 text-center animate-in slide-in-from-top duration-700">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Mesas</h1>
-          <p className="text-sm sm:text-base text-slate-700">Gerencie as mesas do restaurante</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 animate-in fade-in slide-in-from-bottom duration-500">Mesas</h1>
+          <p className="text-sm sm:text-base text-slate-700 animate-in fade-in slide-in-from-bottom duration-700 delay-100">Gerencie as mesas do restaurante</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -96,7 +96,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                   status: "available",
                 })
               }}
-              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
+              className="bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-300 w-full sm:w-auto animate-in fade-in slide-in-from-right duration-500 delay-200"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Mesa
@@ -105,6 +105,9 @@ export function TablesClient({ tables }: { tables: Table[] }) {
           <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md">
             <DialogHeader>
               <DialogTitle className="text-slate-900">{editingTable ? "Editar Mesa" : "Nova Mesa"}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {editingTable ? "Edite os detalhes da mesa" : "Adicione uma nova mesa ao restaurante"}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -168,7 +171,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
         {tables.map((table) => (
-          <Card key={table.id} className="border-slate-200">
+          <Card key={table.id} className="border-slate-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="text-slate-900 flex items-center justify-between">
                 <span className="text-2xl">{table.table_number}</span>
@@ -177,7 +180,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                     onClick={() => handleEdit(table)}
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-slate-600 hover:bg-slate-50"
+                    className="h-7 w-7 text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -185,7 +188,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                     onClick={() => handleDelete(table.id)}
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-red-600 hover:bg-red-50"
+                    className="h-7 w-7 text-red-600 hover:bg-red-50 cursor-pointer"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

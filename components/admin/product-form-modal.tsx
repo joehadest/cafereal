@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Trash2, Upload, GripVertical, Package, Star, ListPlus } from 'lucide-react'
@@ -121,6 +120,19 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
     setIsUploading(true)
 
     try {
+      // Validação básica
+      if (!formData.name || formData.name.trim() === "") {
+        alert("Por favor, preencha o nome do produto")
+        setIsUploading(false)
+        return
+      }
+
+      if (formData.price < 0 || isNaN(formData.price)) {
+        alert("Por favor, insira um preço válido")
+        setIsUploading(false)
+        return
+      }
+
       let imageUrl = formData.image_url
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile)
@@ -130,54 +142,130 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
       }
 
       const productData = {
-        ...formData,
-        image_url: imageUrl,
+        name: formData.name.trim(),
+        description: formData.description?.trim() || null,
+        price: Number(formData.price) || 0,
+        category_id: formData.category_id || null,
+        display_order: Number(formData.display_order) || 0,
+        image_url: imageUrl || null,
+        active: formData.active ?? true,
       }
 
       let productId = product?.id
 
       if (product) {
-        const { error } = await supabase.from("products").update(productData).eq("id", product.id)
-        if (error) throw error
+        const { error, data } = await supabase.from("products").update(productData).eq("id", product.id).select().single()
+        if (error) {
+          console.error("Error updating product:", error)
+          throw new Error(error.message || "Erro ao atualizar produto")
+        }
       } else {
         const { data, error } = await supabase.from("products").insert(productData).select().single()
-        if (error) throw error
+        if (error) {
+          console.error("Error creating product:", error)
+          throw new Error(error.message || "Erro ao criar produto")
+        }
+        if (!data) {
+          throw new Error("Produto criado mas nenhum dado retornado")
+        }
         productId = data.id
       }
 
       // Salvar variedades
       if (productId) {
-        // Deletar variedades existentes
-        await supabase.from("product_varieties").delete().eq("product_id", productId)
+        // Verificar se a tabela de variedades existe antes de tentar usar
+        try {
+          // Deletar variedades existentes
+          const { error: deleteVarietiesError } = await supabase.from("product_varieties").delete().eq("product_id", productId)
+          if (deleteVarietiesError) {
+            // Se o erro for porque a tabela não existe, apenas logar e continuar
+            if (deleteVarietiesError.message?.includes("schema cache") || deleteVarietiesError.message?.includes("does not exist")) {
+              console.warn("Tabela product_varieties não encontrada. Pulando operações de variedades.")
+            } else {
+              console.error("Error deleting varieties:", deleteVarietiesError)
+            }
+          }
 
-        // Inserir novas variedades
-        if (varieties.length > 0) {
-          const varietiesData = varieties.map((v, index) => ({
-            product_id: productId,
-            name: v.name,
-            price: v.price,
-            display_order: index,
-            active: v.active ?? true,
-          }))
-          const { error: varietiesError } = await supabase.from("product_varieties").insert(varietiesData)
-          if (varietiesError) throw varietiesError
+          // Inserir novas variedades
+          if (varieties.length > 0) {
+            const varietiesData = varieties
+              .filter((v) => v.name && v.name.trim() !== "")
+              .map((v, index) => ({
+                product_id: productId,
+                name: v.name.trim(),
+                price: Number(v.price) || 0,
+                display_order: index,
+                active: v.active ?? true,
+              }))
+            
+            if (varietiesData.length > 0) {
+              const { error: varietiesError } = await supabase.from("product_varieties").insert(varietiesData)
+              if (varietiesError) {
+                // Se o erro for porque a tabela não existe, apenas logar e continuar
+                if (varietiesError.message?.includes("schema cache") || varietiesError.message?.includes("does not exist")) {
+                  console.warn("Tabela product_varieties não encontrada. Variedades não foram salvas.")
+                } else {
+                  console.error("Error inserting varieties:", varietiesError)
+                  throw new Error(varietiesError.message || "Erro ao salvar variedades")
+                }
+              }
+            }
+          }
+        } catch (error) {
+          // Se houver erro ao acessar a tabela, apenas logar e continuar
+          if (error instanceof Error && (error.message.includes("schema cache") || error.message.includes("does not exist"))) {
+            console.warn("Tabela product_varieties não encontrada. Variedades não foram salvas.")
+          } else {
+            throw error
+          }
         }
 
-        // Deletar extras existentes
-        await supabase.from("product_extras").delete().eq("product_id", productId)
+        // Verificar se a tabela de extras existe antes de tentar usar
+        try {
+          // Deletar extras existentes
+          const { error: deleteExtrasError } = await supabase.from("product_extras").delete().eq("product_id", productId)
+          if (deleteExtrasError) {
+            // Se o erro for porque a tabela não existe, apenas logar e continuar
+            if (deleteExtrasError.message?.includes("schema cache") || deleteExtrasError.message?.includes("does not exist")) {
+              console.warn("Tabela product_extras não encontrada. Pulando operações de extras.")
+            } else {
+              console.error("Error deleting extras:", deleteExtrasError)
+            }
+          }
 
-        // Inserir novos extras
-        if (extras.length > 0) {
-          const extrasData = extras.map((e, index) => ({
-            product_id: productId,
-            name: e.name,
-            price: e.price,
-            display_order: index,
-            max_quantity: e.max_quantity,
-            active: e.active ?? true,
-          }))
-          const { error: extrasError } = await supabase.from("product_extras").insert(extrasData)
-          if (extrasError) throw extrasError
+          // Inserir novos extras
+          if (extras.length > 0) {
+            const extrasData = extras
+              .filter((e) => e.name && e.name.trim() !== "")
+              .map((e, index) => ({
+                product_id: productId,
+                name: e.name.trim(),
+                price: Number(e.price) || 0,
+                display_order: index,
+                max_quantity: Number(e.max_quantity) || 10,
+                active: e.active ?? true,
+              }))
+            
+            if (extrasData.length > 0) {
+              const { error: extrasError } = await supabase.from("product_extras").insert(extrasData)
+              if (extrasError) {
+                // Se o erro for porque a tabela não existe, apenas logar e continuar
+                if (extrasError.message?.includes("schema cache") || extrasError.message?.includes("does not exist")) {
+                  console.warn("Tabela product_extras não encontrada. Extras não foram salvos.")
+                } else {
+                  console.error("Error inserting extras:", extrasError)
+                  throw new Error(extrasError.message || "Erro ao salvar extras")
+                }
+              }
+            }
+          }
+        } catch (error) {
+          // Se houver erro ao acessar a tabela, apenas logar e continuar
+          if (error instanceof Error && (error.message.includes("schema cache") || error.message.includes("does not exist"))) {
+            console.warn("Tabela product_extras não encontrada. Extras não foram salvos.")
+          } else {
+            throw error
+          }
         }
       }
 
@@ -186,7 +274,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
       router.refresh()
     } catch (error) {
       console.error("Error saving product:", error)
-      alert("Erro ao salvar produto")
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao salvar produto"
+      alert(`Erro ao salvar produto: ${errorMessage}`)
     } finally {
       setIsUploading(false)
     }
@@ -247,8 +336,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-3xl max-h-[95vh] p-0 overflow-hidden">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+      <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-3xl max-h-[95vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-600 rounded-lg">
               <Package className="h-5 w-5 text-white" />
@@ -257,6 +346,9 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
               <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900">
                 {product ? "Editar Produto" : "Novo Produto"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                {product ? "Edite os detalhes do produto" : "Configure todos os detalhes, variedades e extras do novo produto"}
+              </DialogDescription>
               <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
                 Configure todos os detalhes, variedades e extras
               </p>
@@ -264,9 +356,9 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="px-4 sm:px-6 pt-3 border-b border-slate-200 bg-slate-50">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <div className="px-4 sm:px-6 pt-3 border-b border-slate-200 bg-slate-50 flex-shrink-0">
               <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
                 <TabsTrigger value="details" className="text-xs sm:text-sm data-[state=active]:bg-slate-600 data-[state=active]:text-white">
                   <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -293,7 +385,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1 px-4 sm:px-6">
+            <div className="flex-1 px-4 sm:px-6 min-h-0 overflow-y-auto">
               <TabsContent value="details" className="mt-0 py-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="image" className="text-slate-900 font-semibold">
@@ -355,8 +447,11 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                       id="price"
                       type="number"
                       step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: Number.parseFloat(e.target.value) })}
+                      value={formData.price === 0 ? 0 : formData.price || ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value) || 0
+                        setFormData({ ...formData, price: value })
+                      }}
                       required
                       className="border-slate-200 text-sm"
                       placeholder="0.00"
@@ -392,8 +487,11 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                     <Input
                       id="display_order"
                       type="number"
-                      value={formData.display_order}
-                      onChange={(e) => setFormData({ ...formData, display_order: Number.parseInt(e.target.value) })}
+                      value={formData.display_order === 0 ? 0 : formData.display_order || ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? 0 : Number.parseInt(e.target.value) || 0
+                        setFormData({ ...formData, display_order: value })
+                      }}
                       className="border-slate-200 text-sm"
                       placeholder="0"
                     />
@@ -447,8 +545,11 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={variety.price}
-                                onChange={(e) => updateVariety(index, "price", Number.parseFloat(e.target.value))}
+                                value={variety.price === 0 ? 0 : variety.price || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value) || 0
+                                  updateVariety(index, "price", value)
+                                }}
                                 placeholder="0.00"
                                 className="border-slate-200 text-sm"
                               />
@@ -467,7 +568,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                           onClick={() => removeVariety(index)}
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-red-600 hover:bg-red-50 flex-shrink-0"
+                          className="h-8 w-8 text-red-600 hover:bg-red-50 flex-shrink-0 cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -480,7 +581,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                   type="button"
                   onClick={addVariety}
                   variant="outline"
-                  className="w-full border-slate-300 hover:bg-slate-50 text-slate-700"
+                  className="w-full border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Variedade
@@ -519,8 +620,11 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={extra.price}
-                                onChange={(e) => updateExtra(index, "price", Number.parseFloat(e.target.value))}
+                                value={extra.price === 0 ? 0 : extra.price || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value) || 0
+                                  updateExtra(index, "price", value)
+                                }}
                                 placeholder="0.00"
                                 className="border-slate-200 text-sm"
                               />
@@ -531,8 +635,11 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                               <Label className="text-xs font-semibold text-slate-700">Quantidade Máxima</Label>
                               <Input
                                 type="number"
-                                value={extra.max_quantity}
-                                onChange={(e) => updateExtra(index, "max_quantity", Number.parseInt(e.target.value))}
+                                value={extra.max_quantity === 0 ? 0 : extra.max_quantity || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value === "" ? 0 : Number.parseInt(e.target.value) || 0
+                                  updateExtra(index, "max_quantity", value)
+                                }}
                                 placeholder="10"
                                 className="border-slate-200 text-sm"
                               />
@@ -551,7 +658,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                           onClick={() => removeExtra(index)}
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-red-600 hover:bg-red-50 flex-shrink-0"
+                          className="h-8 w-8 text-red-600 hover:bg-red-50 flex-shrink-0 cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -564,16 +671,16 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                   type="button"
                   onClick={addExtra}
                   variant="outline"
-                  className="w-full border-slate-300 hover:bg-slate-50 text-slate-700"
+                  className="w-full border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Extra
                 </Button>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
 
-          <div className="border-t border-slate-200 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="border-t border-slate-200 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0">
             <Button
               type="button"
               onClick={() => {
@@ -581,14 +688,14 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                 onClose()
               }}
               variant="outline"
-              className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
               disabled={isUploading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-slate-600 hover:bg-slate-700 text-white"
+              className="flex-1 bg-slate-600 hover:bg-slate-700 text-white cursor-pointer"
               disabled={isUploading}
             >
               {isUploading ? "Salvando..." : product ? "Atualizar Produto" : "Criar Produto"}

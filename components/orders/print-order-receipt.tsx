@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import type { Order } from "@/types/order"
 
 interface PrintOrderReceiptProps {
@@ -94,24 +95,47 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
             </tr>
           </thead>
           <tbody>
-            {order.order_items.map((item, index) => (
-              <>
-                <tr key={item.id} className="border-b border-dotted border-gray-300">
-                  <td className="py-2 pr-2">{item.product_name}</td>
-                  <td className="py-2 text-center px-2">{item.quantity}</td>
-                  <td className="py-2 text-right whitespace-nowrap">
-                    R$ {(item.product_price * item.quantity).toFixed(2)}
-                  </td>
-                </tr>
-                {item.notes && (
-                  <tr key={`${item.id}-notes`}>
-                    <td colSpan={3} className="text-[10px] italic text-gray-600 pb-2 pl-4">
-                      OBS: {item.notes}
+            {order.order_items.map((item, index) => {
+              const itemPrice = item.variety_price ?? item.product_price
+              const extrasPrice = (item.order_item_extras || []).reduce(
+                (sum, extra) => sum + extra.extra_price * extra.quantity,
+                0
+              )
+              const itemTotal = (itemPrice + extrasPrice) * item.quantity
+
+              return (
+                <React.Fragment key={item.id}>
+                  <tr className="border-b border-dotted border-gray-300">
+                    <td className="py-2 pr-2">
+                      <div>
+                        <div className="font-medium">{item.product_name}</div>
+                        {item.variety_name && (
+                          <div className="text-[10px] text-gray-600 mt-0.5">Tamanho: {item.variety_name}</div>
+                        )}
+                        {item.order_item_extras && item.order_item_extras.length > 0 && (
+                          <div className="text-[10px] text-gray-600 mt-0.5">
+                            {item.order_item_extras.map((extra) => (
+                              <div key={extra.id}>
+                                + {extra.extra_name} {extra.quantity > 1 && `(x${extra.quantity})`}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
+                    <td className="py-2 text-center px-2">{item.quantity}</td>
+                    <td className="py-2 text-right whitespace-nowrap">R$ {itemTotal.toFixed(2)}</td>
                   </tr>
-                )}
-              </>
-            ))}
+                  {item.notes && (
+                    <tr>
+                      <td colSpan={3} className="text-[10px] italic text-gray-600 pb-2 pl-4">
+                        OBS: {item.notes}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )
+            })}
           </tbody>
         </table>
       </div>

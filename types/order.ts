@@ -1,3 +1,12 @@
+export type OrderItemExtra = {
+  id: string
+  order_item_id: string
+  extra_id: string
+  extra_name: string
+  extra_price: number
+  quantity: number
+}
+
 export type OrderItem = {
   id: string
   product_name: string
@@ -5,6 +14,10 @@ export type OrderItem = {
   quantity: number
   subtotal: number
   notes: string | null
+  variety_id?: string | null
+  variety_name?: string | null
+  variety_price?: number | null
+  order_item_extras?: OrderItemExtra[]
 }
 
 export type Order = {

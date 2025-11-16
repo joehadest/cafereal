@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -79,11 +79,11 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      <div className="flex flex-col items-center gap-4 text-center">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col items-center gap-4 text-center animate-in slide-in-from-top duration-700">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorias</h1>
-          <p className="text-sm sm:text-base text-slate-700">Gerencie as categorias do cardápio</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 animate-in fade-in slide-in-from-bottom duration-500">Categorias</h1>
+          <p className="text-sm sm:text-base text-slate-700 animate-in fade-in slide-in-from-bottom duration-700 delay-100">Gerencie as categorias do cardápio</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -92,7 +92,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                 setEditingCategory(null)
                 setFormData({ name: "", description: "", display_order: 0 })
               }}
-              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
+              className="bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-300 w-full sm:w-auto animate-in fade-in slide-in-from-right duration-500 delay-200"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Categoria
@@ -103,6 +103,9 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
               <DialogTitle className="text-slate-900">
                 {editingCategory ? "Editar Categoria" : "Nova Categoria"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                {editingCategory ? "Edite os detalhes da categoria" : "Crie uma nova categoria para organizar os produtos"}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -155,7 +158,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {categories.map((category) => (
-          <Card key={category.id} className="border-slate-200">
+          <Card key={category.id} className="border-slate-200 cursor-pointer">
             <CardHeader>
               <CardTitle className="text-slate-900 flex items-center justify-between">
                 <span>{category.name}</span>
@@ -164,7 +167,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                     onClick={() => handleEdit(category)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-slate-600 hover:bg-slate-50"
+                    className="h-8 w-8 text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -172,7 +175,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
                     onClick={() => handleDelete(category.id)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-red-600 hover:bg-red-50"
+                    className="h-8 w-8 text-red-600 hover:bg-red-50 cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

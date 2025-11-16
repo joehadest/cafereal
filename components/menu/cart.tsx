@@ -3,15 +3,20 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import type { ProductVariety, ProductExtra } from "@/types/product"
 
 type CartItem = {
   id: string
   name: string
   price: number
   quantity: number
+  finalPrice: number
+  selectedVariety?: ProductVariety | null
+  selectedExtras?: { extra: ProductExtra; quantity: number }[]
 }
 
 type DeliveryInfo = {
@@ -39,12 +44,14 @@ export function Cart({
   tableNumber: number | null
   deliveryInfo: DeliveryInfo | null
   deliveryFee: number
-  onUpdateQuantity: (productId: string, quantity: number) => void
-  onRemoveItem: (productId: string) => void
+  onUpdateQuantity: (itemKey: string, quantity: number) => void
+  onRemoveItem: (itemKey: string) => void
   totalPrice: number
 }) {
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | "dinein" | null>(null)
   const router = useRouter()
 
   const finalTotal = totalPrice + deliveryFee
@@ -79,25 +86,51 @@ export function Cart({
 
       if (orderError) throw orderError
 
+      // Inserir itens do pedido com variedades
       const orderItems = cart.map((item) => ({
         order_id: order.id,
         product_id: item.id,
         product_name: item.name,
-        product_price: item.price,
+        product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
         quantity: item.quantity,
-        subtotal: item.price * item.quantity,
+        subtotal: item.finalPrice * item.quantity,
+        variety_id: item.selectedVariety?.id || null,
+        variety_name: item.selectedVariety?.name || null,
+        variety_price: item.selectedVariety?.price || null,
       }))
 
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
+      const { data: insertedItems, error: itemsError } = await supabase.from("order_items").insert(orderItems).select()
 
       if (itemsError) throw itemsError
 
-      const message =
-        orderType === "delivery"
-          ? "Pedido de delivery enviado com sucesso! Aguarde a confirmação."
-          : "Pedido enviado com sucesso! Aguarde a confirmação."
-      alert(message)
-      onClose()
+      // Inserir extras de cada item
+      if (insertedItems) {
+        const extrasToInsert: any[] = []
+        cart.forEach((item, cartIndex) => {
+          const orderItem = insertedItems[cartIndex]
+          if (item.selectedExtras && item.selectedExtras.length > 0 && orderItem) {
+            item.selectedExtras.forEach((extraItem) => {
+              extrasToInsert.push({
+                order_item_id: orderItem.id,
+                extra_id: extraItem.extra.id,
+                extra_name: extraItem.extra.name,
+                extra_price: extraItem.extra.price,
+                quantity: extraItem.quantity,
+              })
+            })
+          }
+        })
+
+        if (extrasToInsert.length > 0) {
+          const { error: extrasError } = await supabase.from("order_item_extras").insert(extrasToInsert)
+          if (extrasError) throw extrasError
+        }
+      }
+
+      // Mostrar modal de sucesso (não fechar o carrinho ainda)
+      setOrderTypeMessage(orderType)
+      setShowSuccessModal(true)
+      // Não chamar onClose() aqui - deixar o modal controlar
       router.refresh()
     } catch (error) {
       console.error("Error submitting order:", error)
@@ -105,6 +138,78 @@ export function Cart({
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Se o modal de sucesso estiver aberto, não renderizar o carrinho
+  if (showSuccessModal) {
+    return (
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md p-0 overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+          <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 p-6 sm:p-8 text-center relative overflow-hidden">
+            {/* Efeito de brilho animado */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] -skew-x-12" />
+            
+            <div className="relative z-10">
+              {/* Ícone de sucesso animado */}
+              <div className="mx-auto mb-4 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg animate-in zoom-in duration-500">
+                <CheckCircle className="h-12 w-12 sm:h-14 sm:w-14 text-white animate-in scale-in duration-700 delay-200" />
+              </div>
+              
+              {/* Ícones decorativos */}
+              <div className="absolute top-4 right-4 opacity-20">
+                <Sparkles className="h-8 w-8 text-green-600 animate-pulse" />
+              </div>
+              <div className="absolute bottom-4 left-4 opacity-20">
+                <Sparkles className="h-6 w-6 text-emerald-600 animate-pulse delay-300" />
+              </div>
+
+              <DialogTitle className="text-2xl sm:text-3xl font-bold text-green-900 mb-2 animate-in slide-in-from-bottom duration-500 delay-100">
+                Pedido Enviado!
+              </DialogTitle>
+              <DialogDescription className="text-base sm:text-lg text-green-800 animate-in slide-in-from-bottom duration-500 delay-200">
+                {orderTypeMessage === "delivery" ? (
+                  <>
+                    <p className="font-semibold mb-2">🍕 Seu pedido de delivery foi enviado com sucesso!</p>
+                    <p className="text-sm text-green-700">
+                      Aguarde a confirmação. Entraremos em contato em breve!
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold mb-2">🍽️ Seu pedido foi enviado com sucesso!</p>
+                    <p className="text-sm text-green-700">
+                      Aguarde a confirmação. Seu pedido será preparado em breve!
+                    </p>
+                  </>
+                )}
+              </DialogDescription>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-4 bg-white">
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <p className="text-sm text-slate-700 text-center">
+                <span className="font-semibold text-slate-900">Obrigado pela preferência!</span>
+                <br />
+                <span className="text-slate-600">Seu pedido está sendo processado.</span>
+              </p>
+            </div>
+
+            <Button
+              onClick={() => {
+                setShowSuccessModal(false)
+                onClose() // Fechar o carrinho também
+                // Limpar o carrinho e resetar
+                window.location.href = "/"
+              }}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold py-6 text-base sm:text-lg"
+            >
+              Continuar Navegando
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   if (!isOpen) return null
@@ -173,24 +278,38 @@ export function Cart({
                 </div>
               )}
 
-              {cart.map((item, index) => (
+              {cart.map((item, index) => {
+                const itemKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+                return (
                 <div
-                  key={item.id}
-                  className="group flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 animate-in slide-in-from-right"
+                  key={itemKey}
+                  className="group flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-lg hover:scale-[1.01] transition-all duration-300 hover:border-slate-400 animate-in fade-in slide-in-from-right duration-500"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate group-hover:text-slate-600 transition-colors">
                       {item.name}
                     </h3>
-                    <p className="text-sm text-slate-700 font-medium mt-1">R$ {item.price.toFixed(2)}</p>
+                    {item.selectedVariety && (
+                      <p className="text-xs text-slate-600 mt-0.5">Tamanho: {item.selectedVariety.name}</p>
+                    )}
+                    {item.selectedExtras && item.selectedExtras.length > 0 && (
+                      <div className="text-xs text-slate-600 mt-0.5 space-y-0.5">
+                        {item.selectedExtras.map((extraItem) => (
+                          <p key={extraItem.extra.id}>
+                            {extraItem.extra.name} {extraItem.quantity > 1 && `(x${extraItem.quantity})`}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-sm text-slate-700 font-medium mt-1">R$ {item.finalPrice.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     <Button
-                      onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => onUpdateQuantity(itemKey, item.quantity - 1)}
                       size="icon"
                       variant="outline"
-                      className="h-7 w-7 sm:h-8 sm:w-8 border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-all duration-200 hover:scale-110"
+                      className="h-7 w-7 sm:h-8 sm:w-8 border-slate-300 hover:bg-red-50 hover:border-red-300 transition-all duration-200 hover:scale-110 active:scale-95"
                     >
                       <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
                     </Button>
@@ -198,24 +317,24 @@ export function Cart({
                       {item.quantity}
                     </span>
                     <Button
-                      onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => onUpdateQuantity(itemKey, item.quantity + 1)}
                       size="icon"
                       variant="outline"
-                      className="h-7 w-7 sm:h-8 sm:w-8 border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-all duration-200 hover:scale-110"
+                      className="h-7 w-7 sm:h-8 sm:w-8 border-slate-300 hover:bg-green-50 hover:border-green-300 transition-all duration-200 hover:scale-110 active:scale-95"
                     >
                       <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
                     </Button>
                     <Button
-                      onClick={() => onRemoveItem(item.id)}
+                      onClick={() => onRemoveItem(itemKey)}
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 hover:scale-110"
+                      className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 hover:scale-110 active:scale-95"
                     >
                       <X className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </div>
-              ))}
+              )})}
 
               <div className="pt-2 animate-in fade-in duration-500 delay-300">
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Observações (opcional)</label>

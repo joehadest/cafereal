@@ -66,11 +66,11 @@ export default async function AdminDashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent">
+      <div className="space-y-2 text-center animate-in fade-in slide-in-from-top duration-700">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom duration-500">
           Dashboard
         </h1>
-        <p className="text-slate-700 text-sm sm:text-base lg:text-lg">Visão geral do restaurante em tempo real</p>
+        <p className="text-slate-700 text-sm sm:text-base lg:text-lg animate-in fade-in slide-in-from-bottom duration-700 delay-100">Visão geral do restaurante em tempo real</p>
       </div>
 
       {/* Stats Grid */}
@@ -99,7 +99,7 @@ export default async function AdminDashboard() {
       {/* Recent and Completed Orders Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
-        <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="border-slate-200 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-left duration-500">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
             <div className="flex items-center gap-2 justify-center text-center">
               <Clock className="h-5 w-5 text-slate-600" />
@@ -111,7 +111,7 @@ export default async function AdminDashboard() {
               {recentOrders?.map((order, index) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between gap-3 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left"
+                  className="flex items-center justify-between gap-3 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-left cursor-pointer"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="space-y-2 flex-1 min-w-0">
@@ -159,7 +159,7 @@ export default async function AdminDashboard() {
         </Card>
 
         {/* Completed Orders Today */}
-        <Card className="border-green-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="border-green-200 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-right duration-500">
           <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
             <div className="flex items-center gap-2 justify-center text-center">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -171,7 +171,7 @@ export default async function AdminDashboard() {
               {completedOrders?.map((order, index) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-white rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-right"
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-white rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md animate-in slide-in-from-right cursor-pointer"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="space-y-2 flex-1">

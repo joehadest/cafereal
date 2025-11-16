@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { OrderCard } from "./order-card"
 import { TableStatus } from "./table-status"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed } from "lucide-react"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BulkPrintDialog } from "./bulk-print-dialog"
 import type { Order } from "@/types/order"
+import { useOrderNotifications } from "@/hooks/use-order-notifications"
 
 type OrderItem = {
   id: string
@@ -41,6 +42,25 @@ export function OrdersClient({
 }) {
   const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  // Função para atualizar a página quando detectar novo pedido
+  const handleNewOrder = () => {
+    router.refresh()
+  }
+  
+  const { permission, isEnabled, requestPermission } = useOrderNotifications(handleNewOrder)
+
+  // Escutar cliques em notificações para atualizar a página
+  useEffect(() => {
+    const handleNotificationClick = () => {
+      router.refresh()
+    }
+
+    window.addEventListener("order-notification-clicked", handleNotificationClick)
+    return () => {
+      window.removeEventListener("order-notification-clicked", handleNotificationClick)
+    }
+  }, [router])
 
   const handleRefresh = () => {
     setIsRefreshing(true)
@@ -74,6 +94,46 @@ export function OrdersClient({
               </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
+              {permission !== "granted" && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      const perm = await requestPermission()
+                      if (perm === "granted") {
+                        // Pequeno delay para garantir que o estado foi atualizado
+                        setTimeout(() => {
+                          // Forçar atualização do componente
+                          router.refresh()
+                        }, 100)
+                      } else if (perm === "denied") {
+                        alert("Permissão negada. Para ativar notificações, acesse as configurações do navegador e permita notificações para este site.")
+                      }
+                    } catch (error) {
+                      console.error("Erro ao solicitar permissão:", error)
+                      alert("Erro ao solicitar permissão de notificações. Tente novamente.")
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent cursor-pointer"
+                  title="Clique para ativar notificações de novos pedidos"
+                >
+                  <Bell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Ativar Notificações</span>
+                </Button>
+              )}
+              {permission === "granted" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent"
+                  title="Notificações ativadas"
+                  disabled
+                >
+                  <Bell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Ativado</span>
+                </Button>
+              )}
               <BulkPrintDialog orders={orders} restaurantInfo={restaurantInfo} />
               <Button
                 onClick={handleRefresh}
