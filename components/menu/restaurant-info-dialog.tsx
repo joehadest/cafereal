@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { MapPin, Phone, Mail, Instagram, Facebook, MessageCircle, Clock, CheckCircle2, XCircle, DollarSign, Info } from "lucide-react"
 
 type RestaurantInfo = {
@@ -21,24 +22,38 @@ type RestaurantInfo = {
   accepts_dine_in?: boolean | null
 }
 
-export function RestaurantInfoDialog({ info }: { info: RestaurantInfo }) {
+type RestaurantInfoDialogProps = {
+  info: RestaurantInfo
+  showButton?: boolean
+}
+
+export function RestaurantInfoDialog({ info, showButton = false }: RestaurantInfoDialogProps) {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:scale-110 transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
-          aria-label="Informações do estabelecimento"
-        >
-          {info.logoUrl ? (
-            <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
-              <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-          )}
-        </button>
-      </DialogTrigger>
+      {showButton ? (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Info className="h-4 w-4" />
+            <span className="hidden sm:inline">Informações</span>
+          </Button>
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+            aria-label="Informações do estabelecimento"
+          >
+            {info.logoUrl ? (
+              <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
+                <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+            )}
+          </button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg border-slate-200">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -57,8 +72,19 @@ export function RestaurantInfoDialog({ info }: { info: RestaurantInfo }) {
         <div className="space-y-4">
           {info.address && (
             <div className="flex items-start gap-2 text-slate-800">
-              <MapPin className="h-4 w-4 mt-1 text-slate-600" />
-              <p className="leading-snug">{info.address}</p>
+              <MapPin className="h-4 w-4 mt-1 text-slate-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="leading-snug mb-1">{info.address}</p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(info.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-slate-600 hover:text-slate-900 hover:underline inline-flex items-center gap-1"
+                >
+                  <MapPin className="h-3 w-3" />
+                  Ver no mapa
+                </a>
+              </div>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

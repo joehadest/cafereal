@@ -108,22 +108,22 @@ export function OrderCard({
 
   return (
     <>
-      <Card className="border-orange-200 hover:shadow-2xl hover:scale-[1.02] hover:border-orange-400 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Card className="border-orange-200 hover:shadow-md hover:border-orange-400 transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               {isDelivery ? (
-                <div className="flex items-center gap-2 group">
-                  <Bike className="h-5 w-5 text-orange-600 group-hover:animate-bounce" />
+                <div className="flex items-center gap-2">
+                  <Bike className="h-5 w-5 text-orange-600" />
                   <span className="text-xl font-bold text-orange-900">Delivery</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 group">
-                  <UtensilsCrossed className="h-5 w-5 text-orange-600 group-hover:rotate-12 transition-transform duration-300" />
+                <div className="flex items-center gap-2">
+                  <UtensilsCrossed className="h-5 w-5 text-orange-600" />
                   <span className="text-xl font-bold text-orange-900">Mesa {order.table_number}</span>
                 </div>
               )}
-              <Badge className={`${config.color} text-white border-0 animate-in zoom-in duration-300`}>
+              <Badge className={`${config.color} text-white border-0`}>
                 {config.label}
               </Badge>
             </div>
@@ -133,13 +133,13 @@ export function OrderCard({
                 disabled={isDeleting}
                 variant="outline"
                 size="icon"
-                className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent hover:scale-110 transition-all duration-300"
+                className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
                 title="Excluir pedido"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-1 text-sm text-orange-700">
-                <Clock className="h-4 w-4 animate-pulse" />
+                <Clock className="h-4 w-4" />
                 {timeAgo}
               </div>
             </div>
@@ -148,7 +148,7 @@ export function OrderCard({
 
         <CardContent className="space-y-3">
           {isDelivery && (order.customer_name || order.customer_phone || order.delivery_address) && (
-            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 space-y-1 text-sm animate-in slide-in-from-left duration-500 hover:bg-orange-100 transition-colors">
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 space-y-1 text-sm hover:bg-orange-100 transition-colors">
               {order.customer_name && (
                 <div className="flex items-center gap-2 text-orange-900">
                   <User className="h-5 w-5" />
@@ -174,8 +174,7 @@ export function OrderCard({
             {order.order_items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex flex-col gap-1 text-sm bg-orange-50 p-2 rounded hover:bg-orange-100 transition-all duration-300 animate-in slide-in-from-right"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="flex flex-col gap-1 text-sm bg-orange-50 p-2 rounded hover:bg-orange-100 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <span className="text-orange-900 font-medium">

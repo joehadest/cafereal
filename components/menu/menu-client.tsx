@@ -393,6 +393,25 @@ export function MenuClient({
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              <RestaurantInfoDialog
+                info={{
+                  name: restaurantName,
+                  logoUrl: restaurantLogo,
+                  address: restaurantInfo?.address ?? undefined,
+                  phone: restaurantInfo?.phone ?? undefined,
+                  email: restaurantInfo?.email ?? undefined,
+                  opening_hours: restaurantInfo?.opening_hours ?? undefined,
+                  instagram: restaurantInfo?.instagram ?? undefined,
+                  facebook: restaurantInfo?.facebook ?? undefined,
+                  whatsapp: restaurantInfo?.whatsapp ?? undefined,
+                  delivery_fee: restaurantInfo?.delivery_fee ?? undefined,
+                  min_order_value: restaurantInfo?.min_order_value ?? undefined,
+                  accepts_delivery: restaurantInfo?.accepts_delivery ?? undefined,
+                  accepts_pickup: restaurantInfo?.accepts_pickup ?? undefined,
+                  accepts_dine_in: restaurantInfo?.accepts_dine_in ?? undefined,
+                }}
+                showButton={true}
+              />
               {user && (
                 <>
                   <Button
@@ -466,7 +485,7 @@ export function MenuClient({
       )}
 
       {orderType === "dinein" && !selectedTable && (
-        <div className="container mx-auto px-4 py-8 animate-in fade-in slide-in-from-left duration-500">
+        <div className="container mx-auto px-4 py-8">
           <TableSelector tables={tables} onSelectTable={setSelectedTable} onBack={handleBackToOrderType} />
         </div>
       )}
@@ -482,15 +501,13 @@ export function MenuClient({
       )}
 
       {showMenu && (
-        <main className="container mx-auto px-4 py-8 animate-in fade-in duration-700">
+        <main className="container mx-auto px-4 py-8">
           <div className="space-y-12">
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <div
                 key={category.id}
                 ref={(el) => registerCategoryRef(category.id, el)}
                 data-category-id={category.id}
-                className="animate-in slide-in-from-bottom duration-700"
-                style={{ animationDelay: `${index * 150}ms` }}
               >
                 <CategorySection category={category} onAddToCart={handleProductClick} />
               </div>

@@ -68,11 +68,11 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
   })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col items-center gap-4 text-center animate-in slide-in-from-top duration-700">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col items-center gap-4 text-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 animate-in fade-in slide-in-from-bottom duration-500">Produtos</h1>
-          <p className="text-sm sm:text-base text-slate-700 animate-in fade-in slide-in-from-bottom duration-700 delay-100">Gerencie os produtos do cardápio com variedades e extras</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Produtos</h1>
+          <p className="text-sm sm:text-base text-slate-700">Gerencie os produtos do cardápio com variedades e extras</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto items-center">
           <div className="w-full sm:w-64">
@@ -97,7 +97,7 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
               setEditingProduct(null)
               setIsModalOpen(true)
             }}
-            className="bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-300 w-full sm:w-auto animate-in fade-in slide-in-from-right duration-500 delay-200"
+            className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Produto
@@ -105,71 +105,70 @@ export function ProductsClient({ products, categories }: { products: Product[]; 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {filteredProducts.map((product, index) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+        {filteredProducts.map((product) => (
           <Card 
             key={product.id} 
-            className="border-slate-200 overflow-hidden hover:shadow-xl hover:scale-[1.02] hover:border-slate-400 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom duration-500 cursor-pointer"
-            style={{ animationDelay: `${index * 50}ms` }}
+            className="border-slate-200 overflow-hidden hover:shadow-md hover:border-slate-400 transition-shadow cursor-pointer"
           >
             {product.image_url && (
-              <div className="relative w-full h-48 overflow-hidden group">
+              <div className="relative w-full h-32 overflow-hidden group">
                 <Image 
                   src={product.image_url || "/placeholder.svg"} 
                   alt={product.name} 
                   fill 
-                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out" 
+                  className="object-cover" 
                 />
               </div>
             )}
             {!product.image_url && (
-              <div className="relative w-full h-48 bg-slate-50 flex items-center justify-center">
-                <ImageIcon className="h-16 w-16 text-slate-300" />
+              <div className="relative w-full h-32 bg-slate-50 flex items-center justify-center">
+                <ImageIcon className="h-10 w-10 text-slate-300" />
               </div>
             )}
-            <CardHeader>
-              <CardTitle className="text-slate-900 flex items-center justify-between">
-                <span className="text-balance">{product.name}</span>
-                <div className="flex gap-2">
+            <CardHeader className="p-3">
+              <CardTitle className="text-slate-900 flex items-center justify-between text-sm">
+                <span className="text-balance line-clamp-1">{product.name}</span>
+                <div className="flex gap-1">
                   <Button
                     onClick={() => handleEdit(product)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                    className="h-6 w-6 text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-3 w-3" />
                   </Button>
                   <Button
                     onClick={() => handleDelete(product.id)}
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-red-600 hover:bg-red-50 cursor-pointer"
+                    className="h-6 w-6 text-red-600 hover:bg-red-50 cursor-pointer"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-slate-700 text-pretty line-clamp-2">
+            <CardContent className="p-3 pt-0 space-y-1">
+              <p className="text-xs text-slate-700 text-pretty line-clamp-1">
                 {product.description || "Sem descrição"}
               </p>
-              <p className="text-2xl font-bold text-slate-600">R$ {product.price.toFixed(2)}</p>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <p className="text-base font-bold text-slate-600">R$ {product.price.toFixed(2)}</p>
+              <div className="flex flex-wrap gap-1 mt-1">
                 {product.varieties && product.varieties.length > 0 && (
-                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                    <ListPlus className="h-3 w-3 mr-1" />
-                    {product.varieties.length} variedades
+                  <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700 px-1 py-0">
+                    <ListPlus className="h-2 w-2 mr-0.5" />
+                    {product.varieties.length}
                   </Badge>
                 )}
                 {product.extras && product.extras.length > 0 && (
-                  <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">
-                    <Star className="h-3 w-3 mr-1" />
-                    {product.extras.length} extras
+                  <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-700 px-1 py-0">
+                    <Star className="h-2 w-2 mr-0.5" />
+                    {product.extras.length}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-slate-600">Categoria: {product.categories?.name || "Sem categoria"}</p>
+              <p className="text-[10px] text-slate-600 line-clamp-1">Cat: {product.categories?.name || "N/A"}</p>
             </CardContent>
           </Card>
         ))}
