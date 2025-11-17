@@ -12,7 +12,7 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-kitchen hidden print:block bg-white text-black p-4 max-w-[80mm] mx-auto font-mono">
+    <div className="print-kitchen hidden print:block bg-white text-black p-4 max-w-[80mm] mx-auto font-mono overflow-visible">
       {/* Header */}
       <div className="text-center border-b-4 border-black pb-3 mb-3">
         <h1 className="text-3xl font-bold">{restaurantName || "COZINHA"}</h1>
@@ -83,10 +83,23 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
 
       {/* Info Cliente (se Delivery) */}
       {isDelivery && order.customer_name && (
-        <div className="border-t-2 border-dashed border-gray-600 pt-3 mt-3">
+        <div className="border-t-2 border-dashed border-gray-600 pt-3 mt-3 space-y-1">
           <p className="text-sm">
             <strong>Cliente:</strong> {order.customer_name}
           </p>
+          {order.customer_phone && (
+            <p className="text-sm">
+              <strong>Telefone:</strong> {order.customer_phone}
+            </p>
+          )}
+          {order.delivery_address && (
+            <div className="text-sm overflow-visible">
+              <p className="font-bold mb-1">Endereço:</p>
+              <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
+                {order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

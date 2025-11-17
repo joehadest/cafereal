@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles } from "lucide-react"
@@ -52,14 +54,43 @@ export function Cart({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | "dinein" | null>(null)
+  const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const router = useRouter()
 
   const finalTotal = totalPrice + deliveryFee
 
+  // Usar deliveryInfo se existir (usuário logado), senão usar manualDeliveryInfo
+  // IMPORTANTE: Se manualDeliveryInfo foi preenchido, ele tem prioridade sobre deliveryInfo
+  // para evitar duplicação quando o usuário preenche manualmente sem login
+  const effectiveDeliveryInfo = manualDeliveryInfo && (manualDeliveryInfo.customerName || manualDeliveryInfo.customerPhone || manualDeliveryInfo.deliveryAddress)
+    ? manualDeliveryInfo
+    : deliveryInfo || manualDeliveryInfo
+  // Só mostrar modo leitura se vier do deliveryInfo (usuário logado) e não houver dados manuais
+  const shouldShowReadOnly = deliveryInfo !== null && (!manualDeliveryInfo || (!manualDeliveryInfo.customerName && !manualDeliveryInfo.customerPhone && !manualDeliveryInfo.deliveryAddress))
+
   const handleSubmitOrder = async () => {
     if (cart.length === 0) return
     if (orderType === "dinein" && !tableNumber) return
-    if (orderType === "delivery" && !deliveryInfo) return
+    if (orderType === "delivery" && !effectiveDeliveryInfo) {
+      alert("Por favor, preencha todas as informações de entrega")
+      return
+    }
+
+    // Validação adicional para delivery
+    if (orderType === "delivery" && effectiveDeliveryInfo) {
+      if (!effectiveDeliveryInfo.customerName?.trim()) {
+        alert("Por favor, preencha o nome completo")
+        return
+      }
+      if (!effectiveDeliveryInfo.customerPhone?.trim()) {
+        alert("Por favor, preencha o telefone")
+        return
+      }
+      if (!effectiveDeliveryInfo.deliveryAddress?.trim()) {
+        alert("Por favor, preencha o endereço completo")
+        return
+      }
+    }
 
     setIsSubmitting(true)
     const supabase = createClient()
@@ -74,17 +105,26 @@ export function Cart({
 
       if (orderType === "dinein") {
         orderData.table_number = tableNumber
-      } else if (orderType === "delivery") {
+      } else if (orderType === "delivery" && effectiveDeliveryInfo) {
         orderData.table_number = 0
-        orderData.customer_name = deliveryInfo.customerName
-        orderData.customer_phone = deliveryInfo.customerPhone
-        orderData.delivery_address = deliveryInfo.deliveryAddress
-        orderData.delivery_fee = deliveryFee
+        // Garantir que os dados sejam salvos corretamente
+        // Se manualDeliveryInfo foi preenchido, usar apenas ele para evitar duplicação
+        const infoToSave = manualDeliveryInfo && (manualDeliveryInfo.customerName || manualDeliveryInfo.customerPhone || manualDeliveryInfo.deliveryAddress)
+          ? manualDeliveryInfo
+          : effectiveDeliveryInfo
+        orderData.customer_name = infoToSave.customerName.trim()
+        orderData.customer_phone = infoToSave.customerPhone.trim()
+        // Remover quebras de linha e espaços extras do endereço
+        orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
+        orderData.delivery_fee = deliveryFee || 0
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
 
-      if (orderError) throw orderError
+      if (orderError) {
+        console.error("Erro ao criar pedido:", orderError)
+        throw orderError
+      }
 
       // Inserir itens do pedido com variedades
       const orderItems = cart.map((item) => ({
@@ -166,22 +206,25 @@ export function Cart({
               <DialogTitle className="text-2xl sm:text-3xl font-bold text-green-900 mb-2 animate-in slide-in-from-bottom duration-500 delay-100">
                 Pedido Enviado!
               </DialogTitle>
-              <DialogDescription className="text-base sm:text-lg text-green-800 animate-in slide-in-from-bottom duration-500 delay-200">
+              <div className="text-base sm:text-lg text-green-800 animate-in slide-in-from-bottom duration-500 delay-200">
                 {orderTypeMessage === "delivery" ? (
                   <>
-                    <p className="font-semibold mb-2">🍕 Seu pedido de delivery foi enviado com sucesso!</p>
-                    <p className="text-sm text-green-700">
+                    <div className="font-semibold mb-2">🍕 Seu pedido de delivery foi enviado com sucesso!</div>
+                    <div className="text-sm text-green-700">
                       Aguarde a confirmação. Entraremos em contato em breve!
-                    </p>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <p className="font-semibold mb-2">🍽️ Seu pedido foi enviado com sucesso!</p>
-                    <p className="text-sm text-green-700">
+                    <div className="font-semibold mb-2">🍽️ Seu pedido foi enviado com sucesso!</div>
+                    <div className="text-sm text-green-700">
                       Aguarde a confirmação. Seu pedido será preparado em breve!
-                    </p>
+                    </div>
                   </>
                 )}
+              </div>
+              <DialogDescription className="sr-only">
+                Pedido enviado com sucesso. Aguarde a confirmação.
               </DialogDescription>
             </div>
           </div>
@@ -253,28 +296,99 @@ export function Cart({
             </div>
           ) : (
             <>
-              {orderType === "delivery" && deliveryInfo && (
-                <div className="bg-gradient-to-br from-stone-50 to-stone-100/50 p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm space-y-2 sm:space-y-3 animate-in slide-in-from-top duration-300">
+              {orderType === "delivery" && (
+                <div className="bg-gradient-to-br from-stone-50 to-stone-100/50 p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
                   <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm sm:text-base">
                     <div className="p-1.5 bg-slate-200 rounded-lg">
                       <Bike className="h-4 w-4" />
                     </div>
                     <span>Informações de Entrega</span>
                   </div>
-                  <div className="space-y-2 text-sm text-slate-800 pl-7 sm:pl-8">
-                    <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-slate-600 flex-shrink-0" />
-                      <span className="font-medium truncate">{deliveryInfo.customerName}</span>
+                  
+                  {shouldShowReadOnly && effectiveDeliveryInfo ? (
+                    <div className="space-y-2 text-sm text-slate-800 pl-7 sm:pl-8">
+                      <div className="flex items-center gap-2">
+                        <User className="h-3.5 w-3.5 text-slate-600 flex-shrink-0" />
+                        <span className="font-medium truncate">{effectiveDeliveryInfo.customerName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-slate-600 flex-shrink-0" />
+                        <span>{effectiveDeliveryInfo.customerPhone}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-3.5 w-3.5 mt-0.5 text-slate-600 flex-shrink-0" />
+                        <span className="flex-1 break-words">{effectiveDeliveryInfo.deliveryAddress}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5 text-slate-600 flex-shrink-0" />
-                      <span>{deliveryInfo.customerPhone}</span>
+                  ) : (
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cart-customer-name" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                          <User className="h-4 w-4" />
+                          Nome Completo
+                        </Label>
+                        <Input
+                          id="cart-customer-name"
+                          type="text"
+                          placeholder="Seu nome completo"
+                          value={manualDeliveryInfo?.customerName || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value
+                            setManualDeliveryInfo((prev) => ({
+                              customerName: newValue,
+                              customerPhone: prev?.customerPhone || "",
+                              deliveryAddress: prev?.deliveryAddress || "",
+                            }))
+                          }}
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="cart-customer-phone" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                          <Phone className="h-4 w-4" />
+                          Telefone
+                        </Label>
+                        <Input
+                          id="cart-customer-phone"
+                          type="tel"
+                          placeholder="(00) 00000-0000"
+                          value={manualDeliveryInfo?.customerPhone || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value
+                            setManualDeliveryInfo((prev) => ({
+                              customerName: prev?.customerName || "",
+                              customerPhone: newValue,
+                              deliveryAddress: prev?.deliveryAddress || "",
+                            }))
+                          }}
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="cart-delivery-address" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                          <MapPin className="h-4 w-4" />
+                          Endereço Completo
+                        </Label>
+                        <Textarea
+                          id="cart-delivery-address"
+                          placeholder="Rua, número, bairro, cidade, CEP"
+                          value={manualDeliveryInfo?.deliveryAddress || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value
+                            setManualDeliveryInfo((prev) => ({
+                              customerName: prev?.customerName || "",
+                              customerPhone: prev?.customerPhone || "",
+                              deliveryAddress: newValue,
+                            }))
+                          }}
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base resize-none"
+                          rows={3}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-slate-600 flex-shrink-0" />
-                      <span className="flex-1 break-words">{deliveryInfo.deliveryAddress}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -376,7 +490,10 @@ export function Cart({
             <Button
               onClick={handleSubmitOrder}
               disabled={
-                isSubmitting || (!tableNumber && orderType === "dinein") || (!deliveryInfo && orderType === "delivery")
+                isSubmitting || 
+                (!tableNumber && orderType === "dinein") || 
+                (!effectiveDeliveryInfo && orderType === "delivery") ||
+                (orderType === "delivery" && effectiveDeliveryInfo && (!effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress))
               }
               className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white text-base sm:text-lg py-5 sm:py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold"
             >

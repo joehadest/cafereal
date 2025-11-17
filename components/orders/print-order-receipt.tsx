@@ -25,7 +25,7 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
   }
 
   return (
-    <div className="print-receipt hidden print:block bg-white text-black p-6 max-w-[80mm] mx-auto font-mono text-sm">
+    <div className="print-receipt hidden print:block bg-white text-black p-6 max-w-[80mm] mx-auto font-mono text-sm overflow-visible">
       {/* Header do Restaurante */}
       <div className="text-center border-b-2 border-dashed border-gray-800 pb-4 mb-4">
         <h1 className="text-2xl font-bold uppercase mb-2">{restaurantInfo?.name || "Restaurante"}</h1>
@@ -75,10 +75,12 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
             <p>
               <strong>Telefone:</strong> {order.customer_phone}
             </p>
-            <p>
-              <strong>Endereço:</strong>
-            </p>
-            <p className="ml-2 whitespace-pre-wrap">{order.delivery_address}</p>
+            <div className="overflow-visible">
+              <p className="font-bold mb-1">Endereço:</p>
+              <p className="ml-2 break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
+                {order.delivery_address ? order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : ""}
+              </p>
+            </div>
           </div>
         </div>
       )}

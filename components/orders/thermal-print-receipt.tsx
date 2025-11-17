@@ -66,7 +66,7 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
               <p className="text-sm">
                 <strong>Endereço:</strong>
               </p>
-              <p className="text-xs ml-2">{order.delivery_address}</p>
+              <p className="text-xs ml-2">{order.delivery_address ? order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : ""}</p>
             </>
           ) : (
             <p className="font-bold text-lg">MESA {order.table_number}</p>

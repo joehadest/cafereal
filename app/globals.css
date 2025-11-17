@@ -156,6 +156,8 @@
     width: 80mm;
     margin: 0;
     padding: 0;
+    overflow: visible !important;
+    min-height: auto;
   }
 
   /* Remover margens de impressão */
@@ -175,5 +177,28 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
+  }
+
+  /* Garantir que endereços e textos longos sejam exibidos completamente */
+  .print-receipt p,
+  .print-kitchen p,
+  .print-receipt div,
+  .print-kitchen div {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Garantir que endereços não sejam cortados */
+  .print-receipt [class*="delivery"],
+  .print-kitchen [class*="delivery"],
+  .print-receipt [class*="address"],
+  .print-kitchen [class*="address"] {
+    min-height: auto !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
   }
 }

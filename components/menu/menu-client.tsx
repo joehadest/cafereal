@@ -86,6 +86,7 @@ export function MenuClient({
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
+  const [hasChosenContinueWithoutLogin, setHasChosenContinueWithoutLogin] = useState(false)
   const router = useRouter()
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -153,14 +154,11 @@ export function MenuClient({
       return
     }
 
-    if (orderType === "delivery" && !user) {
+    // Mostrar modal de login se não estiver logado e for delivery, mas permitir continuar sem login
+    // Não mostrar se o usuário já escolheu continuar sem login
+    if (orderType === "delivery" && !user && !hasChosenContinueWithoutLogin) {
+      setSelectedProduct(product)
       setShowLoginModal(true)
-      return
-    }
-
-    if (orderType === "delivery" && !deliveryInfo) {
-      alert("Por favor, complete seu cadastro com endereço de entrega")
-      router.push("/customer/profile")
       return
     }
 
@@ -510,7 +508,7 @@ export function MenuClient({
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Login Necessário</h2>
               <p className="text-slate-700">
-                Para adicionar itens ao carrinho e fazer pedidos de delivery, você precisa estar logado.
+                Faça login para usar seus dados salvos e facilitar seus pedidos. Ou continue sem login e preencha seus dados no carrinho.
               </p>
               <div className="space-y-2 pt-4">
                 <Button
@@ -526,8 +524,35 @@ export function MenuClient({
                 >
                   Criar Conta
                 </Button>
-                <Button onClick={() => setShowLoginModal(false)} variant="ghost" className="w-full text-slate-700">
-                  Continuar Navegando
+                <Button 
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    setHasChosenContinueWithoutLogin(true) // Marcar que escolheu continuar sem login
+                    // Permitir continuar sem login - o produto será adicionado ao carrinho
+                    if (selectedProduct) {
+                      const hasVarieties = (selectedProduct.varieties && Array.isArray(selectedProduct.varieties) && selectedProduct.varieties.length > 0) || 
+                                         (selectedProduct.varieties && typeof selectedProduct.varieties === 'object' && Object.keys(selectedProduct.varieties).length > 0)
+                      const hasExtras = (selectedProduct.extras && Array.isArray(selectedProduct.extras) && selectedProduct.extras.length > 0) ||
+                                       (selectedProduct.extras && typeof selectedProduct.extras === 'object' && Object.keys(selectedProduct.extras).length > 0)
+                      
+                      if (hasVarieties || hasExtras) {
+                        setIsOptionsModalOpen(true)
+                      } else {
+                        addToCart(selectedProduct, { variety: null, extras: [] })
+                      }
+                      setSelectedProduct(null)
+                    }
+                  }} 
+                  variant="outline" 
+                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Continuar sem Login
+                </Button>
+                <Button onClick={() => {
+                  setShowLoginModal(false)
+                  setSelectedProduct(null)
+                }} variant="ghost" className="w-full text-slate-700">
+                  Cancelar
                 </Button>
               </div>
             </div>

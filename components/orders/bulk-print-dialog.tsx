@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { createRoot } from "react-dom/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -46,43 +47,102 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
     // Criar elemento temporário com todos os pedidos selecionados
     const printContainer = document.createElement("div")
     printContainer.className = "print-container"
-
-    selectedOrders.forEach((orderId) => {
-      const order = orders.find((o) => o.id === orderId)
-      if (!order) return
-
-      const orderDiv = document.createElement("div")
-      orderDiv.className = "page-break"
-
-      if (printType === "kitchen") {
-        orderDiv.innerHTML = document.querySelector(`[data-kitchen-ticket="${orderId}"]`)?.innerHTML || ""
-      } else {
-        orderDiv.innerHTML = document.querySelector(`[data-receipt="${orderId}"]`)?.innerHTML || ""
-      }
-
-      printContainer.appendChild(orderDiv)
-    })
+    printContainer.style.position = "absolute"
+    printContainer.style.left = "-9999px"
+    printContainer.style.top = "0"
+    printContainer.style.width = "80mm"
+    printContainer.id = "bulk-print-container"
 
     document.body.appendChild(printContainer)
 
+    // Renderizar todos os pedidos selecionados usando React
+    const root = createRoot(printContainer)
+    
+    const ordersToPrint = selectedOrders
+      .map((orderId) => orders.find((o) => o.id === orderId))
+      .filter((order): order is Order => order !== undefined)
+
+    root.render(
+      <div style={{ width: "80mm" }}>
+        {ordersToPrint.map((order, index) => (
+          <div
+            key={order.id}
+            className="print-item"
+            style={{
+              pageBreakAfter: index < ordersToPrint.length - 1 ? "always" : "auto",
+              pageBreakInside: "avoid",
+            }}
+          >
+            {printType === "kitchen" ? (
+              <div className="print-kitchen" style={{ display: "block" }}>
+                <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
+              </div>
+            ) : (
+              <div className="print-receipt" style={{ display: "block" }}>
+                <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+
     // Adicionar estilos de impressão temporários
     const style = document.createElement("style")
+    style.id = "bulk-print-styles"
     style.innerHTML = `
       @media print {
-        body * { visibility: hidden; }
-        .print-container, .print-container * { visibility: visible; }
-        .print-container { position: absolute; left: 0; top: 0; width: 100%; }
-        .page-break { page-break-after: always; }
+        body * { 
+          visibility: hidden !important; 
+        }
+        #bulk-print-container, 
+        #bulk-print-container *, 
+        #bulk-print-container .print-kitchen,
+        #bulk-print-container .print-kitchen *,
+        #bulk-print-container .print-receipt,
+        #bulk-print-container .print-receipt * { 
+          visibility: visible !important; 
+          display: block !important;
+        }
+        #bulk-print-container .hidden {
+          display: block !important;
+          visibility: visible !important;
+        }
+        #bulk-print-container { 
+          position: absolute !important; 
+          left: 0 !important; 
+          top: 0 !important; 
+          width: 80mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #bulk-print-container .print-item {
+          page-break-inside: avoid !important;
+          margin-bottom: 0 !important;
+        }
+        #bulk-print-container .print-item:not(:last-child) {
+          page-break-after: always !important;
+        }
       }
     `
     document.head.appendChild(style)
 
+    // Aguardar um pouco para garantir que o React renderizou tudo
     setTimeout(() => {
       window.print()
-      document.body.removeChild(printContainer)
-      document.head.removeChild(style)
-      setOpen(false)
-    }, 100)
+      // Limpar após impressão
+      setTimeout(() => {
+        root.unmount()
+        if (document.body.contains(printContainer)) {
+          document.body.removeChild(printContainer)
+        }
+        const existingStyle = document.getElementById("bulk-print-styles")
+        if (existingStyle) {
+          document.head.removeChild(existingStyle)
+        }
+        setOpen(false)
+      }, 500)
+    }, 500)
   }
 
   const statusCounts = {
@@ -249,14 +309,22 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
         </DialogContent>
       </Dialog>
 
-      {/* Componentes de impressão escondidos */}
-      <div className="hidden">
+      {/* Componentes de impressão escondidos - renderizados para serem clonados */}
+      <div style={{ position: "absolute", left: "-9999px", top: "0", opacity: 0, pointerEvents: "none" }}>
         {orders.map((order) => (
           <div key={order.id}>
-            <div data-receipt={order.id}>
+            <div 
+              data-receipt={order.id} 
+              className="print-receipt"
+              style={{ display: "block" }}
+            >
               <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
             </div>
-            <div data-kitchen-ticket={order.id}>
+            <div 
+              data-kitchen-ticket={order.id} 
+              className="print-kitchen"
+              style={{ display: "block" }}
+            >
               <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
             </div>
           </div>

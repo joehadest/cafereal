@@ -3,14 +3,11 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Printer, Trash2 } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type { Order } from "@/types/order"
-import { PrintOrderReceipt } from "./print-order-receipt"
-import { PrintKitchenTicket } from "./print-kitchen-ticket"
 
 type OrderItem = {
   id: string
@@ -53,8 +50,6 @@ export function OrderCard({
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showPrintDialog, setShowPrintDialog] = useState(false)
-  const [printType, setPrintType] = useState<"receipt" | "kitchen">("kitchen")
   const config = statusConfig[order.status as keyof typeof statusConfig]
 
   const isDelivery = order.order_type === "delivery"
@@ -104,14 +99,6 @@ export function OrderCard({
     }
   }
 
-  const handlePrint = (type: "receipt" | "kitchen") => {
-    setPrintType(type)
-    setShowPrintDialog(false)
-    setTimeout(() => {
-      window.print()
-    }, 100)
-  }
-
   const timeAgo = new Date(order.created_at).toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -142,15 +129,6 @@ export function OrderCard({
             </div>
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => setShowPrintDialog(true)}
-                variant="outline"
-                size="icon"
-                className="border-orange-300 text-orange-900 hover:bg-orange-50 bg-transparent hover:scale-110 hover:rotate-12 transition-all duration-300"
-                title="Imprimir pedido"
-              >
-                <Printer className="h-4 w-4" />
-              </Button>
-              <Button
                 onClick={handleDeleteOrder}
                 disabled={isDeleting}
                 variant="outline"
@@ -169,20 +147,26 @@ export function OrderCard({
         </CardHeader>
 
         <CardContent className="space-y-3">
-          {isDelivery && (
+          {isDelivery && (order.customer_name || order.customer_phone || order.delivery_address) && (
             <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 space-y-1 text-sm animate-in slide-in-from-left duration-500 hover:bg-orange-100 transition-colors">
-              <div className="flex items-center gap-2 text-orange-900">
-                <User className="h-5 w-5" />
-                <span className="font-semibold">{order.customer_name}</span>
-              </div>
-              <div className="flex items-center gap-2 text-orange-800">
-                <Phone className="h-5 w-5" />
-                <span>{order.customer_phone}</span>
-              </div>
-              <div className="flex items-start gap-2 text-orange-800">
-                <MapPin className="h-5 w-5 mt-0.5" />
-                <span className="text-xs">{order.delivery_address}</span>
-              </div>
+              {order.customer_name && (
+                <div className="flex items-center gap-2 text-orange-900">
+                  <User className="h-5 w-5" />
+                  <span className="font-semibold">{order.customer_name}</span>
+                </div>
+              )}
+              {order.customer_phone && (
+                <div className="flex items-center gap-2 text-orange-800">
+                  <Phone className="h-5 w-5" />
+                  <span>{order.customer_phone}</span>
+                </div>
+              )}
+              {order.delivery_address && (
+                <div className="flex items-start gap-2 text-orange-800">
+                  <MapPin className="h-5 w-5 mt-0.5" />
+                  <span className="text-xs">{order.delivery_address}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -253,62 +237,6 @@ export function OrderCard({
           </Button>
         </CardFooter>
       </Card>
-
-      <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 border-b border-slate-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-slate-600 rounded-lg">
-                <Printer className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900">Escolher Formato</h2>
-            </div>
-            <p className="text-sm text-slate-600 ml-14">Selecione o tipo de impressão para este pedido</p>
-          </div>
-
-          <div className="p-6 space-y-3">
-            <button
-              onClick={() => handlePrint("kitchen")}
-              className="group w-full p-5 flex items-start gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-600 hover:bg-slate-50 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            >
-              <div className="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition-colors">
-                <UtensilsCrossed className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="flex-1 text-left">
-                <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-slate-700">Comanda de Cozinha</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Formato grande com foco nos itens e observações para a equipe da cozinha
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-slate-400 mt-2 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
-            </button>
-
-            <button
-              onClick={() => handlePrint("receipt")}
-              className="group w-full p-5 flex items-start gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-600 hover:bg-slate-50 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            >
-              <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
-                <Printer className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="flex-1 text-left">
-                <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-slate-700">Recibo Completo</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Com valores detalhados, informações do cliente e dados de entrega
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-slate-400 mt-2 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="hidden print:block">
-        {printType === "kitchen" ? (
-          <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
-        ) : (
-          <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
-        )}
-      </div>
     </>
   )
 }
