@@ -185,7 +185,3 @@ Este projeto é privado e de uso exclusivo.
 ## 👨‍💻 Desenvolvimento
 
 Para contribuir ou reportar problemas, abra uma issue no repositório.
-
----
-
-Desenvolvido com ❤️ para restaurantes modernos
