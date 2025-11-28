@@ -1,0 +1,338 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(0) rotate(0deg);
+  }
+}
+
+:root {
+  /* Atualizando paleta de cores para cinza e bege */
+  --background: oklch(0.96 0.01 60); /* Bege muito claro */
+  --foreground: oklch(0.25 0.01 240); /* Cinza muito escuro para texto */
+  --card: oklch(0.98 0.008 60); /* Bege claro para cards */
+  --card-foreground: oklch(0.25 0.01 240);
+  --popover: oklch(0.98 0.008 60);
+  --popover-foreground: oklch(0.25 0.01 240);
+  --primary: oklch(0.45 0.02 240); /* Cinza escuro vibrante */
+  --primary-foreground: oklch(0.98 0.008 60); /* Bege claro para texto em cinza */
+  --secondary: oklch(0.88 0.02 60); /* Bege médio */
+  --secondary-foreground: oklch(0.25 0.01 240);
+  --muted: oklch(0.92 0.015 60); /* Bege claro */
+  --muted-foreground: oklch(0.55 0.02 240); /* Cinza médio para texto muted */
+  --accent: oklch(0.65 0.02 240); /* Cinza médio para accent */
+  --accent-foreground: oklch(0.98 0.008 60);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0.008 60);
+  --border: oklch(0.85 0.02 60); /* Bege para bordas */
+  --input: oklch(0.85 0.02 60);
+  --ring: oklch(0.45 0.02 240); /* Cinza para focus ring */
+  --chart-1: oklch(0.45 0.02 240); /* Cinza escuro */
+  --chart-2: oklch(0.55 0.02 240); /* Cinza médio */
+  --chart-3: oklch(0.65 0.02 240); /* Cinza claro */
+  --chart-4: oklch(0.7 0.04 60); /* Bege escuro */
+  --chart-5: oklch(0.8 0.03 50); /* Bege claro */
+  --radius: 10px;
+  --sidebar: oklch(0.98 0.008 60); /* Bege claro */
+  --sidebar-foreground: oklch(0.25 0.01 240);
+  --sidebar-primary: oklch(0.45 0.02 240); /* Cinza escuro */
+  --sidebar-primary-foreground: oklch(0.98 0.008 60);
+  --sidebar-accent: oklch(0.92 0.015 60); /* Bege claro */
+  --sidebar-accent-foreground: oklch(0.25 0.01 240);
+  --sidebar-border: oklch(0.85 0.02 60);
+  --sidebar-ring: oklch(0.45 0.02 240);
+}
+
+.dark {
+  /* Paleta dark mode com cinza e bege */
+  --background: oklch(0.18 0.01 240); /* Cinza muito escuro */
+  --foreground: oklch(0.95 0.01 60); /* Bege claro para texto */
+  --card: oklch(0.22 0.01 240); /* Cinza escuro para cards */
+  --card-foreground: oklch(0.95 0.01 60);
+  --popover: oklch(0.22 0.01 240);
+  --popover-foreground: oklch(0.95 0.01 60);
+  --primary: oklch(0.65 0.02 240); /* Cinza claro vibrante */
+  --primary-foreground: oklch(0.95 0.01 60);
+  --secondary: oklch(0.3 0.01 240); /* Cinza médio escuro */
+  --secondary-foreground: oklch(0.95 0.01 60);
+  --muted: oklch(0.28 0.01 240);
+  --muted-foreground: oklch(0.7 0.02 240);
+  --accent: oklch(0.55 0.02 240);
+  --accent-foreground: oklch(0.95 0.01 60);
+  --destructive: oklch(0.5 0.2 27);
+  --destructive-foreground: oklch(0.95 0.01 60);
+  --border: oklch(0.3 0.01 240);
+  --input: oklch(0.3 0.01 240);
+  --ring: oklch(0.65 0.02 240);
+  --chart-1: oklch(0.65 0.02 240);
+  --chart-2: oklch(0.7 0.02 240);
+  --chart-3: oklch(0.75 0.02 240);
+  --chart-4: oklch(0.6 0.04 60);
+  --chart-5: oklch(0.7 0.03 50);
+  --sidebar: oklch(0.2 0.01 240);
+  --sidebar-foreground: oklch(0.95 0.01 60);
+  --sidebar-primary: oklch(0.65 0.02 240);
+  --sidebar-primary-foreground: oklch(0.95 0.01 60);
+  --sidebar-accent: oklch(0.28 0.01 240);
+  --sidebar-accent-foreground: oklch(0.95 0.01 60);
+  --sidebar-border: oklch(0.3 0.01 240);
+  --sidebar-ring: oklch(0.65 0.02 240);
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Estilos de impressão para recibos térmicos e comandas */
+@media print {
+  /* Ocultar tudo exceto o conteúdo de impressão */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-receipt,
+  .print-receipt *,
+  .print-kitchen,
+  .print-kitchen * {
+    visibility: visible;
+  }
+
+  .print-receipt,
+  .print-kitchen {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+    min-height: auto !important;
+    max-height: 100vh !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    break-before: avoid !important;
+  }
+
+  /* Remover margens de impressão e evitar páginas em branco */
+  @page {
+    margin: 0 !important;
+    padding: 0 !important;
+    size: 80mm auto !important;
+  }
+
+  /* Garantir que não haja páginas em branco */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ocultar qualquer elemento que possa causar páginas extras */
+  body > *:not(.print-receipt):not(.print-kitchen) {
+    display: none !important;
+  }
+
+  /* Evitar quebra de página dentro do conteúdo */
+  .print-receipt > *,
+  .print-kitchen > * {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Garantir que o último elemento não force uma nova página */
+  .print-receipt > *:last-child,
+  .print-kitchen > *:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Otimizar impressão em preto e branco */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Garantir que endereços e textos longos sejam exibidos completamente */
+  .print-receipt p,
+  .print-kitchen p,
+  .print-receipt div,
+  .print-kitchen div,
+  .print-receipt span,
+  .print-kitchen span {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    box-sizing: border-box;
+  }
+
+  /* Garantir que endereços não sejam cortados */
+  .print-receipt [class*="delivery"],
+  .print-kitchen [class*="delivery"],
+  .print-receipt [class*="address"],
+  .print-kitchen [class*="address"] {
+    min-height: auto !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  /* Melhorar layout responsivo de tabelas e grids */
+  .print-receipt table,
+  .print-kitchen table {
+    width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-receipt .grid,
+  .print-kitchen .grid {
+    display: grid !important;
+    width: 100% !important;
+  }
+
+  /* Garantir que flex containers funcionem corretamente */
+  .print-receipt .flex,
+  .print-kitchen .flex {
+    display: flex !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Melhorar espaçamento e legibilidade - otimizado para 1 página */
+  .print-receipt,
+  .print-kitchen {
+    line-height: 1.25 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 8px 10px !important;
+    max-height: 100% !important;
+  }
+
+  /* Reduzir espaçamentos para caber em 1 página */
+  .print-receipt > div,
+  .print-kitchen > div {
+    margin-bottom: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .print-receipt .mb-2,
+  .print-kitchen .mb-2 {
+    margin-bottom: 6px !important;
+  }
+
+  .print-receipt .mb-3,
+  .print-kitchen .mb-3 {
+    margin-bottom: 8px !important;
+  }
+
+  .print-receipt .pb-2,
+  .print-kitchen .pb-2 {
+    padding-bottom: 6px !important;
+  }
+
+  .print-receipt .pb-3,
+  .print-kitchen .pb-3 {
+    padding-bottom: 8px !important;
+  }
+
+  .print-receipt .space-y-2 > * + *,
+  .print-kitchen .space-y-2 > * + * {
+    margin-top: 4px !important;
+  }
+
+  /* Garantir que não haja quebra de página */
+  .print-receipt,
+  .print-kitchen {
+    orphans: 999 !important;
+    widows: 999 !important;
+  }
+
+  /* Forçar apenas uma página - ocultar qualquer conteúdo após o primeiro */
+  .print-receipt::after,
+  .print-kitchen::after {
+    content: "" !important;
+    display: none !important;
+  }
+
+  /* Garantir que não haja espaçamento que force nova página */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Garantir que todos os textos sejam em negrito */
+  .print-receipt *,
+  .print-kitchen * {
+    font-weight: 700 !important;
+  }
+
+  /* Garantir que badges e status sejam visíveis */
+  .print-receipt [class*="bg-"],
+  .print-kitchen [class*="bg-"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
