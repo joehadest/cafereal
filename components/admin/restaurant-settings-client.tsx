@@ -27,7 +27,6 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
       facebook: "",
       whatsapp: "",
       pix_key: "",
-      csc_token: "",
       cnpj: "",
       delivery_fee: 5.0,
       min_order_value: 20.0,
@@ -478,23 +477,6 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
               />
               <p className="text-xs text-slate-600">
                 Chave PIX para pagamento. Pode ser CPF, CNPJ, email, telefone ou chave aleatória.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cscToken" className="text-sm sm:text-base font-medium text-slate-900 flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                CSC TOKEN (Nota Fiscal)
-              </Label>
-              <Input
-                id="cscToken"
-                type="text"
-                value={settings.csc_token || ""}
-                onChange={(e) => setSettings({ ...settings, csc_token: e.target.value })}
-                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base font-mono"
-                placeholder="7E017DBC-13CA-481E-8604-41D925CC2F46"
-              />
-              <p className="text-xs text-slate-600">
-                Código de Segurança do Contribuinte (CSC TOKEN) para emissão de NFC-e. Este token é fornecido pela SEFAZ.
               </p>
             </div>
             <div className="space-y-2">
