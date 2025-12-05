@@ -14,5 +14,9 @@ export default async function SettingsPage() {
 
   const { data: settings } = await supabase.from("restaurant_settings").select("*").single()
 
-  return <RestaurantSettingsClient initialSettings={settings} />
+  return (
+    <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 lg:px-8">
+      <RestaurantSettingsClient initialSettings={settings} />
+    </div>
+  )
 }

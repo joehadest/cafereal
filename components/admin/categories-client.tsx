@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
@@ -25,6 +25,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [movingCategoryId, setMovingCategoryId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -75,6 +76,87 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
     } catch (error) {
       console.error("Error deleting category:", error)
       alert("Erro ao deletar categoria")
+    }
+  }
+
+  const handleMoveOrder = async (categoryId: string, direction: "left" | "right") => {
+    if (movingCategoryId) return // Evitar cliques múltiplos
+    
+    setMovingCategoryId(categoryId)
+    const supabase = createClient()
+    const sortedCategories = [...categories].sort((a, b) => {
+      // Ordenar por display_order, e se for igual, por ID para garantir ordem consistente
+      if (a.display_order !== b.display_order) {
+        return a.display_order - b.display_order
+      }
+      return a.id.localeCompare(b.id)
+    })
+    
+    const currentIndex = sortedCategories.findIndex((c) => c.id === categoryId)
+
+    if (currentIndex === -1) {
+      setMovingCategoryId(null)
+      return
+    }
+
+    const newIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1
+    if (newIndex < 0 || newIndex >= sortedCategories.length) {
+      setMovingCategoryId(null)
+      return
+    }
+
+    // Recalcular ordens sequencialmente para garantir valores únicos
+    const updatedCategories = sortedCategories.map((c, idx) => ({
+      ...c,
+      display_order: idx + 1
+    }))
+
+    // Trocar posições no array
+    const temp = updatedCategories[currentIndex]
+    updatedCategories[currentIndex] = updatedCategories[newIndex]
+    updatedCategories[newIndex] = temp
+
+    // Recalcular ordens após a troca
+    const finalCategories = updatedCategories.map((c, idx) => ({
+      ...c,
+      display_order: idx + 1
+    }))
+
+    console.log("Movendo categoria:", {
+      current: { id: sortedCategories[currentIndex].id, name: sortedCategories[currentIndex].name },
+      target: { id: sortedCategories[newIndex].id, name: sortedCategories[newIndex].name },
+      direction,
+      newOrders: finalCategories.map(c => ({ id: c.id, name: c.name, order: c.display_order }))
+    })
+
+    try {
+      // Atualizar todas as categorias com as novas ordens
+      const updates = finalCategories.map((c) => ({
+        id: c.id,
+        display_order: c.display_order
+      }))
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from("categories")
+          .update({ display_order: update.display_order })
+          .eq("id", update.id)
+
+        if (error) {
+          console.error(`Erro ao atualizar categoria ${update.id}:`, error)
+          throw error
+        }
+      }
+
+      // Forçar refresh - usar setTimeout para garantir que as atualizações foram commitadas
+      setTimeout(() => {
+        router.refresh()
+        setMovingCategoryId(null)
+      }, 100)
+    } catch (error) {
+      console.error("Error moving category:", error)
+      alert(`Erro ao reorganizar categoria: ${error instanceof Error ? error.message : "Erro desconhecido"}`)
+      setMovingCategoryId(null)
     }
   }
 
@@ -156,38 +238,76 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-        {categories.map((category) => (
-          <Card key={category.id} className="border-slate-200 cursor-pointer hover:shadow-md transition-shadow">
-            <CardHeader className="p-3 sm:p-6">
-              <CardTitle className="text-slate-900 flex items-center justify-between gap-2 text-base sm:text-lg">
-                <span className="flex-1 min-w-0 break-words">{category.name}</span>
-                <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-                  <Button
-                    onClick={() => handleEdit(category)}
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-slate-600 hover:bg-slate-50 cursor-pointer"
-                  >
-                    <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(category.id)}
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:bg-red-50 cursor-pointer"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </Button>
+      <div className="space-y-3">
+        {[...categories].sort((a, b) => a.display_order - b.display_order).map((category, index) => {
+          const sortedCategories = [...categories].sort((a, b) => a.display_order - b.display_order)
+          const canMoveUp = index > 0
+          const canMoveDown = index < sortedCategories.length - 1
+
+          return (
+            <Card key={category.id} className="border-slate-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-3 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex gap-1 pt-1">
+                    <Button
+                      onClick={() => handleMoveOrder(category.id, "left")}
+                      size="icon"
+                      variant="ghost"
+                      disabled={!canMoveUp || movingCategoryId === category.id}
+                      className="h-6 w-6 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Mover para esquerda (antes)"
+                    >
+                      {movingCategoryId === category.id ? (
+                        <div className="h-4 w-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <ChevronLeft className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleMoveOrder(category.id, "right")}
+                      size="icon"
+                      variant="ghost"
+                      disabled={!canMoveDown || movingCategoryId === category.id}
+                      className="h-6 w-6 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Mover para direita (depois)"
+                    >
+                      {movingCategoryId === category.id ? (
+                        <div className="h-4 w-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-slate-900 flex items-center justify-between gap-2 text-base sm:text-lg mb-2">
+                      <span className="flex-1 min-w-0 break-words">{category.name}</span>
+                      <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                        <Button
+                          onClick={() => handleEdit(category)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                        >
+                          <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(category.id)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:bg-red-50 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                    </CardTitle>
+                    <p className="text-xs sm:text-sm text-slate-700 break-words">{category.description || "Sem descrição"}</p>
+                    <p className="text-xs text-slate-600 mt-2">Ordem: {category.display_order}</p>
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-6 pt-0">
-              <p className="text-xs sm:text-sm text-slate-700 break-words">{category.description || "Sem descrição"}</p>
-              <p className="text-xs text-slate-600 mt-2">Ordem: {category.display_order}</p>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

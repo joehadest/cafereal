@@ -9,7 +9,16 @@ interface PrintOrderReceiptProps {
     name: string
     phone?: string
     address?: string
+    cnpj?: string
   }
+}
+
+// Função para formatar CNPJ
+const formatCNPJ = (cnpj: string | null | undefined): string | null => {
+  if (!cnpj) return null
+  const cleanCnpj = cnpj.replace(/\D/g, '')
+  if (cleanCnpj.length !== 14) return cnpj
+  return cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
 export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptProps) {
@@ -198,6 +207,9 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
       {/* Footer */}
       <div className="text-center text-xs mt-2 space-y-0.5 border-t-2 border-gray-800 pt-2">
         <p className="font-bold text-black uppercase">{restaurantInfo?.name || "CAFEREAL"}</p>
+        {restaurantInfo?.cnpj && (
+          <p className="font-bold text-black text-[10px]">CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
+        )}
         <p className="font-bold text-black">Obrigado pela preferência!</p>
         <p className="font-bold text-black">Volte sempre!</p>
         {restaurantInfo?.phone && (

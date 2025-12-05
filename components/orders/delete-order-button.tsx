@@ -50,13 +50,23 @@ export function DeleteOrderButton({ orderId, variant = "icon" }: { orderId: stri
       }
 
       // Forçar atualização completa da página
-      router.push("/admin/orders").catch((error) => {
+      try {
+        const pushResult = router.push("/admin/orders")
+        // Verificar se router.push retorna uma Promise antes de chamar .catch()
+        if (pushResult && typeof pushResult.catch === "function") {
+          pushResult.catch((error) => {
+            console.warn("Erro ao navegar após deletar:", error)
+            // Fallback: tentar apenas refresh
+            router.refresh()
+          })
+        } else {
+          // Se não retornar Promise, apenas fazer refresh
+          router.refresh()
+        }
+      } catch (error) {
         console.warn("Erro ao navegar após deletar:", error)
-        // Fallback: tentar apenas refresh
-        router.refresh().catch((err) => {
-          console.warn("Erro ao atualizar após deletar:", err)
-        })
-      })
+        router.refresh()
+      }
     } catch (e) {
       console.error("Erro completo ao excluir pedido:", e)
       const errorMessage = e instanceof Error ? e.message : "Erro desconhecido"

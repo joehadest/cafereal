@@ -7,7 +7,7 @@ import { TableSelector } from "./table-selector"
 import { OrderTypeSelector } from "./order-type-selector"
 import { ProductOptionsModal } from "./product-options-modal"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle } from "lucide-react"
+import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle, Package } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CategoryNavBar } from "./category-nav-bar"
@@ -385,6 +385,15 @@ export function MenuClient({
                 }}
                 showButton={true}
               />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/customer/orders")}
+                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
+              >
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+                <span className="hidden sm:inline">Meus Pedidos</span>
+              </Button>
               {user && (
                 <>
                   <Button
@@ -465,6 +474,13 @@ export function MenuClient({
         <CategoryNavBar
           categories={categories
             .filter((cat) => cat.active !== false)
+            .sort((a: any, b: any) => {
+              // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
+              if (a.display_order !== b.display_order) {
+                return (a.display_order || 0) - (b.display_order || 0)
+              }
+              return a.id.localeCompare(b.id)
+            })
             .map((cat) => ({ id: cat.id, name: cat.name }))}
           activeCategory={activeCategory}
           onCategoryClick={handleCategoryClick}
@@ -474,15 +490,23 @@ export function MenuClient({
       {showMenu && (
         <main className="container mx-auto px-4 py-8">
           <div className="space-y-12">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                ref={(el) => registerCategoryRef(category.id, el)}
-                data-category-id={category.id}
-              >
-                <CategorySection category={category} onAddToCart={handleProductClick} />
-              </div>
-            ))}
+            {categories
+              .sort((a: any, b: any) => {
+                // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
+                if (a.display_order !== b.display_order) {
+                  return (a.display_order || 0) - (b.display_order || 0)
+                }
+                return a.id.localeCompare(b.id)
+              })
+              .map((category) => (
+                <div
+                  key={category.id}
+                  ref={(el) => registerCategoryRef(category.id, el)}
+                  data-category-id={category.id}
+                >
+                  <CategorySection category={category} onAddToCart={handleProductClick} />
+                </div>
+              ))}
           </div>
         </main>
       )}

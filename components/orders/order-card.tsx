@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -15,6 +15,7 @@ import { createRoot } from "react-dom/client"
 import type { Order } from "@/types/order"
 import { PrintOrderReceipt } from "./print-order-receipt"
 import { PrintKitchenTicket } from "./print-kitchen-ticket"
+import { PrintCustomerTicket } from "./print-customer-ticket"
 
 type OrderItem = {
   id: string
@@ -53,17 +54,19 @@ const statusConfig = {
 function OrderCardComponent({
   order,
   restaurantInfo,
-}: { order: Order; restaurantInfo?: { name: string; phone?: string; address?: string } }) {
+}: { order: Order; restaurantInfo?: { name: string; phone?: string; address?: string; cnpj?: string } }) {
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
-  const [printType, setPrintType] = useState<"receipt" | "kitchen">("receipt")
+  const [printType, setPrintType] = useState<"receipt" | "kitchen" | "customer">("receipt")
   const config = statusConfig[order.status as keyof typeof statusConfig]
 
   const isDelivery = order.order_type === "delivery"
 
   const handleUpdateStatus = async () => {
+    if (!config) return
+    
     setIsUpdating(true)
     const supabase = createClient()
 
@@ -76,12 +79,7 @@ function OrderCardComponent({
       if (error) throw error
 
       try {
-        const refreshResult = router.refresh()
-        if (refreshResult && typeof refreshResult.catch === 'function') {
-          refreshResult.catch((error) => {
-            console.warn("Erro ao atualizar após mudar status:", error)
-          })
-        }
+        router.refresh()
       } catch (error) {
         console.warn("Erro ao atualizar após mudar status:", error)
       }
@@ -157,12 +155,7 @@ function OrderCardComponent({
       // Forçar atualização completa da página após um pequeno delay
       setTimeout(() => {
         try {
-          const refreshResult = router.refresh()
-          if (refreshResult && typeof refreshResult.catch === 'function') {
-            refreshResult.catch((error) => {
-              console.warn("Erro ao atualizar após deletar pedido:", error)
-            })
-          }
+          router.refresh()
         } catch (error) {
           console.warn("Erro ao atualizar após deletar pedido:", error)
         }
@@ -207,6 +200,10 @@ function OrderCardComponent({
           <div className="print-kitchen" style={{ display: "block", visibility: "visible", position: "relative" }}>
             <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
           </div>
+        ) : printType === "customer" ? (
+          <div className="print-customer" style={{ display: "block", visibility: "visible", position: "relative" }}>
+            <PrintCustomerTicket order={order} restaurantInfo={restaurantInfo} />
+          </div>
         ) : (
           <div className="print-receipt" style={{ display: "block", visibility: "visible", position: "relative" }}>
             <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
@@ -225,7 +222,8 @@ function OrderCardComponent({
         visibility: visible !important;
       }
       #print-container-${order.id} .print-receipt,
-      #print-container-${order.id} .print-kitchen {
+      #print-container-${order.id} .print-kitchen,
+      #print-container-${order.id} .print-customer {
         display: block !important;
         visibility: visible !important;
       }
@@ -264,12 +262,15 @@ function OrderCardComponent({
         #print-container-${order.id} .print-kitchen *,
         #print-container-${order.id} .print-receipt,
         #print-container-${order.id} .print-receipt *,
+        #print-container-${order.id} .print-customer,
+        #print-container-${order.id} .print-customer *,
         #print-container-${order.id} .hidden { 
           visibility: visible !important; 
           display: block !important;
         }
         #print-container-${order.id} .print-receipt,
-        #print-container-${order.id} .print-kitchen {
+        #print-container-${order.id} .print-kitchen,
+        #print-container-${order.id} .print-customer {
           position: relative !important;
           left: auto !important;
           top: auto !important;
@@ -319,7 +320,7 @@ function OrderCardComponent({
           htmlEl.classList.remove("hidden")
         }
         // Garantir que elementos com print:block sejam visíveis
-        if (htmlEl.classList.contains("print-receipt") || htmlEl.classList.contains("print-kitchen")) {
+        if (htmlEl.classList.contains("print-receipt") || htmlEl.classList.contains("print-kitchen") || htmlEl.classList.contains("print-customer")) {
           htmlEl.style.display = "block"
           htmlEl.style.visibility = "visible"
         }
@@ -367,7 +368,9 @@ function OrderCardComponent({
     minute: "2-digit",
   })
 
-  const nextLabel = typeof config.nextLabel === "function" ? config.nextLabel(order.order_type) : config.nextLabel
+  const nextLabel = config ? (typeof config.nextLabel === "function" ? config.nextLabel(order.order_type) : config.nextLabel) : "Sem ação"
+  const statusLabel = config?.label || order.status
+  const statusColor = config?.color || "bg-gray-500"
 
   return (
     <>
@@ -386,8 +389,8 @@ function OrderCardComponent({
                   <span className="text-lg sm:text-xl font-bold text-slate-900">Mesa {order.table_number}</span>
                 </div>
               )}
-              <Badge className={`${config.color} text-white border-0 text-xs`}>
-                {config.label}
+              <Badge className={`${statusColor} text-white border-0 text-xs`}>
+                {statusLabel}
               </Badge>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
@@ -412,7 +415,7 @@ function OrderCardComponent({
                       <DialogTitle className="text-lg sm:text-xl">Imprimir Pedido</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <RadioGroup value={printType} onValueChange={(value) => setPrintType(value as "receipt" | "kitchen")}>
+                      <RadioGroup value={printType} onValueChange={(value) => setPrintType(value as "receipt" | "kitchen" | "customer")}>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="receipt" id="receipt" />
                           <Label htmlFor="receipt" className="flex items-center gap-2 cursor-pointer text-sm sm:text-base">
@@ -425,6 +428,13 @@ function OrderCardComponent({
                           <Label htmlFor="kitchen" className="flex items-center gap-2 cursor-pointer text-sm sm:text-base">
                             <ChefHat className="h-4 w-4" />
                             Comanda de Cozinha
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="customer" id="customer" />
+                          <Label htmlFor="customer" className="flex items-center gap-2 cursor-pointer text-sm sm:text-base">
+                            <Receipt className="h-4 w-4" />
+                            Comanda do Cliente {!isDelivery && `(Mesa ${order.table_number})`}
                           </Label>
                         </div>
                       </RadioGroup>
@@ -525,20 +535,22 @@ function OrderCardComponent({
           </div>
         </CardContent>
 
-        <CardFooter className="p-3 sm:p-6 pt-0">
-          <Button
-            onClick={handleUpdateStatus}
-            disabled={isUpdating}
-            className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-sm sm:text-base ${
-              isUpdating ? "animate-pulse" : "hover:scale-105"
-            }`}
-          >
-            {isUpdating ? "Atualizando..." : nextLabel}
-            <ChevronRight
-              className={`h-3 w-3 sm:h-4 sm:w-4 ml-2 ${isUpdating ? "" : "group-hover:translate-x-1 transition-transform"}`}
-            />
-          </Button>
-        </CardFooter>
+        {config && (
+          <CardFooter className="p-3 sm:p-6 pt-0">
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={isUpdating}
+              className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-sm sm:text-base ${
+                isUpdating ? "animate-pulse" : "hover:scale-105"
+              }`}
+            >
+              {isUpdating ? "Atualizando..." : nextLabel}
+              <ChevronRight
+                className={`h-3 w-3 sm:h-4 sm:w-4 ml-2 ${isUpdating ? "" : "group-hover:translate-x-1 transition-transform"}`}
+              />
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </>
   )

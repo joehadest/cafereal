@@ -37,6 +37,7 @@ export function OrdersClient({
     name: string
     phone?: string
     address?: string
+    cnpj?: string
   }
 }) {
   const router = useRouter()
@@ -227,13 +228,14 @@ export function OrdersClient({
   const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
   
   // Usar useMemo para evitar recálculos desnecessários
-  const { deliveryOrders, dineInOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders } = useMemo(() => {
+  const { deliveryOrders, dineInOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
     const delivery = visibleOrders.filter((o) => o.order_type === "delivery")
     const dineIn = visibleOrders.filter((o) => o.order_type === "dine-in")
     const pending = visibleOrders.filter((o) => o.status === "pending")
     const preparing = visibleOrders.filter((o) => o.status === "preparing")
     const ready = visibleOrders.filter((o) => o.status === "ready")
     const outForDelivery = visibleOrders.filter((o) => o.status === "out_for_delivery")
+    const delivered = visibleOrders.filter((o) => o.status === "delivered")
     
     return {
       deliveryOrders: delivery,
@@ -242,14 +244,15 @@ export function OrdersClient({
       preparingOrders: preparing,
       readyOrders: ready,
       outForDeliveryOrders: outForDelivery,
+      deliveredOrders: delivered,
     }
   }, [visibleOrders])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-slate-50">
+    <div className="orders-full-width min-h-screen w-full bg-gradient-to-br from-stone-50 via-stone-100 to-slate-50">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+      <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm w-full">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-slate-600 p-1.5 sm:p-2 rounded-lg">
@@ -320,7 +323,7 @@ export function OrdersClient({
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
+      <main className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="all" className="space-y-4 sm:space-y-6">
           <TabsList className="bg-white border border-slate-200 w-full sm:w-auto grid grid-cols-2 sm:flex">
             <TabsTrigger value="all" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
@@ -409,6 +412,21 @@ export function OrdersClient({
                 </div>
               </section>
             )}
+
+            {/* Delivered Orders */}
+            {deliveredOrders.length > 0 && (
+              <section>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
+                  <span className="bg-emerald-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
+                  Entregues ({deliveredOrders.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {deliveredOrders.map((order) => (
+                    <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                  ))}
+                </div>
+              </section>
+            )}
           </TabsContent>
 
           <TabsContent value="delivery" className="space-y-6 sm:space-y-8">
@@ -446,6 +464,18 @@ export function OrdersClient({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "ready" || o.status === "out_for_delivery")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+                {deliveryOrders.filter((o) => o.status === "delivered").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {deliveryOrders
+                        .filter((o) => o.status === "delivered")
                         .map((order) => (
                           <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                         ))}
@@ -491,6 +521,18 @@ export function OrdersClient({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "ready")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+                {dineInOrders.filter((o) => o.status === "delivered").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {dineInOrders
+                        .filter((o) => o.status === "delivered")
                         .map((order) => (
                           <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                         ))}

@@ -8,5 +8,9 @@ export default async function TablesPage() {
 
   const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")
 
-  return <TablesClient tables={tables || []} />
+  return (
+    <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 lg:px-8">
+      <TablesClient tables={tables || []} />
+    </div>
+  )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -50,7 +51,15 @@ const menuItems = [
   },
 ]
 
-export function AdminSidebar({ user }: { user: any }) {
+export function AdminSidebar({ 
+  user, 
+  restaurantName, 
+  restaurantLogo 
+}: { 
+  user: any
+  restaurantName?: string
+  restaurantLogo?: string | null
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -89,11 +98,23 @@ export function AdminSidebar({ user }: { user: any }) {
       >
         <div className="p-6 pt-16 lg:pt-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-transparent">
           <div className="flex items-center gap-3 animate-in fade-in duration-700">
-            <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300">
-              <UtensilsCrossed className="h-6 w-6 text-white" />
-            </div>
+            {restaurantLogo ? (
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 flex-shrink-0">
+                <Image
+                  src={restaurantLogo}
+                  alt={restaurantName || "Logo"}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 flex-shrink-0">
+                <UtensilsCrossed className="h-6 w-6 text-white" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-slate-900">Admin Panel</h2>
+              <h2 className="font-bold text-slate-900 truncate">{restaurantName || "Admin Panel"}</h2>
               <p className="text-xs text-slate-700 truncate">{user.email}</p>
             </div>
           </div>

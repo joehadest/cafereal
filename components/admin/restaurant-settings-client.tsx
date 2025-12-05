@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Store, Clock, DollarSign, Phone, Instagram, Facebook, Upload, ImageIcon, MessageCircle, CreditCard } from "lucide-react"
+import { Store, Clock, DollarSign, Phone, Instagram, Facebook, Upload, ImageIcon, MessageCircle, CreditCard, FileText } from "lucide-react"
 import Image from "next/image"
 
 export function RestaurantSettingsClient({ initialSettings }: { initialSettings: any }) {
@@ -27,6 +27,8 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
       facebook: "",
       whatsapp: "",
       pix_key: "",
+      csc_token: "",
+      cnpj: "",
       delivery_fee: 5.0,
       min_order_value: 20.0,
       accepts_delivery: true,
@@ -270,8 +272,8 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 md:items-start">
+        <Card className="p-4 sm:p-6 lg:p-8 border-slate-200 bg-gradient-to-br from-white to-stone-50/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-auto">
           <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-4 sm:mb-6 flex items-center gap-3">
             <div className="bg-gradient-to-br from-slate-600 to-slate-500 p-2 rounded-lg">
               <Store className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
@@ -299,7 +301,7 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 id="address"
                 value={settings.address || ""}
                 onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base resize-y"
                 placeholder="Rua, número, bairro, cidade - estado"
                 rows={3}
               />
@@ -476,6 +478,51 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
               />
               <p className="text-xs text-slate-600">
                 Chave PIX para pagamento. Pode ser CPF, CNPJ, email, telefone ou chave aleatória.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cscToken" className="text-sm sm:text-base font-medium text-slate-900 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                CSC TOKEN (Nota Fiscal)
+              </Label>
+              <Input
+                id="cscToken"
+                type="text"
+                value={settings.csc_token || ""}
+                onChange={(e) => setSettings({ ...settings, csc_token: e.target.value })}
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base font-mono"
+                placeholder="7E017DBC-13CA-481E-8604-41D925CC2F46"
+              />
+              <p className="text-xs text-slate-600">
+                Código de Segurança do Contribuinte (CSC TOKEN) para emissão de NFC-e. Este token é fornecido pela SEFAZ.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cnpj" className="text-sm sm:text-base font-medium text-slate-900 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                CNPJ da Empresa
+              </Label>
+              <Input
+                id="cnpj"
+                type="text"
+                value={settings.cnpj || ""}
+                onChange={(e) => {
+                  // Formatar CNPJ automaticamente
+                  let value = e.target.value.replace(/\D/g, '')
+                  if (value.length <= 14) {
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2')
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2')
+                    value = value.replace(/(\d{3})(\d)/, '$1/$2')
+                    value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+                    setSettings({ ...settings, cnpj: value })
+                  }
+                }}
+                className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base font-mono"
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+              />
+              <p className="text-xs text-slate-600">
+                CNPJ da empresa que aparecerá nas notas fiscais e comprovantes.
               </p>
             </div>
           </div>

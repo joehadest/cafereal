@@ -25,7 +25,16 @@ export function CategorySection({
   category: Category
   onAddToCart: (product: Product) => void
 }) {
-  const activeProducts = category.products.filter((p) => p.active)
+  // Filtrar produtos ativos e ordenar por display_order
+  const activeProducts = category.products
+    .filter((p) => p.active)
+    .sort((a: any, b: any) => {
+      // Ordenar por display_order, e se for igual, por ID para garantir ordem consistente
+      if (a.display_order !== b.display_order) {
+        return (a.display_order || 0) - (b.display_order || 0)
+      }
+      return a.id.localeCompare(b.id)
+    })
 
   if (activeProducts.length === 0) return null
 

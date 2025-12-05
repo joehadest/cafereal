@@ -7,6 +7,7 @@ export default async function AdminOrdersPage() {
   const supabase = await createClient()
 
   // Fetch all orders with their items, varieties, and extras
+  // Incluindo "delivered" para que pedidos não sumam após serem marcados como entregues
   const { data: orders } = await supabase
     .from("orders")
     .select(`
@@ -16,7 +17,7 @@ export default async function AdminOrdersPage() {
         order_item_extras(*)
       )
     `)
-    .in("status", ["pending", "preparing", "ready", "out_for_delivery"])
+    .in("status", ["pending", "preparing", "ready", "out_for_delivery", "delivered"])
     .order("created_at", { ascending: false })
 
   // Fetch all tables
@@ -24,7 +25,7 @@ export default async function AdminOrdersPage() {
 
   const { data: restaurantSettings } = await supabase
     .from("restaurant_settings")
-    .select("name, phone, address")
+    .select("name, phone, address, cnpj")
     .single()
 
   const restaurantInfo = restaurantSettings
@@ -32,11 +33,13 @@ export default async function AdminOrdersPage() {
         name: restaurantSettings.name || "CafeReal",
         phone: restaurantSettings.phone || undefined,
         address: restaurantSettings.address || undefined,
+        cnpj: restaurantSettings.cnpj || undefined,
       }
     : {
         name: "CafeReal",
         phone: undefined,
         address: undefined,
+        cnpj: undefined,
       }
 
   return <OrdersClient orders={orders || []} tables={tables || []} restaurantInfo={restaurantInfo} />

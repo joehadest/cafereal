@@ -26,11 +26,21 @@ export default async function AdminLayout({
     redirect("/")
   }
 
+  // Buscar logo e nome do restaurante
+  const { data: restaurantSettings } = await supabase
+    .from("restaurant_settings")
+    .select("name, logo_url")
+    .single()
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50">
-      <AdminSidebar user={user} />
+      <AdminSidebar 
+        user={user} 
+        restaurantName={restaurantSettings?.name || "Admin Panel"}
+        restaurantLogo={restaurantSettings?.logo_url || null}
+      />
       <main className="flex-1 w-full pt-16 lg:pt-0 lg:ml-64 overflow-x-hidden">
-        <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 lg:px-8">{children}</div>
+        {children}
       </main>
     </div>
   )

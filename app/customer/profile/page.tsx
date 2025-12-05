@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { User, MapPin, Plus, Trash2, ArrowLeft, Home, Phone, Edit2, Save, X } from "lucide-react"
+import { User, MapPin, Plus, Trash2, ArrowLeft, Home, Phone, Edit2, Save, X, Package } from "lucide-react"
 
 export default function CustomerProfilePage() {
   const [profile, setProfile] = useState<any>(null)
@@ -306,14 +306,24 @@ export default function CustomerProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50 py-4 px-3 sm:py-8 sm:px-6 overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/")}
-          className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          <span className="font-medium">Voltar ao Cardápio</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/")}
+            className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors -ml-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span className="font-medium">Voltar ao Cardápio</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/customer/orders")}
+            className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors border-slate-300"
+          >
+            <Package className="h-4 w-4 mr-2" />
+            <span className="font-medium">Meus Pedidos</span>
+          </Button>
+        </div>
 
         <Card className="border-2 border-slate-200 shadow-lg overflow-hidden transition-shadow hover:shadow-xl">
           <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-500 p-4 sm:p-6">

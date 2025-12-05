@@ -22,11 +22,19 @@ export default async function HomePage() {
     .order("display_order")
   
   
-  // Filter products to only show active ones, but keep all active categories
+  // Filter products to only show active ones and sort by display_order, but keep all active categories
   if (categories) {
     categories.forEach((category: any) => {
       if (category.products) {
-        category.products = category.products.filter((p: any) => p.active === true)
+        category.products = category.products
+          .filter((p: any) => p.active === true)
+          .sort((a: any, b: any) => {
+            // Ordenar por display_order, e se for igual, por ID para garantir ordem consistente
+            if (a.display_order !== b.display_order) {
+              return a.display_order - b.display_order
+            }
+            return a.id.localeCompare(b.id)
+          })
       }
     })
   }
