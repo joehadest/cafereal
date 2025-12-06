@@ -254,23 +254,24 @@ export function OrdersClient({
     <div className="orders-full-width min-h-screen w-full bg-gradient-to-br from-stone-50 via-stone-100 to-slate-50">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm w-full">
-        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="bg-slate-600 p-1.5 sm:p-2 rounded-lg">
-                <ClipboardList className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
+              <div className="bg-slate-600 p-1 sm:p-1.5 md:p-2 rounded-lg flex-shrink-0">
+                <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gerenciamento de Pedidos</h1>
-                <p className="text-xs sm:text-sm text-slate-700">
-                  {visibleOrders.length} pedidos ativos ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">Gerenciamento de Pedidos</h1>
+                <p className="text-[10px] xs:text-xs sm:text-sm text-slate-700 break-words">
+                  <span className="whitespace-nowrap">{visibleOrders.length} pedidos ativos</span>
+                  <span className="hidden xs:inline"> ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)</span>
                   {isEnabled && (
-                    <span className="ml-2 text-green-600 text-xs">• Atualização automática ativa</span>
+                    <span className="ml-1 sm:ml-2 text-green-600 text-[10px] xs:text-xs">• Auto</span>
                   )}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
               {permission !== "granted" && (
                 <Button
                   onClick={async () => {
@@ -292,72 +293,72 @@ export function OrdersClient({
                   }}
                   variant="outline"
                   size="sm"
-                  className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent cursor-pointer"
+                  className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent cursor-pointer text-xs sm:text-sm px-2 sm:px-3"
                   title="Clique para ativar notificações de novos pedidos"
                 >
-                  <Bell className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Ativar Notificações</span>
+                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                  <span className="hidden sm:inline text-xs md:text-sm">Ativar Notificações</span>
                 </Button>
               )}
               {permission === "granted" && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent"
+                  className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
                   title="Notificações ativadas"
                   disabled
                 >
-                  <Bell className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Ativado</span>
+                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                  <span className="hidden sm:inline text-xs md:text-sm">Ativado</span>
                 </Button>
               )}
               <Button
                 onClick={handleRefresh}
                 variant="outline"
                 size="sm"
-                className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent"
+                className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
               >
-                <RefreshCw className={`h-4 w-4 sm:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">Atualizar</span>
+                <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Tabs defaultValue="all" className="space-y-4 sm:space-y-6">
-          <TabsList className="bg-white border border-slate-200 w-full sm:w-auto grid grid-cols-2 sm:flex">
-            <TabsTrigger value="all" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
-              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Todos
+      <main className="w-full px-2 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-6 lg:py-8">
+        <Tabs defaultValue="all" className="space-y-3 sm:space-y-6">
+          <TabsList className="bg-white border border-slate-200 w-full sm:w-auto grid grid-cols-2 sm:flex gap-1 sm:gap-0 p-1">
+            <TabsTrigger value="all" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
+              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Todos</span>
             </TabsTrigger>
-            <TabsTrigger value="delivery" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
-              <Bike className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Delivery ({deliveryOrders.length})
+            <TabsTrigger value="delivery" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
+              <Bike className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Delivery ({deliveryOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="dine-in" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
-              <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Mesas ({dineInOrders.length})
+            <TabsTrigger value="dine-in" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
+              <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Mesas ({dineInOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="balcao" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
-              <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Balcão ({balcaoOrders.length})
+            <TabsTrigger value="balcao" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
+              <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Balcão ({balcaoOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="tables" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
-              <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Status
+            <TabsTrigger value="tables" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
+              <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Status</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all" className="space-y-6 sm:space-y-8">
+          <TabsContent value="all" className="space-y-4 sm:space-y-8">
             {/* Pending Orders */}
             <section>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                <span className="bg-yellow-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
-                Pendentes ({pendingOrders.length})
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                <span className="bg-yellow-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
+                <span className="whitespace-nowrap">Pendentes ({pendingOrders.length})</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {pendingOrders.map((order) => (
                   <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                 ))}
@@ -371,11 +372,11 @@ export function OrdersClient({
 
             {/* Preparing Orders */}
             <section>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                <span className="bg-blue-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
-                Em Preparo ({preparingOrders.length})
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                <span className="bg-blue-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
+                <span className="whitespace-nowrap">Em Preparo ({preparingOrders.length})</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {preparingOrders.map((order) => (
                   <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                 ))}
@@ -389,11 +390,11 @@ export function OrdersClient({
 
             {/* Ready Orders */}
             <section>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                <span className="bg-green-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
-                Prontos ({readyOrders.length})
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                <span className="bg-green-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
+                <span className="whitespace-nowrap">Prontos ({readyOrders.length})</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {readyOrders.map((order) => (
                   <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                 ))}
@@ -407,11 +408,11 @@ export function OrdersClient({
 
             {outForDeliveryOrders.length > 0 && (
               <section>
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                  <span className="bg-slate-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
-                  Saiu para Entrega ({outForDeliveryOrders.length})
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                  <span className="bg-slate-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
+                  <span className="whitespace-nowrap">Saiu para Entrega ({outForDeliveryOrders.length})</span>
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {outForDeliveryOrders.map((order) => (
                     <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                   ))}
@@ -422,11 +423,11 @@ export function OrdersClient({
             {/* Delivered Orders */}
             {deliveredOrders.length > 0 && (
               <section>
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                  <span className="bg-emerald-500 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full"></span>
-                  Entregues ({deliveredOrders.length})
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                  <span className="bg-emerald-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
+                  <span className="whitespace-nowrap">Entregues ({deliveredOrders.length})</span>
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {deliveredOrders.map((order) => (
                     <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
                   ))}
@@ -435,15 +436,15 @@ export function OrdersClient({
             )}
           </TabsContent>
 
-          <TabsContent value="delivery" className="space-y-6 sm:space-y-8">
+          <TabsContent value="delivery" className="space-y-4 sm:space-y-8">
             {deliveryOrders.length === 0 ? (
-              <p className="text-slate-700 text-center py-8 sm:py-12 text-sm sm:text-base">Nenhum pedido de delivery</p>
+              <p className="text-slate-700 text-center py-6 sm:py-12 text-xs sm:text-sm md:text-base">Nenhum pedido de delivery</p>
             ) : (
               <>
                 {deliveryOrders.filter((o) => o.status === "pending").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Pendentes</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pendentes</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
@@ -454,8 +455,8 @@ export function OrdersClient({
                 )}
                 {deliveryOrders.filter((o) => o.status === "preparing").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Em Preparo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Em Preparo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
@@ -466,8 +467,8 @@ export function OrdersClient({
                 )}
                 {deliveryOrders.filter((o) => o.status === "ready" || o.status === "out_for_delivery").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Prontos / Em Entrega</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Prontos / Em Entrega</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "ready" || o.status === "out_for_delivery")
                         .map((order) => (
@@ -478,8 +479,8 @@ export function OrdersClient({
                 )}
                 {deliveryOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
@@ -492,15 +493,15 @@ export function OrdersClient({
             )}
           </TabsContent>
 
-          <TabsContent value="dine-in" className="space-y-6 sm:space-y-8">
+          <TabsContent value="dine-in" className="space-y-4 sm:space-y-8">
             {dineInOrders.length === 0 ? (
-              <p className="text-slate-700 text-center py-8 sm:py-12 text-sm sm:text-base">Nenhum pedido de mesa</p>
+              <p className="text-slate-700 text-center py-6 sm:py-12 text-xs sm:text-sm md:text-base">Nenhum pedido de mesa</p>
             ) : (
               <>
                 {dineInOrders.filter((o) => o.status === "pending").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Pendentes</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pendentes</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
@@ -511,8 +512,8 @@ export function OrdersClient({
                 )}
                 {dineInOrders.filter((o) => o.status === "preparing").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Em Preparo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Em Preparo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
@@ -523,8 +524,8 @@ export function OrdersClient({
                 )}
                 {dineInOrders.filter((o) => o.status === "ready").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Prontos</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Prontos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "ready")
                         .map((order) => (
@@ -535,8 +536,8 @@ export function OrdersClient({
                 )}
                 {dineInOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
@@ -549,15 +550,15 @@ export function OrdersClient({
             )}
           </TabsContent>
 
-          <TabsContent value="balcao" className="space-y-6 sm:space-y-8">
+          <TabsContent value="balcao" className="space-y-4 sm:space-y-8">
             {balcaoOrders.length === 0 ? (
-              <p className="text-slate-700 text-center py-8 sm:py-12 text-sm sm:text-base">Nenhum pedido do balcão</p>
+              <p className="text-slate-700 text-center py-6 sm:py-12 text-xs sm:text-sm md:text-base">Nenhum pedido do balcão</p>
             ) : (
               <>
                 {balcaoOrders.filter((o) => o.status === "pending").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Pendentes</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pendentes</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
@@ -568,8 +569,8 @@ export function OrdersClient({
                 )}
                 {balcaoOrders.filter((o) => o.status === "preparing").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Em Preparo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Em Preparo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
@@ -580,8 +581,8 @@ export function OrdersClient({
                 )}
                 {balcaoOrders.filter((o) => o.status === "ready").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Prontos</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Prontos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status === "ready")
                         .map((order) => (
@@ -592,8 +593,8 @@ export function OrdersClient({
                 )}
                 {balcaoOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
@@ -607,7 +608,7 @@ export function OrdersClient({
           </TabsContent>
 
           <TabsContent value="tables">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {tables.map((table) => {
                 const tableOrders = dineInOrders.filter((o) => o.table_number === table.table_number)
                 return <TableStatus key={table.id} table={table} orders={tableOrders} />

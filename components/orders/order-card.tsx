@@ -375,8 +375,8 @@ function OrderCardComponent({
   return (
     <>
       <Card className="border-slate-200 hover:shadow-md hover:border-slate-400 transition-shadow">
-        <CardHeader className="pb-3 p-3 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <CardHeader className="pb-2 sm:pb-3 p-2.5 sm:p-3 md:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-2">
               {isDelivery ? (
                 <div className="flex items-center gap-2">
@@ -398,10 +398,10 @@ function OrderCardComponent({
                 {statusLabel}
               </Badge>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-700">
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{timeAgo}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-1 text-[10px] xs:text-xs sm:text-sm text-slate-700">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">{timeAgo}</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
@@ -409,7 +409,7 @@ function OrderCardComponent({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8 sm:h-10 sm:w-10 border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent"
+                      className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent flex-shrink-0"
                       title="Imprimir pedido"
                     >
                       <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -455,7 +455,7 @@ function OrderCardComponent({
                   disabled={isDeleting}
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 sm:h-10 sm:w-10 border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
+                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-red-300 text-red-600 hover:bg-red-50 bg-transparent flex-shrink-0"
                   title="Excluir pedido"
                 >
                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -465,9 +465,9 @@ function OrderCardComponent({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3 p-3 sm:p-6">
+        <CardContent className="space-y-2 sm:space-y-3 p-2.5 sm:p-3 md:p-6">
           {isDelivery && (order.customer_name || order.customer_phone || order.delivery_address) && (
-            <div className="bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200 space-y-1.5 text-xs sm:text-sm hover:bg-slate-100 transition-colors">
+            <div className="bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200 space-y-1 sm:space-y-1.5 text-[11px] xs:text-xs sm:text-sm hover:bg-slate-100 transition-colors">
               {order.customer_name && (
                 <div className="flex items-center gap-2 text-slate-900">
                   <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
@@ -489,11 +489,11 @@ function OrderCardComponent({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             {order.order_items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex flex-col gap-1 text-xs sm:text-sm bg-slate-50 p-2 sm:p-3 rounded hover:bg-slate-100 transition-colors"
+                className="flex flex-col gap-0.5 sm:gap-1 text-[11px] xs:text-xs sm:text-sm bg-slate-50 p-2 sm:p-3 rounded hover:bg-slate-100 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <span className="text-slate-900 font-medium break-words flex-1">
@@ -541,11 +541,11 @@ function OrderCardComponent({
         </CardContent>
 
         {config && (
-          <CardFooter className="p-3 sm:p-6 pt-0">
+          <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0">
             <Button
               onClick={handleUpdateStatus}
               disabled={isUpdating}
-              className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-sm sm:text-base ${
+              className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-xs xs:text-sm sm:text-base py-2 sm:py-2.5 ${
                 isUpdating ? "animate-pulse" : "hover:scale-105"
               }`}
             >

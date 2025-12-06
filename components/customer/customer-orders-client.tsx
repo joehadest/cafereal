@@ -208,26 +208,26 @@ export function CustomerOrdersClient({ orders: initialOrders }: { orders: Order[
 
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 mb-6">
-            <TabsTrigger value="all" className="text-xs sm:text-sm">
+          <TabsList className="flex w-full flex-wrap gap-1 sm:gap-2 mb-6 p-1 bg-white border border-slate-200">
+            <TabsTrigger value="all" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0">
               Todos ({allOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs sm:text-sm">
+            <TabsTrigger value="pending" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0">
               Pendentes ({pendingOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="preparing" className="text-xs sm:text-sm">
+            <TabsTrigger value="preparing" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0">
               Em Preparo ({preparingOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="ready" className="text-xs sm:text-sm">
+            <TabsTrigger value="ready" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0">
               Prontos ({readyOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="out_for_delivery" className="text-xs sm:text-sm hidden sm:inline-flex">
+            <TabsTrigger value="out_for_delivery" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0 hidden sm:inline-flex">
               Em Entrega ({outForDeliveryOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="delivered" className="text-xs sm:text-sm">
+            <TabsTrigger value="delivered" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0">
               Entregues ({deliveredOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="cancelled" className="text-xs sm:text-sm hidden sm:inline-flex">
+            <TabsTrigger value="cancelled" className="text-[10px] xs:text-xs sm:text-sm whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2 flex-shrink-0 hidden sm:inline-flex">
               Cancelados ({cancelledOrders.length})
             </TabsTrigger>
           </TabsList>
