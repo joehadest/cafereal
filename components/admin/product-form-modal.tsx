@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Trash2, Upload, GripVertical, Package, Star, ListPlus } from 'lucide-react'
+import { Plus, Trash2, Upload, GripVertical, Package, Star, ListPlus, Copy, Clipboard, X } from 'lucide-react'
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from 'next/navigation'
 import Image from "next/image"
@@ -43,10 +43,12 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
     display_order: 0,
     image_url: "",
     active: true,
+    max_extras: null as number | null,
   })
 
   const [varieties, setVarieties] = useState<ProductVariety[]>([])
   const [extras, setExtras] = useState<ProductExtra[]>([])
+  const [refreshCopiedIndicator, setRefreshCopiedIndicator] = useState(0)
 
   useEffect(() => {
     if (product) {
@@ -58,6 +60,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
         display_order: product.display_order,
         image_url: product.image_url || "",
         active: product.active,
+        max_extras: (product as any).max_extras || null,
       })
       setImagePreview(product.image_url || null)
       setVarieties(product.varieties || [])
@@ -76,12 +79,19 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
       display_order: 0,
       image_url: "",
       active: true,
+      max_extras: null,
     })
     setImageFile(null)
     setImagePreview(null)
     setVarieties([])
     setExtras([])
     setActiveTab("details")
+  }
+
+  const handleRemoveImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setFormData({ ...formData, image_url: "" })
   }
 
   const uploadImage = async (file: File): Promise<string | null> => {
@@ -140,6 +150,10 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
           imageUrl = uploadedUrl
         }
       }
+      // Se image_url foi limpo (removido), definir como null
+      if (formData.image_url === "" && !imageFile) {
+        imageUrl = null
+      }
 
       const productData = {
         name: formData.name.trim(),
@@ -149,6 +163,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
         display_order: Number(formData.display_order) || 0,
         image_url: imageUrl || null,
         active: formData.active ?? true,
+        max_extras: formData.max_extras && formData.max_extras > 0 ? Number(formData.max_extras) : null,
       }
 
       let productId = product?.id
@@ -183,10 +198,33 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
 
           // Preparar dados para upsert (se houver variedades na lista)
           if (varieties.length > 0) {
-            const varietiesData = varieties
-              .filter((v) => v.name && v.name.trim() !== "")
+            // Separar variedades existentes (com ID válido) e novas (sem ID ou com ID temporário)
+            const existingVarietiesIds = existingVarieties?.map(ev => ev.id) || []
+            
+            const varietiesToUpdate = varieties
+              .filter((v) => {
+                return v.name && 
+                       v.name.trim() !== "" && 
+                       v.id && 
+                       !v.id.startsWith("temp-") && 
+                       existingVarietiesIds.includes(v.id)
+              })
               .map((v, index) => ({
-                ...(v.id && existingVarieties?.some(ev => ev.id === v.id) ? { id: v.id } : {}),
+                id: v.id,
+                product_id: productId,
+                name: v.name.trim(),
+                price: Number(v.price) || 0,
+                display_order: index,
+                active: v.active ?? true,
+              }))
+
+            const varietiesToInsert = varieties
+              .filter((v) => {
+                return v.name && 
+                       v.name.trim() !== "" && 
+                       (!v.id || v.id.startsWith("temp-") || !existingVarietiesIds.includes(v.id))
+              })
+              .map((v, index) => ({
                 product_id: productId,
                 name: v.name.trim(),
                 price: Number(v.price) || 0,
@@ -194,24 +232,40 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                 active: v.active ?? true,
               }))
             
-            if (varietiesData.length > 0) {
-              // Usar upsert para atualizar existentes e inserir novas
-              const { error: varietiesError } = await supabase
+            // Atualizar variedades existentes
+            if (varietiesToUpdate.length > 0) {
+              const { error: updateError } = await supabase
                 .from("product_varieties")
-                .upsert(varietiesData, { onConflict: "id" })
+                .upsert(varietiesToUpdate, { onConflict: "id" })
 
-              if (varietiesError) {
-                // Verificar se há uma mensagem de erro real
-                const hasErrorMessage = varietiesError.message && varietiesError.message.trim() !== ""
-                const hasErrorCode = varietiesError.code && varietiesError.code.trim() !== ""
+              if (updateError) {
+                const hasErrorMessage = updateError.message && updateError.message.trim() !== ""
+                const hasErrorCode = updateError.code && updateError.code.trim() !== ""
 
-                // Se o erro for porque a tabela não existe, apenas logar e continuar
-                if (hasErrorMessage && (varietiesError.message.includes("schema cache") || varietiesError.message.includes("does not exist"))) {
+                if (hasErrorMessage && (updateError.message.includes("schema cache") || updateError.message.includes("does not exist"))) {
                   console.warn("Tabela product_varieties não encontrada. Variedades não foram salvas.")
                 } else if (hasErrorMessage || hasErrorCode) {
-                  // Só lançar erro se houver uma mensagem ou código de erro real
-                  console.error("Error upserting varieties:", varietiesError.message || varietiesError.code || varietiesError)
-                  throw new Error(varietiesError.message || varietiesError.code || "Erro ao salvar variedades")
+                  console.error("Error updating varieties:", updateError.message || updateError.code || updateError)
+                  throw new Error(updateError.message || updateError.code || "Erro ao atualizar variedades")
+                }
+              }
+            }
+
+            // Inserir novas variedades
+            if (varietiesToInsert.length > 0) {
+              const { error: insertError } = await supabase
+                .from("product_varieties")
+                .insert(varietiesToInsert)
+
+              if (insertError) {
+                const hasErrorMessage = insertError.message && insertError.message.trim() !== ""
+                const hasErrorCode = insertError.code && insertError.code.trim() !== ""
+
+                if (hasErrorMessage && (insertError.message.includes("schema cache") || insertError.message.includes("does not exist"))) {
+                  console.warn("Tabela product_varieties não encontrada. Variedades não foram salvas.")
+                } else if (hasErrorMessage || hasErrorCode) {
+                  console.error("Error inserting varieties:", insertError.message || insertError.code || insertError)
+                  throw new Error(insertError.message || insertError.code || "Erro ao inserir variedades")
                 }
               }
             }
@@ -289,10 +343,34 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
 
           // Preparar dados para upsert (se houver extras na lista)
           if (extras.length > 0) {
-            const extrasData = extras
-              .filter((e) => e.name && e.name.trim() !== "")
+            // Separar extras existentes (com ID válido) e novos (sem ID ou com ID temporário)
+            const existingExtrasIds = existingExtras?.map(ee => ee.id) || []
+            
+            const extrasToUpdate = extras
+              .filter((e) => {
+                return e.name && 
+                       e.name.trim() !== "" && 
+                       e.id && 
+                       !e.id.startsWith("temp-") && 
+                       existingExtrasIds.includes(e.id)
+              })
               .map((e, index) => ({
-                ...(e.id && existingExtras?.some(ee => ee.id === e.id) ? { id: e.id } : {}),
+                id: e.id,
+                product_id: productId,
+                name: e.name.trim(),
+                price: Number(e.price) || 0,
+                display_order: index,
+                max_quantity: Number(e.max_quantity) || 10,
+                active: e.active ?? true,
+              }))
+
+            const extrasToInsert = extras
+              .filter((e) => {
+                return e.name && 
+                       e.name.trim() !== "" && 
+                       (!e.id || e.id.startsWith("temp-") || !existingExtrasIds.includes(e.id))
+              })
+              .map((e, index) => ({
                 product_id: productId,
                 name: e.name.trim(),
                 price: Number(e.price) || 0,
@@ -301,24 +379,40 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                 active: e.active ?? true,
               }))
             
-            if (extrasData.length > 0) {
-              // Usar upsert para atualizar existentes e inserir novos
-              const { error: extrasError } = await supabase
+            // Atualizar extras existentes
+            if (extrasToUpdate.length > 0) {
+              const { error: updateError } = await supabase
                 .from("product_extras")
-                .upsert(extrasData, { onConflict: "id" })
+                .upsert(extrasToUpdate, { onConflict: "id" })
 
-              if (extrasError) {
-                // Verificar se há uma mensagem de erro real
-                const hasErrorMessage = extrasError.message && extrasError.message.trim() !== ""
-                const hasErrorCode = extrasError.code && extrasError.code.trim() !== ""
+              if (updateError) {
+                const hasErrorMessage = updateError.message && updateError.message.trim() !== ""
+                const hasErrorCode = updateError.code && updateError.code.trim() !== ""
 
-                // Se o erro for porque a tabela não existe, apenas logar e continuar
-                if (hasErrorMessage && (extrasError.message.includes("schema cache") || extrasError.message.includes("does not exist"))) {
+                if (hasErrorMessage && (updateError.message.includes("schema cache") || updateError.message.includes("does not exist"))) {
                   console.warn("Tabela product_extras não encontrada. Extras não foram salvos.")
                 } else if (hasErrorMessage || hasErrorCode) {
-                  // Só lançar erro se houver uma mensagem ou código de erro real
-                  console.error("Error upserting extras:", extrasError.message || extrasError.code || extrasError)
-                  throw new Error(extrasError.message || extrasError.code || "Erro ao salvar extras")
+                  console.error("Error updating extras:", updateError.message || updateError.code || updateError)
+                  throw new Error(updateError.message || updateError.code || "Erro ao atualizar extras")
+                }
+              }
+            }
+
+            // Inserir novos extras
+            if (extrasToInsert.length > 0) {
+              const { error: insertError } = await supabase
+                .from("product_extras")
+                .insert(extrasToInsert)
+
+              if (insertError) {
+                const hasErrorMessage = insertError.message && insertError.message.trim() !== ""
+                const hasErrorCode = insertError.code && insertError.code.trim() !== ""
+
+                if (hasErrorMessage && (insertError.message.includes("schema cache") || insertError.message.includes("does not exist"))) {
+                  console.warn("Tabela product_extras não encontrada. Extras não foram salvos.")
+                } else if (hasErrorMessage || hasErrorCode) {
+                  console.error("Error inserting extras:", insertError.message || insertError.code || insertError)
+                  throw new Error(insertError.message || insertError.code || "Erro ao inserir extras")
                 }
               }
             }
@@ -452,6 +546,89 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
     setExtras(newExtras)
   }
 
+  const copyExtras = () => {
+    if (typeof window === "undefined") return
+    
+    if (extras.length === 0) {
+      alert("Não há extras para copiar")
+      return
+    }
+    
+    // Filtrar apenas extras válidos (com nome)
+    const validExtras = extras.filter(e => e.name && e.name.trim() !== "")
+    
+    if (validExtras.length === 0) {
+      alert("Não há extras válidos para copiar. Adicione nomes aos extras primeiro.")
+      return
+    }
+
+    // Salvar no localStorage
+    const extrasToCopy = validExtras.map(e => ({
+      name: e.name,
+      price: e.price,
+      max_quantity: e.max_quantity,
+      active: e.active,
+    }))
+    
+    localStorage.setItem("copiedProductExtras", JSON.stringify(extrasToCopy))
+    setRefreshCopiedIndicator(prev => prev + 1)
+    alert(`${extrasToCopy.length} extra(s) copiado(s) com sucesso!`)
+  }
+
+  const pasteExtras = () => {
+    if (typeof window === "undefined") return
+    
+    const copiedData = localStorage.getItem("copiedProductExtras")
+    
+    if (!copiedData) {
+      alert("Nenhum extra copiado. Copie os extras de outro produto primeiro.")
+      return
+    }
+
+    try {
+      const copiedExtras = JSON.parse(copiedData)
+      
+      if (!Array.isArray(copiedExtras) || copiedExtras.length === 0) {
+        alert("Nenhum extra válido encontrado na área de transferência.")
+        return
+      }
+
+      // Adicionar os extras copiados aos extras existentes
+      const newExtras = copiedExtras.map((copied, index) => ({
+        id: `temp-${Date.now()}-${index}`,
+        product_id: product?.id || "",
+        name: copied.name,
+        price: copied.price || 0,
+        display_order: extras.length + index,
+        active: copied.active !== undefined ? copied.active : true,
+        max_quantity: copied.max_quantity || 10,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }))
+
+      setExtras([...extras, ...newExtras])
+      setRefreshCopiedIndicator(prev => prev + 1)
+      alert(`${newExtras.length} extra(s) colado(s) com sucesso!`)
+    } catch (error) {
+      console.error("Erro ao colar extras:", error)
+      alert("Erro ao colar extras. Tente novamente.")
+    }
+  }
+
+  const hasCopiedExtras = () => {
+    if (typeof window === "undefined") return false
+    
+    const copiedData = localStorage.getItem("copiedProductExtras")
+    if (!copiedData) return false
+    
+    try {
+      const copiedExtras = JSON.parse(copiedData)
+      return Array.isArray(copiedExtras) && copiedExtras.length > 0
+    } catch {
+      return false
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-3xl max-h-[95vh] p-0 overflow-hidden flex flex-col">
@@ -511,8 +688,18 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                   </Label>
                   <div className="flex flex-col gap-4">
                     {imagePreview && (
-                      <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm">
+                      <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm group">
                         <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                        <Button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remover imagem"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
@@ -525,6 +712,18 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                       />
                       <Upload className="h-5 w-5 text-slate-600" />
                     </div>
+                    {imagePreview && (
+                      <Button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remover Imagem
+                      </Button>
+                    )}
                     <p className="text-xs text-slate-600">Formatos: PNG, JPEG, JPG, WebP</p>
                   </div>
                 </div>
@@ -613,6 +812,27 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                       className="border-slate-200 text-sm"
                       placeholder="0"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="max_extras" className="text-slate-900 font-semibold">
+                      Limite de Extras Diferentes
+                    </Label>
+                    <Input
+                      id="max_extras"
+                      type="number"
+                      min="0"
+                      value={formData.max_extras === null ? "" : formData.max_extras}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? null : Number.parseInt(e.target.value) || null
+                        setFormData({ ...formData, max_extras: value })
+                      }}
+                      className="border-slate-200 text-sm"
+                      placeholder="Sem limite (deixe vazio)"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Limite máximo de extras diferentes que podem ser selecionados. Deixe vazio para permitir todos.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -713,6 +933,17 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                     Extra, Molho Especial).
                   </p>
                 </div>
+                
+                {hasCopiedExtras() && refreshCopiedIndicator >= 0 && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <Clipboard className="h-4 w-4 text-green-600" />
+                      <p className="text-xs sm:text-sm text-green-800 font-medium">
+                        Há extras copiados prontos para colar!
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {extras.map((extra, index) => (
@@ -785,6 +1016,28 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                   ))}
                 </div>
 
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    type="button"
+                    onClick={copyExtras}
+                    variant="outline"
+                    disabled={extras.length === 0}
+                    className="flex-1 border-blue-300 hover:bg-blue-50 text-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Extras
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={pasteExtras}
+                    variant="outline"
+                    disabled={!hasCopiedExtras()}
+                    className="flex-1 border-green-300 hover:bg-green-50 text-green-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Clipboard className="h-4 w-4 mr-2" />
+                    Colar Extras
+                  </Button>
+                </div>
                 <Button
                   type="button"
                   onClick={addExtra}

@@ -383,6 +383,11 @@ function OrderCardComponent({
                   <Bike className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                   <span className="text-lg sm:text-xl font-bold text-slate-900">Delivery</span>
                 </div>
+              ) : order.table_number === 0 ? (
+                <div className="flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+                  <span className="text-lg sm:text-xl font-bold text-slate-900">Balcão</span>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
@@ -434,7 +439,7 @@ function OrderCardComponent({
                           <RadioGroupItem value="customer" id="customer" />
                           <Label htmlFor="customer" className="flex items-center gap-2 cursor-pointer text-sm sm:text-base">
                             <Receipt className="h-4 w-4" />
-                            Comanda do Cliente {!isDelivery && `(Mesa ${order.table_number})`}
+                            Comanda do Cliente {!isDelivery && (order.table_number === 0 ? "(Balcão)" : `(Mesa ${order.table_number})`)}
                           </Label>
                         </div>
                       </RadioGroup>

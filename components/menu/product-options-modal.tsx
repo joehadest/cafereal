@@ -35,10 +35,15 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
   const extrasPrice = selectedExtras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
   const totalPrice = basePrice + extrasPrice
 
+  // Limite máximo de extras diferentes que podem ser selecionados
+  // Se o produto tiver um campo max_extras, usar ele, senão usar null (sem limite)
+  const maxExtrasCount = product.max_extras ?? null
+
   const handleAddExtra = (extra: ProductExtra) => {
     setSelectedExtras((prev) => {
       const existing = prev.find((item) => item.extra.id === extra.id)
       if (existing) {
+        // Se já existe, apenas incrementar a quantidade se não ultrapassar o limite do extra
         if (existing.quantity < extra.max_quantity) {
           return prev.map((item) =>
             item.extra.id === extra.id ? { ...item, quantity: item.quantity + 1 } : item
@@ -46,6 +51,13 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
         }
         return prev
       }
+      
+      // Se é um novo extra, verificar se não ultrapassou o limite de extras diferentes
+      if (maxExtrasCount !== null && prev.length >= maxExtrasCount) {
+        // Limite atingido, não adicionar
+        return prev
+      }
+      
       return [...prev, { extra, quantity: 1 }]
     })
   }
@@ -150,10 +162,22 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
           {/* Seleção de Extras */}
           {activeExtras.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-slate-600" />
-                <Label className="text-base font-semibold text-slate-900">Adicionais (opcional)</Label>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-slate-600" />
+                  <Label className="text-base font-semibold text-slate-900">Adicionais (opcional)</Label>
+                </div>
+                {maxExtrasCount !== null && (
+                  <span className="text-xs text-slate-500">
+                    {selectedExtras.length}/{maxExtrasCount} selecionados
+                  </span>
+                )}
               </div>
+              {maxExtrasCount !== null && selectedExtras.length >= maxExtrasCount && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-800">
+                  Limite de {maxExtrasCount} {maxExtrasCount === 1 ? 'adicional' : 'adicionais'} atingido. Remova um para adicionar outro.
+                </div>
+              )}
               <div className="space-y-2">
                 {activeExtras.map((extra, index) => {
                   const selected = selectedExtras.find((item) => item.extra.id === extra.id)
@@ -208,7 +232,8 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
                             variant="outline"
                             size="sm"
                             onClick={() => handleAddExtra(extra)}
-                            className="text-xs"
+                            disabled={maxExtrasCount !== null && selectedExtras.length >= maxExtrasCount}
+                            className="text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Plus className="h-3 w-3 mr-1" />
                             Adicionar

@@ -259,7 +259,7 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm">
                             #{order.id.slice(0, 8)} -{" "}
-                            {order.order_type === "delivery" ? "Delivery" : `Mesa ${order.table_number}`}
+                            {order.order_type === "delivery" ? "Delivery" : order.table_number === 0 ? "Balcão" : `Mesa ${order.table_number}`}
                           </p>
                           <p className="text-xs text-slate-600">
                             {order.order_items.length} itens • R$ {order.total.toFixed(2)} •{" "}

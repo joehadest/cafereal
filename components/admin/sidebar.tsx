@@ -14,6 +14,7 @@ import {
   Settings,
   Menu,
   X,
+  Store,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
@@ -43,6 +44,11 @@ const menuItems = [
     href: "/admin/orders",
     label: "Pedidos",
     icon: ClipboardList,
+  },
+  {
+    href: "/admin/counter",
+    label: "Balcão",
+    icon: Store,
   },
   {
     href: "/admin/settings",

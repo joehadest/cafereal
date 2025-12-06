@@ -26,11 +26,11 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-customer hidden print:block bg-white text-black p-4 max-w-[80mm] mx-auto font-sans text-sm overflow-visible">
+    <div className="print-customer hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm' }}>
       {/* Header do Restaurante */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">
         <div className="mb-2">
-          <h1 className="text-3xl font-bold uppercase leading-tight text-black tracking-wide">
+          <h1 className="text-2xl font-bold uppercase leading-tight text-black tracking-wide">
             {restaurantInfo?.name || "CAFEREAL"}
           </h1>
         </div>
@@ -44,9 +44,9 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
 
       {/* Informações da Mesa */}
       {!isDelivery && (
-        <div className="mb-3 pb-3 border-b-2 border-gray-400 bg-gray-100 -mx-4 px-4 py-3 rounded">
+        <div className="mb-3 pb-3 border-b-2 border-gray-400 bg-gray-100 -mx-3 px-3 py-3 rounded">
           <div className="text-center">
-            <p className="text-2xl font-bold text-black mb-1">MESA {order.table_number}</p>
+            <p className="text-xl font-bold text-black mb-1">{order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}</p>
             <p className="text-xs text-black">
               {timestamp.toLocaleDateString("pt-BR", {
                 weekday: "long",
@@ -111,18 +111,18 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
                         ))}
                       </div>
                     )}
+                    {item.notes && (
+                      <div className="mt-2 ml-2 pl-2 border-l-2 border-yellow-500 bg-yellow-50 py-1 px-2 rounded">
+                        <p className="text-xs font-semibold text-black leading-tight">
+                          <span className="font-bold">OBS:</span> {item.notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right whitespace-nowrap">
                     <span className="font-bold text-sm text-black">R$ {itemTotal.toFixed(2)}</span>
                   </div>
                 </div>
-                {item.notes && (
-                  <div className="mt-2 ml-2 pl-2 border-l-2 border-yellow-500 bg-yellow-50 py-1 px-2 rounded">
-                    <p className="text-xs font-semibold text-black leading-tight">
-                      <span className="font-bold">OBS:</span> {item.notes}
-                    </p>
-                  </div>
-                )}
               </div>
             )
           })}
@@ -131,7 +131,7 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
 
       {/* Observações do Pedido */}
       {order.notes && (
-        <div className="mb-3 pb-3 border-b border-gray-300 bg-yellow-50 -mx-4 px-4 py-2 rounded">
+        <div className="mb-3 pb-3 border-b border-gray-300 bg-yellow-50 -mx-3 px-3 py-2 rounded">
           <h2 className="font-bold text-xs mb-1 uppercase text-black">Observações</h2>
           <p className="text-xs text-black whitespace-pre-wrap leading-tight break-words font-semibold">
             {order.notes}
@@ -181,4 +181,5 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
     </div>
   )
 }
+
 

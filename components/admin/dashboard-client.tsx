@@ -30,6 +30,8 @@ type DashboardStats = {
   todayRevenue: number
   todayCompletedOrders: number
   todayDeliveryOrders: number
+  todayBalcaoOrders: number
+  todayBalcaoRevenue: number
   periodRevenue: number
   periodCompletedOrders: number
   dailyAverage: number
@@ -49,6 +51,24 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
   const fetchData = async (start: Date, end: Date) => {
     setIsLoading(true)
     try {
+      // Get today's data (for balcão stats)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const todayEnd = new Date(today)
+      todayEnd.setHours(23, 59, 59, 999)
+
+      const { data: todayOrders } = await supabase
+        .from("orders")
+        .select("total, status, table_number, order_type")
+        .gte("created_at", today.toISOString())
+        .lte("created_at", todayEnd.toISOString())
+
+      const todayRevenue = todayOrders?.reduce((sum, order) => sum + order.total, 0) || 0
+      const todayCompletedOrders = todayOrders?.filter((o) => o.status === "delivered").length || 0
+      const todayDeliveryOrders = todayOrders?.filter((o) => o.order_type === "delivery").length || 0
+      const todayBalcaoOrders = todayOrders?.filter((o) => o.table_number === 0).length || 0
+      const todayBalcaoRevenue = todayOrders?.filter((o) => o.table_number === 0).reduce((sum, order) => sum + order.total, 0) || 0
+
       // Get period orders
       const { data: periodOrders } = await supabase
         .from("orders")
@@ -86,12 +106,35 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
       const daysCount = daysDiff + 1
       const dailyAverage = periodRevenue / daysCount
 
+      // Get recent orders
+      const { data: recentOrders } = await supabase
+        .from("orders")
+        .select("id, table_number, total, created_at, status, order_type, customer_name")
+        .order("created_at", { ascending: false })
+        .limit(6)
+
+      // Get completed orders today
+      const { data: completedOrders } = await supabase
+        .from("orders")
+        .select("id, table_number, total, created_at, order_type, customer_name")
+        .eq("status", "delivered")
+        .gte("created_at", today.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(6)
+
       setStats((prev) => ({
         ...prev,
+        todayRevenue,
+        todayCompletedOrders,
+        todayDeliveryOrders,
+        todayBalcaoOrders,
+        todayBalcaoRevenue,
         periodRevenue,
         periodCompletedOrders,
         dailyAverage,
         dailyRevenues,
+        recentOrders: recentOrders || [],
+        completedOrders: completedOrders || [],
       }))
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
@@ -136,6 +179,13 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
     }
 
     fetchData(start, end)
+
+    // Atualizar automaticamente a cada 5 segundos
+    const interval = setInterval(() => {
+      fetchData(start, end)
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [period, startDate, endDate])
 
   const getStatusBadge = (status: string) => {
@@ -350,6 +400,12 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
           icon={Bike}
           trend={`${stats.todayCompletedOrders} concluídos hoje`}
         />
+        <StatsCard
+          title="Balcão Hoje"
+          value={stats.todayBalcaoOrders.toString()}
+          icon={UtensilsCrossed}
+          trend={`R$ ${stats.todayBalcaoRevenue.toFixed(2)}`}
+        />
         <StatsCard title="Produtos Ativos" value={stats.totalProducts?.toString() || "0"} icon={Package} />
         <StatsCard title="Mesas" value={stats.totalTables?.toString() || "0"} icon={UtensilsCrossed} />
       </div>
@@ -378,6 +434,11 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
                         <>
                           <Bike className="h-4 w-4 text-slate-600" />
                           <p className="font-semibold text-slate-900 truncate">{order.customer_name || "Cliente"}</p>
+                        </>
+                      ) : order.table_number === 0 ? (
+                        <>
+                          <UtensilsCrossed className="h-4 w-4 text-slate-600" />
+                          <p className="font-semibold text-slate-900">Balcão</p>
                         </>
                       ) : (
                         <>
@@ -436,6 +497,11 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
                         <>
                           <Bike className="h-4 w-4 text-green-600" />
                           <p className="font-semibold text-green-900">{order.customer_name || "Cliente"}</p>
+                        </>
+                      ) : order.table_number === 0 ? (
+                        <>
+                          <UtensilsCrossed className="h-4 w-4 text-green-600" />
+                          <p className="font-semibold text-green-900">Balcão</p>
                         </>
                       ) : (
                         <>

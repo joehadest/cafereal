@@ -12,26 +12,26 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-kitchen hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-mono overflow-visible">
+    <div className="print-kitchen hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm' }}>
       {/* Header - Destacado */}
-      <div className="text-center border-b-4 border-black pb-2 mb-2">
+      <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1">
-          <h1 className="text-3xl font-bold uppercase tracking-wide">{restaurantName || "CAFEREAL"}</h1>
+          <h1 className="text-xl font-bold uppercase tracking-wide">{restaurantName || "CAFEREAL"}</h1>
         </div>
-        <div className="border-t border-b border-gray-600 py-0.5 mt-1">
+        <div className="border-t border-b border-gray-600 py-1 mt-1">
           <p className="text-xs font-bold uppercase">Comanda de Cozinha</p>
         </div>
       </div>
 
       {/* Tipo e Mesa/Delivery */}
       <div className="bg-black text-white p-2 mb-2 text-center">
-        <p className="text-3xl font-bold">{isDelivery ? "DELIVERY" : `MESA ${order.table_number}`}</p>
+        <p className="text-2xl font-bold">{isDelivery ? "DELIVERY" : order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}</p>
       </div>
 
       {/* Pedido e Hora */}
       <div className="text-center mb-2 pb-2 border-b-2 border-dashed border-gray-600">
-        <p className="text-xl font-bold mb-0.5">PEDIDO #{order.id.slice(0, 8).toUpperCase()}</p>
-        <p className="text-lg font-bold">
+        <p className="text-base font-bold mb-0.5">PEDIDO #{order.id.slice(0, 8).toUpperCase()}</p>
+        <p className="text-sm font-bold">
           {timestamp.toLocaleTimeString("pt-BR", {
             hour: "2-digit",
             minute: "2-digit",
@@ -41,25 +41,25 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
 
       {/* Itens - Formato Cozinha */}
       <div className="mb-2">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs">
           <tbody>
             {order.order_items.map((item) => (
               <tr key={item.id} className="border-b-2 border-gray-400">
                 <td className="py-2 pr-3">
                   <div className="flex items-start justify-between mb-1">
-                    <span className="text-2xl font-bold mr-3">{item.quantity}x</span>
-                    <span className="text-lg font-bold flex-1 uppercase leading-tight">{item.product_name}</span>
+                    <span className="text-xl font-bold mr-3">{item.quantity}x</span>
+                    <span className="text-sm font-bold flex-1 uppercase leading-tight">{item.product_name}</span>
                   </div>
                   {item.variety_name && (
                     <div className="ml-10 mt-0.5 mb-0.5">
-                      <p className="text-sm font-bold">TAMANHO: {item.variety_name.toUpperCase()}</p>
+                      <p className="text-xs font-bold">TAMANHO: {item.variety_name.toUpperCase()}</p>
                     </div>
                   )}
                   {item.order_item_extras && item.order_item_extras.length > 0 && (
                     <div className="ml-10 mt-0.5 mb-0.5">
                       <p className="text-xs font-bold uppercase mb-0.5">EXTRAS:</p>
                       {item.order_item_extras.map((extra) => (
-                        <p key={extra.id} className="text-sm font-semibold">
+                        <p key={extra.id} className="text-xs font-semibold">
                           + {extra.extra_name.toUpperCase()} {extra.quantity > 1 && `(x${extra.quantity})`}
                         </p>
                       ))}
@@ -68,7 +68,7 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
                   {item.notes && (
                     <div className="ml-10 mt-1 bg-yellow-100 border-l-4 border-yellow-500 p-1.5">
                       <p className="text-xs font-bold uppercase mb-0.5">OBSERVAÇÃO:</p>
-                      <p className="text-sm font-semibold">{item.notes}</p>
+                      <p className="text-xs font-semibold">{item.notes}</p>
                     </div>
                   )}
                 </td>

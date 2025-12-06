@@ -58,13 +58,30 @@ export function useOrderNotifications(onNewOrder?: OnNewOrderCallback) {
           const hasErrorMessage = error.message && error.message.trim() !== ""
           const hasErrorCode = error.code && error.code.trim() !== ""
           
+          // Ignorar erros de rede temporários (Failed to fetch) - são comuns e não críticos
+          if (hasErrorMessage && (
+            error.message.includes("Failed to fetch") ||
+            error.message.includes("NetworkError") ||
+            error.message.includes("Network request failed") ||
+            error.message.includes("fetch")
+          )) {
+            // Silenciosamente ignorar erros de rede - o próximo check tentará novamente
+            return
+          }
+          
+          // Logar apenas erros que não são de rede
           if (hasErrorMessage || hasErrorCode) {
-            console.error("Erro ao verificar pedidos:", error.message || error.code || error)
+            // Não logar erros de rede
+            const errorMsg = error.message || ""
+            if (!errorMsg.includes("fetch") && !errorMsg.includes("network") && !errorMsg.includes("Network")) {
+              console.error("Erro ao verificar pedidos:", error.message || error.code || error)
+            }
           }
           // Se não houver mensagem nem código, provavelmente é um objeto vazio e não há erro real
           return
         }
 
+        // Verificar se orders existe antes de acessar
         if (!orders || orders.length === 0) {
           // Se não há pedidos, resetar os refs para detectar quando aparecer um novo
           if (lastOrderIdRef.current !== null || knownOrderIdsRef.current.size > 0) {
@@ -224,11 +241,25 @@ export function useOrderNotifications(onNewOrder?: OnNewOrderCallback) {
           }
         }
       } catch (error) {
-        // Verificar se há uma mensagem de erro real antes de logar
-        if (error instanceof Error && error.message && error.message.trim() !== "") {
-          console.error("Erro ao verificar novos pedidos:", error.message)
+        // Tratar erros de rede (Failed to fetch) silenciosamente
+        if (error instanceof Error) {
+          // Ignorar erros de rede temporários - o próximo check tentará novamente
+          if (error.message && error.message.includes("Failed to fetch")) {
+            // Silenciosamente ignorar - não é um erro crítico
+            return
+          }
+          
+          // Logar apenas erros reais (não de rede)
+          if (error.message && error.message.trim() !== "") {
+            console.error("Erro ao verificar novos pedidos:", error.message)
+          }
         } else if (error && typeof error === "object" && "message" in error) {
           const errorMessage = (error as any).message
+          // Ignorar erros de rede
+          if (errorMessage && errorMessage.includes("Failed to fetch")) {
+            return
+          }
+          
           if (errorMessage && errorMessage.trim() !== "") {
             console.error("Erro ao verificar novos pedidos:", errorMessage)
           }

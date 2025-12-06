@@ -156,6 +156,7 @@
     position: relative !important;
     left: auto !important;
     top: auto !important;
+    right: auto !important;
     width: 80mm !important;
     max-width: 80mm !important;
     margin: 0 auto !important;
@@ -180,10 +181,14 @@
     size: 80mm auto !important;
   }
 
-  /* Garantir que não haja páginas em branco */
-  body {
+  /* Garantir que não haja páginas em branco e centralizar */
+  html, body {
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
   }
 
   /* Ocultar qualquer elemento que possa causar páginas extras */
@@ -232,8 +237,24 @@
     overflow-wrap: break-word !important;
     word-break: break-word !important;
     max-width: 100% !important;
-    overflow: visible !important;
-    box-sizing: border-box;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Garantir que valores monetários não quebrem */
+  .print-receipt .text-right,
+  .print-kitchen .text-right,
+  .print-customer .text-right {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Garantir que flex containers não ultrapassem a largura */
+  .print-receipt .flex,
+  .print-kitchen .flex,
+  .print-customer .flex {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Garantir que endereços não sejam cortados */
@@ -273,23 +294,32 @@
     flex-wrap: wrap !important;
   }
 
-  /* Melhorar espaçamento e legibilidade - otimizado para 1 página */
+  /* Melhorar espaçamento e legibilidade - otimizado para 80mm */
   .print-receipt,
   .print-kitchen,
   .print-customer {
-    line-height: 1.25 !important;
+    line-height: 1.3 !important;
     font-size: 12px !important;
     font-weight: 700 !important;
     padding: 8px 10px !important;
     max-height: 100% !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    box-sizing: border-box !important;
   }
 
-  /* Reduzir espaçamentos para caber em 1 página */
+  /* Reduzir espaçamentos para caber em 80mm */
   .print-receipt > div,
   .print-kitchen > div,
   .print-customer > div {
-    margin-bottom: 6px !important;
-    padding-bottom: 6px !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .print-receipt .mb-1,
+  .print-kitchen .mb-1,
+  .print-customer .mb-1 {
+    margin-bottom: 4px !important;
   }
 
   .print-receipt .mb-2,
@@ -304,6 +334,12 @@
     margin-bottom: 8px !important;
   }
 
+  .print-receipt .pb-1,
+  .print-kitchen .pb-1,
+  .print-customer .pb-1 {
+    padding-bottom: 4px !important;
+  }
+
   .print-receipt .pb-2,
   .print-kitchen .pb-2,
   .print-customer .pb-2 {
@@ -314,6 +350,12 @@
   .print-kitchen .pb-3,
   .print-customer .pb-3 {
     padding-bottom: 8px !important;
+  }
+
+  .print-receipt .space-y-1 > * + *,
+  .print-kitchen .space-y-1 > * + *,
+  .print-customer .space-y-1 > * + * {
+    margin-top: 2px !important;
   }
 
   .print-receipt .space-y-2 > * + *,

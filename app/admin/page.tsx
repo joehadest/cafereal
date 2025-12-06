@@ -29,13 +29,15 @@ export default async function AdminDashboard() {
 
   const { data: todayOrders } = await supabase
     .from("orders")
-    .select("total, status, order_type")
+    .select("total, status, order_type, table_number")
     .gte("created_at", today.toISOString())
     .lte("created_at", todayEnd.toISOString())
 
   const todayRevenue = todayOrders?.reduce((sum, order) => sum + order.total, 0) || 0
   const todayCompletedOrders = todayOrders?.filter((o) => o.status === "delivered").length || 0
   const todayDeliveryOrders = todayOrders?.filter((o) => o.order_type === "delivery").length || 0
+  const todayBalcaoOrders = todayOrders?.filter((o) => o.table_number === 0).length || 0
+  const todayBalcaoRevenue = todayOrders?.filter((o) => o.table_number === 0).reduce((sum, order) => sum + order.total, 0) || 0
 
   // Get weekly data (last 7 days)
   const weekAgo = new Date()
@@ -113,6 +115,8 @@ export default async function AdminDashboard() {
     todayRevenue,
     todayCompletedOrders,
     todayDeliveryOrders,
+    todayBalcaoOrders,
+    todayBalcaoRevenue,
     periodRevenue: weeklyRevenue,
     periodCompletedOrders: weeklyCompletedOrders,
     dailyAverage,

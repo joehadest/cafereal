@@ -5,7 +5,7 @@ import { OrderCard } from "./order-card"
 import { TableStatus } from "./table-status"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell } from "lucide-react"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Order } from "@/types/order"
 import { useOrderNotifications } from "@/hooks/use-order-notifications"
@@ -228,9 +228,10 @@ export function OrdersClient({
   const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
   
   // Usar useMemo para evitar recálculos desnecessários
-  const { deliveryOrders, dineInOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
+  const { deliveryOrders, dineInOrders, balcaoOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
     const delivery = visibleOrders.filter((o) => o.order_type === "delivery")
-    const dineIn = visibleOrders.filter((o) => o.order_type === "dine-in")
+    const dineIn = visibleOrders.filter((o) => o.order_type === "dine-in" && o.table_number !== 0)
+    const balcao = visibleOrders.filter((o) => o.table_number === 0)
     const pending = visibleOrders.filter((o) => o.status === "pending")
     const preparing = visibleOrders.filter((o) => o.status === "preparing")
     const ready = visibleOrders.filter((o) => o.status === "ready")
@@ -240,6 +241,7 @@ export function OrdersClient({
     return {
       deliveryOrders: delivery,
       dineInOrders: dineIn,
+      balcaoOrders: balcao,
       pendingOrders: pending,
       preparingOrders: preparing,
       readyOrders: ready,
@@ -261,7 +263,7 @@ export function OrdersClient({
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gerenciamento de Pedidos</h1>
                 <p className="text-xs sm:text-sm text-slate-700">
-                  {visibleOrders.length} pedidos ativos ({deliveryOrders.length} delivery, {dineInOrders.length} mesa)
+                  {visibleOrders.length} pedidos ativos ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)
                   {isEnabled && (
                     <span className="ml-2 text-green-600 text-xs">• Atualização automática ativa</span>
                   )}
@@ -337,6 +339,10 @@ export function OrdersClient({
             <TabsTrigger value="dine-in" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
               <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Mesas ({dineInOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="balcao" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
+              <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Balcão ({balcaoOrders.length})
             </TabsTrigger>
             <TabsTrigger value="tables" className="data-[state=active]:bg-slate-100 text-xs sm:text-sm">
               <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -532,6 +538,63 @@ export function OrdersClient({
                     <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {dineInOrders
+                        .filter((o) => o.status === "delivered")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="balcao" className="space-y-6 sm:space-y-8">
+            {balcaoOrders.length === 0 ? (
+              <p className="text-slate-700 text-center py-8 sm:py-12 text-sm sm:text-base">Nenhum pedido do balcão</p>
+            ) : (
+              <>
+                {balcaoOrders.filter((o) => o.status === "pending").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Pendentes</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {balcaoOrders
+                        .filter((o) => o.status === "pending")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+                {balcaoOrders.filter((o) => o.status === "preparing").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Em Preparo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {balcaoOrders
+                        .filter((o) => o.status === "preparing")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+                {balcaoOrders.filter((o) => o.status === "ready").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Prontos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {balcaoOrders
+                        .filter((o) => o.status === "ready")
+                        .map((order) => (
+                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                        ))}
+                    </div>
+                  </section>
+                )}
+                {balcaoOrders.filter((o) => o.status === "delivered").length > 0 && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Entregues</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {balcaoOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
                           <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />

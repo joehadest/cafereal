@@ -30,6 +30,7 @@ export type Product = {
   display_order: number
   active: boolean
   image_url?: string
+  max_extras?: number | null
   created_at: string
   updated_at: string
   categories?: { name: string }
