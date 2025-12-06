@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { openWhatsApp } from "@/lib/utils"
 import type { ProductVariety, ProductExtra } from "@/types/product"
 
 type CartItem = {
@@ -322,16 +323,11 @@ export function Cart({
       message += `*${restaurantName}*\n`
       message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
       
-      // Limpar número do WhatsApp (remover caracteres não numéricos)
-      const cleanWhatsApp = whatsapp.replace(/\D/g, "")
-      
-      // Codificar a mensagem corretamente para URL usando encodeURIComponent
-      // Isso garante que caracteres especiais e acentos sejam codificados corretamente
-      const encodedMessage = encodeURIComponent(message)
-      
-      // Abrir WhatsApp com a mensagem formatada
-      const whatsappUrl = `https://wa.me/${cleanWhatsApp}?text=${encodedMessage}`
-      window.open(whatsappUrl, "_blank")
+      // Usar a função utilitária para abrir WhatsApp de forma otimizada para todos os dispositivos
+      openWhatsApp(whatsapp, message, {
+        openInNewTab: false, // Em mobile, abre diretamente no app; em desktop, abre na mesma aba
+        fallbackToWeb: true // Se falhar, tenta abrir WhatsApp Web
+      })
     } catch (error) {
       console.error("Erro ao enviar para WhatsApp:", error)
       alert("Erro ao abrir WhatsApp. Tente novamente.")

@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MapPin, Phone, Mail, Instagram, Facebook, MessageCircle, Clock, CheckCircle2, XCircle, DollarSign, Info } from "lucide-react"
+import { openWhatsApp } from "@/lib/utils"
 
 type RestaurantInfo = {
   name: string
@@ -199,17 +200,22 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
                   </a>
                 )}
                 {info.whatsapp && (
-                  <a
-                    href={`https://wa.me/${info.whatsapp.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition-all"
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      openWhatsApp(info.whatsapp || "", "", {
+                        openInNewTab: false,
+                        fallbackToWeb: true
+                      })
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition-all w-full text-left"
                   >
                     <div className="bg-slate-600 rounded-lg p-2 flex-shrink-0">
                       <MessageCircle className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-sm sm:text-base text-slate-800 font-medium">WhatsApp</span>
-                  </a>
+                  </button>
                 )}
                 {info.instagram && (
                   <a
