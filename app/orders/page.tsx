@@ -13,8 +13,12 @@ export default async function OrdersPage() {
     .in("status", ["pending", "preparing", "ready"])
     .order("created_at", { ascending: false })
 
-  // Fetch all tables
-  const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")
+  // Fetch all tables (only active ones)
+  const { data: tables } = await supabase
+    .from("restaurant_tables")
+    .select("*")
+    .eq("active", true)
+    .order("table_number")
 
   return <OrdersClient orders={orders || []} tables={tables || []} />
 }

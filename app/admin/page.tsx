@@ -19,7 +19,10 @@ export default async function AdminDashboard() {
     .select("*", { count: "exact", head: true })
     .eq("active", true)
 
-  const { count: totalTables } = await supabase.from("restaurant_tables").select("*", { count: "exact", head: true })
+  const { count: totalTables } = await supabase
+    .from("restaurant_tables")
+    .select("*", { count: "exact", head: true })
+    .eq("active", true)
 
   // Get today's data
   const today = new Date()

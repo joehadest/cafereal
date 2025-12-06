@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, Users } from "lucide-react"
+import { Plus, Pencil, Trash2, Users, Eye, EyeOff } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,7 @@ type Table = {
   table_number: number
   capacity: number
   status: string
+  active?: boolean
 }
 
 export function TablesClient({ tables }: { tables: Table[] }) {
@@ -65,7 +66,7 @@ export function TablesClient({ tables }: { tables: Table[] }) {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja deletar esta mesa?")) return
+    if (!confirm("Tem certeza que deseja deletar esta mesa permanentemente? Esta ação não pode ser desfeita.")) return
 
     const supabase = createClient()
     try {
@@ -75,6 +76,23 @@ export function TablesClient({ tables }: { tables: Table[] }) {
     } catch (error) {
       console.error("Error deleting table:", error)
       alert("Erro ao deletar mesa")
+    }
+  }
+
+  const handleToggleActive = async (table: Table) => {
+    const supabase = createClient()
+    try {
+      const newActiveStatus = !(table.active ?? true)
+      const { error } = await supabase
+        .from("restaurant_tables")
+        .update({ active: newActiveStatus })
+        .eq("id", table.id)
+      
+      if (error) throw error
+      router.refresh()
+    } catch (error) {
+      console.error("Error toggling table active status:", error)
+      alert("Erro ao alterar status da mesa")
     }
   }
 
@@ -169,46 +187,117 @@ export function TablesClient({ tables }: { tables: Table[] }) {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-        {tables.map((table) => (
-          <Card key={table.id} className="border-slate-200 cursor-pointer hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
-              <CardTitle className="text-slate-900 flex items-center justify-between gap-2">
-                <span className="text-xl sm:text-2xl font-bold">{table.table_number}</span>
-                <div className="flex gap-1 flex-shrink-0">
-                  <Button
-                    onClick={() => handleEdit(table)}
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 sm:h-7 sm:w-7 text-slate-600 hover:bg-slate-50 cursor-pointer"
+      <div className="space-y-4">
+        {/* Mesas Ativas */}
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-3">Mesas Ativas</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            {tables.filter((table) => table.active !== false).map((table) => (
+              <Card key={table.id} className="border-slate-200 cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+                  <CardTitle className="text-slate-900 flex items-center justify-between gap-2">
+                    <span className="text-xl sm:text-2xl font-bold">{table.table_number}</span>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button
+                        onClick={() => handleEdit(table)}
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 sm:h-7 sm:w-7 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        onClick={() => handleToggleActive(table)}
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 sm:h-7 sm:w-7 text-orange-600 hover:bg-orange-50 cursor-pointer"
+                        title="Desativar mesa"
+                      >
+                        <EyeOff className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(table.id)}
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 sm:h-7 sm:w-7 text-red-600 hover:bg-red-50 cursor-pointer"
+                        title="Deletar permanentemente"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 p-3 sm:p-6 pt-0">
+                  <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-700">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span>{table.capacity} {table.capacity === 1 ? 'pessoa' : 'pessoas'}</span>
+                  </div>
+                  <Badge
+                    variant={table.status === "available" ? "outline" : "default"}
+                    className={`text-xs ${table.status === "available" ? "border-green-500 text-green-700" : "bg-slate-600"}`}
                   >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(table.id)}
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 sm:h-7 sm:w-7 text-red-600 hover:bg-red-50 cursor-pointer"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 p-3 sm:p-6 pt-0">
-              <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-700">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span>{table.capacity} {table.capacity === 1 ? 'pessoa' : 'pessoas'}</span>
-              </div>
-              <Badge
-                variant={table.status === "available" ? "outline" : "default"}
-                className={`text-xs ${table.status === "available" ? "border-green-500 text-green-700" : "bg-slate-600"}`}
-              >
-                {table.status === "available" ? "Disponível" : table.status === "occupied" ? "Ocupada" : "Reservada"}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
+                    {table.status === "available" ? "Disponível" : table.status === "occupied" ? "Ocupada" : "Reservada"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Mesas Desativadas */}
+        {tables.filter((table) => table.active === false).length > 0 && (
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-600 mb-3">Mesas Desativadas</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              {tables.filter((table) => table.active === false).map((table) => (
+                <Card key={table.id} className="border-slate-200 opacity-60 cursor-pointer hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+                    <CardTitle className="text-slate-600 flex items-center justify-between gap-2">
+                      <span className="text-xl sm:text-2xl font-bold line-through">{table.table_number}</span>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          onClick={() => handleEdit(table)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 sm:h-7 sm:w-7 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          onClick={() => handleToggleActive(table)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 hover:bg-green-50 cursor-pointer"
+                          title="Reativar mesa"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(table.id)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 sm:h-7 sm:w-7 text-red-600 hover:bg-red-50 cursor-pointer"
+                          title="Deletar permanentemente"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 p-3 sm:p-6 pt-0">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+                      <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span>{table.capacity} {table.capacity === 1 ? 'pessoa' : 'pessoas'}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs border-slate-400 text-slate-500">
+                      Desativada
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

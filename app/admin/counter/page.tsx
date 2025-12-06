@@ -8,8 +8,12 @@ export default async function CounterPage() {
 
   // Não precisa buscar categorias e produtos, pois o balcão é um item especial
 
-  // Buscar mesas
-  const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")
+  // Buscar mesas (apenas ativas para o balcão)
+  const { data: tables } = await supabase
+    .from("restaurant_tables")
+    .select("*")
+    .eq("active", true)
+    .order("table_number")
 
   // Buscar informações do restaurante
   const { data: restaurantSettings } = await supabase

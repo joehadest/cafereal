@@ -63,8 +63,12 @@ export default async function HomePage() {
     })
   }
 
-  // Fetch available tables
-  const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")
+  // Fetch available tables (only active ones)
+  const { data: tables } = await supabase
+    .from("restaurant_tables")
+    .select("*")
+    .eq("active", true)
+    .order("table_number")
 
   return (
     <MenuClient

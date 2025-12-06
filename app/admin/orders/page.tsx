@@ -20,8 +20,12 @@ export default async function AdminOrdersPage() {
     .in("status", ["pending", "preparing", "ready", "out_for_delivery", "delivered"])
     .order("created_at", { ascending: false })
 
-  // Fetch all tables
-  const { data: tables } = await supabase.from("restaurant_tables").select("*").order("table_number")
+  // Fetch all tables (only active ones for display)
+  const { data: tables } = await supabase
+    .from("restaurant_tables")
+    .select("*")
+    .eq("active", true)
+    .order("table_number")
 
   const { data: restaurantSettings } = await supabase
     .from("restaurant_settings")
