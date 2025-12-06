@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { CategorySection } from "./category-section"
 import { Cart } from "./cart"
 import { TableSelector } from "./table-selector"
 import { OrderTypeSelector } from "./order-type-selector"
 import { ProductOptionsModal } from "./product-options-modal"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle, Package } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { ShoppingCart, Bike, UtensilsCrossed, LogOut, User, AlertCircle, Package, Search, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CategoryNavBar } from "./category-nav-bar"
@@ -91,6 +92,7 @@ export function MenuClient({
   const router = useRouter()
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
   const categoryRefs = useRef<Map<string, HTMLElement>>(new Map())
   const visibleSections = useRef<Map<string, number>>(new Map())
 
@@ -247,6 +249,44 @@ export function MenuClient({
   // - Para delivery: orderType está definido
   // - Para dine-in: orderType está definido E mesa foi selecionada
   const showMenu = orderType !== null && (orderType === "delivery" || (orderType === "dinein" && selectedTable !== null))
+
+  // Filtrar categorias e produtos baseado no termo de busca
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return categories
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim()
+    
+    return categories
+      .map((category) => {
+        // Filtrar apenas produtos ativos que correspondem à busca
+        const filteredProducts = category.products
+          .filter((product) => product.active !== false)
+          .filter((product) => {
+            const productName = (product.name || "").toLowerCase()
+            const productDescription = (product.description || "").toLowerCase()
+            return productName.includes(searchLower) || productDescription.includes(searchLower)
+          })
+
+        // Retornar categoria apenas se tiver produtos filtrados
+        if (filteredProducts.length > 0) {
+          return {
+            ...category,
+            products: filteredProducts,
+          }
+        }
+        return null
+      })
+      .filter((category): category is Category => category !== null)
+  }, [categories, searchTerm])
+
+  // Limpar categoria ativa quando houver busca
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      setActiveCategory(null)
+    }
+  }, [searchTerm])
 
   useEffect(() => {
     if (!showMenu) return
@@ -470,9 +510,35 @@ export function MenuClient({
         <TableSelector tables={tables} onSelectTable={setSelectedTable} onBack={handleBackToOrderType} />
       )}
 
-      {showMenu && categories.length > 0 && (
+      {showMenu && (
+        <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+          <div className="container mx-auto px-4 py-3 sm:py-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-10 sm:pl-12 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-slate-300 focus:border-slate-500 focus:ring-slate-500 rounded-lg"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label="Limpar busca"
+                >
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMenu && filteredCategories.length > 0 && !searchTerm && (
         <CategoryNavBar
-          categories={categories
+          categories={filteredCategories
             .filter((cat) => cat.active !== false)
             .sort((a: any, b: any) => {
               // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
@@ -489,25 +555,43 @@ export function MenuClient({
 
       {showMenu && (
         <main className="container mx-auto px-4 py-8">
-          <div className="space-y-12">
-            {categories
-              .sort((a: any, b: any) => {
-                // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
-                if (a.display_order !== b.display_order) {
-                  return (a.display_order || 0) - (b.display_order || 0)
-                }
-                return a.id.localeCompare(b.id)
-              })
-              .map((category) => (
-                <div
-                  key={category.id}
-                  ref={(el) => registerCategoryRef(category.id, el)}
-                  data-category-id={category.id}
+          {filteredCategories.length > 0 ? (
+            <div className="space-y-12">
+              {filteredCategories
+                .sort((a: any, b: any) => {
+                  // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
+                  if (a.display_order !== b.display_order) {
+                    return (a.display_order || 0) - (b.display_order || 0)
+                  }
+                  return a.id.localeCompare(b.id)
+                })
+                .map((category) => (
+                  <div
+                    key={category.id}
+                    ref={(el) => registerCategoryRef(category.id, el)}
+                    data-category-id={category.id}
+                  >
+                    <CategorySection category={category} onAddToCart={handleProductClick} />
+                  </div>
+                ))}
+            </div>
+          ) : searchTerm ? (
+            <div className="text-center py-16">
+              <div className="mb-4 inline-block p-6 bg-slate-100 rounded-full">
+                <Search className="h-16 w-16 text-slate-300" />
+              </div>
+              <p className="text-lg font-medium text-slate-700">Nenhum produto encontrado</p>
+              <p className="text-sm text-slate-600 mt-2">
+                Tente buscar com outros termos ou{" "}
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="text-slate-700 font-medium hover:underline"
                 >
-                  <CategorySection category={category} onAddToCart={handleProductClick} />
-                </div>
-              ))}
-          </div>
+                  limpar a busca
+                </button>
+              </p>
+            </div>
+          ) : null}
         </main>
       )}
 

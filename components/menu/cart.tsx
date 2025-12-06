@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle } from "lucide-react"
+import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { openWhatsApp } from "@/lib/utils"
@@ -61,10 +61,12 @@ export function Cart({
   } | null
 }) {
   const [notes, setNotes] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | "dinein" | null>(null)
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
+  const [dineInCustomerName, setDineInCustomerName] = useState("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -89,6 +91,21 @@ export function Cart({
   const handleSubmitOrder = async () => {
     if (cart.length === 0) return
     if (orderType === "dinein" && !tableNumber) return
+    
+    // Validação para pedidos de mesa - nome obrigatório
+    if (orderType === "dinein") {
+      if (!dineInCustomerName?.trim()) {
+        alert("Por favor, preencha o nome para identificar o pedido")
+        return
+      }
+    }
+    
+    // Validação para forma de pagamento
+    if (!paymentMethod || !paymentMethod.trim()) {
+      alert("Por favor, selecione a forma de pagamento")
+      return
+    }
+    
     if (orderType === "delivery" && !effectiveDeliveryInfo) {
       alert("Por favor, preencha todas as informações de entrega")
       return
@@ -119,10 +136,15 @@ export function Cart({
         status: "pending",
         total: finalTotal,
         notes: notes || null,
+        payment_method: paymentMethod.trim(),
       }
 
       if (orderType === "dinein") {
         orderData.table_number = tableNumber
+        // Salvar nome do cliente para pedidos de mesa
+        if (dineInCustomerName?.trim()) {
+          orderData.customer_name = dineInCustomerName.trim()
+        }
       } else if (orderType === "delivery" && effectiveDeliveryInfo) {
         orderData.table_number = 0
         // Garantir que os dados sejam salvos corretamente
@@ -302,11 +324,12 @@ export function Cart({
       }
       message += `\n*TOTAL: R$ ${order.total.toFixed(2)}*\n\n`
       
-      if (pixKey) {
-        message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
-        message += `*FORMA DE PAGAMENTO:*\n`
-        message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
-        message += `*PIX*\n`
+      message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
+      message += `*FORMA DE PAGAMENTO:*\n`
+      message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+      message += `*${order.payment_method || "Não informado"}*\n\n`
+      
+      if (order.payment_method === "PIX" && pixKey) {
         message += `Chave PIX: ${pixKey}\n`
         message += `Valor: R$ ${order.total.toFixed(2)}\n\n`
       }
@@ -556,6 +579,34 @@ export function Cart({
                 </div>
               )}
 
+              {orderType === "dinein" && (
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 sm:p-4 rounded-xl border border-blue-200 shadow-sm space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
+                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm sm:text-base">
+                    <div className="p-1.5 bg-blue-200 rounded-lg">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <span>Identificação do Pedido</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cart-dinein-name" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                      <User className="h-4 w-4" />
+                      Nome do Cliente <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="cart-dinein-name"
+                      type="text"
+                      placeholder="Seu nome completo"
+                      value={dineInCustomerName}
+                      onChange={(e) => setDineInCustomerName(e.target.value)}
+                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
+                      required
+                    />
+                    <p className="text-xs text-slate-600">Este nome será usado para identificar seu pedido na mesa {tableNumber}</p>
+                  </div>
+                </div>
+              )}
+
               {cart.map((item, index) => {
                 const itemKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
                 return (
@@ -614,6 +665,62 @@ export function Cart({
                 </div>
               )})}
 
+              <div className="pt-2 animate-in fade-in duration-500 delay-200">
+                <label className="block text-sm font-semibold text-slate-900 mb-3">
+                  Forma de Pagamento <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("PIX")}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "PIX"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Smartphone className={`h-5 w-5 sm:h-6 sm:w-6 ${paymentMethod === "PIX" ? "text-green-600" : "text-slate-500"}`} />
+                    <span className="text-xs sm:text-sm font-medium">PIX</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("Dinheiro")}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "Dinheiro"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Wallet className={`h-5 w-5 sm:h-6 sm:w-6 ${paymentMethod === "Dinheiro" ? "text-green-600" : "text-slate-500"}`} />
+                    <span className="text-xs sm:text-sm font-medium">Dinheiro</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("Cartão de Débito")}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "Cartão de Débito"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                    }`}
+                  >
+                    <CreditCard className={`h-5 w-5 sm:h-6 sm:w-6 ${paymentMethod === "Cartão de Débito" ? "text-green-600" : "text-slate-500"}`} />
+                    <span className="text-xs sm:text-sm font-medium">Débito</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("Cartão de Crédito")}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "Cartão de Crédito"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                    }`}
+                  >
+                    <CreditCard className={`h-5 w-5 sm:h-6 sm:w-6 ${paymentMethod === "Cartão de Crédito" ? "text-green-600" : "text-slate-500"}`} />
+                    <span className="text-xs sm:text-sm font-medium">Crédito</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="pt-2 animate-in fade-in duration-500 delay-300">
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Observações (opcional)</label>
                 <Textarea
@@ -656,6 +763,8 @@ export function Cart({
               disabled={
                 Boolean(isSubmitting || 
                 (!tableNumber && orderType === "dinein") || 
+                (orderType === "dinein" && !dineInCustomerName?.trim()) ||
+                (!paymentMethod || !paymentMethod.trim()) ||
                 (!effectiveDeliveryInfo && orderType === "delivery") ||
                 (orderType === "delivery" && effectiveDeliveryInfo && (!effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)))
               }
