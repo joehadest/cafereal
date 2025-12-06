@@ -69,6 +69,9 @@ export function CounterClient({
   const [cart, setCart] = useState<CartItem[]>([])
   const [selectedTable, setSelectedTable] = useState<string>("0") // 0 = balcão
   const [customerName, setCustomerName] = useState<string>("")
+  const [customerPhone, setCustomerPhone] = useState<string>("")
+  const [customerAddress, setCustomerAddress] = useState<string>("")
+  const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [notes, setNotes] = useState<string>("")
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false)
   const [productWeight, setProductWeight] = useState<string>("")
@@ -151,11 +154,18 @@ export function CounterClient({
         table_number: tableNumber,
         total: totalPrice,
         notes: notes || null,
+        payment_method: paymentMethod.trim() || null,
       }
 
-      // Se for balcão (mesa 0), pode ter nome do cliente
-      if (tableNumber === 0 && customerName.trim()) {
+      // Adicionar informações do cliente se preenchidas
+      if (customerName.trim()) {
         orderData.customer_name = customerName.trim()
+      }
+      if (customerPhone.trim()) {
+        orderData.customer_phone = customerPhone.trim()
+      }
+      if (customerAddress.trim()) {
+        orderData.delivery_address = customerAddress.trim()
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
@@ -235,6 +245,9 @@ export function CounterClient({
       // Limpar carrinho
       setCart([])
       setCustomerName("")
+      setCustomerPhone("")
+      setCustomerAddress("")
+      setPaymentMethod("")
       setNotes("")
       setSelectedTable("0")
 
@@ -518,17 +531,50 @@ export function CounterClient({
                   </Select>
                 </div>
 
-                {selectedTable === "0" && (
-                  <div>
-                    <Label htmlFor="customerName">Nome do Cliente (opcional)</Label>
-                    <Input
-                      id="customerName"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Nome do cliente"
-                    />
-                  </div>
-                )}
+                <div>
+                  <Label htmlFor="customerName">Nome do Cliente</Label>
+                  <Input
+                    id="customerName"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Nome completo do cliente"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerPhone">Telefone (opcional)</Label>
+                  <Input
+                    id="customerPhone"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerAddress">Endereço (opcional)</Label>
+                  <Input
+                    id="customerAddress"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="Endereço completo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="paymentMethod">Forma de Pagamento</Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger id="paymentMethod">
+                      <SelectValue placeholder="Selecione a forma de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PIX">PIX</SelectItem>
+                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                      <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div>
                   <Label htmlFor="notes">Observações</Label>

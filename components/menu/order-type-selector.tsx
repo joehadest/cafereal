@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Bike, UtensilsCrossed, ArrowRight } from "lucide-react"
+import { Bike, ArrowRight } from "lucide-react"
 
 type OrderTypeSelectorProps = {
   onSelectType: (type: "delivery" | "dinein") => void

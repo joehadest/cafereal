@@ -35,7 +35,6 @@ export function Cart({
   onClose,
   cart,
   orderType,
-  tableNumber,
   deliveryInfo,
   deliveryFee,
   onUpdateQuantity,
@@ -47,8 +46,7 @@ export function Cart({
   isOpen: boolean
   onClose: () => void
   cart: CartItem[]
-  orderType: "delivery" | "dinein" | null
-  tableNumber: number | null
+  orderType: "delivery" | null
   deliveryInfo: DeliveryInfo | null
   deliveryFee: number
   onUpdateQuantity: (itemKey: string, quantity: number) => void
@@ -66,9 +64,8 @@ export function Cart({
   const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | "dinein" | null>(null)
+  const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | null>(null)
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
-  const [dineInCustomerName, setDineInCustomerName] = useState("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -92,15 +89,6 @@ export function Cart({
 
   const handleSubmitOrder = async () => {
     if (cart.length === 0) return
-    if (orderType === "dinein" && !tableNumber) return
-    
-    // Validação para pedidos de mesa - nome obrigatório
-    if (orderType === "dinein") {
-      if (!dineInCustomerName?.trim()) {
-        alert("Por favor, preencha o nome para identificar o pedido")
-        return
-      }
-    }
     
     // Validação para forma de pagamento
     if (!paymentMethod || !paymentMethod.trim()) {
@@ -134,20 +122,14 @@ export function Cart({
 
     try {
       const orderData: any = {
-        order_type: orderType === "dinein" ? "dine-in" : "delivery",
+        order_type: "delivery",
         status: "pending",
         total: finalTotal,
         notes: notes || null,
         payment_method: paymentMethod.trim(),
       }
 
-      if (orderType === "dinein") {
-        orderData.table_number = tableNumber
-        // Salvar nome do cliente para pedidos de mesa
-        if (dineInCustomerName?.trim()) {
-          orderData.customer_name = dineInCustomerName.trim()
-        }
-      } else if (orderType === "delivery" && effectiveDeliveryInfo) {
+      if (orderType === "delivery" && effectiveDeliveryInfo) {
         orderData.table_number = 0
         // Garantir que os dados sejam salvos corretamente
         // Se manualDeliveryInfo foi preenchido, usar apenas ele para evitar duplicação
@@ -589,33 +571,6 @@ export function Cart({
                 </div>
               )}
 
-              {orderType === "dinein" && (
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 sm:p-4 rounded-xl border border-blue-200 shadow-sm space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
-                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm sm:text-base">
-                    <div className="p-1.5 bg-blue-200 rounded-lg">
-                      <User className="h-4 w-4" />
-                    </div>
-                    <span>Identificação do Pedido</span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="cart-dinein-name" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
-                      <User className="h-4 w-4" />
-                      Nome do Cliente <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="cart-dinein-name"
-                      type="text"
-                      placeholder="Seu nome completo"
-                      value={dineInCustomerName}
-                      onChange={(e) => setDineInCustomerName(e.target.value)}
-                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
-                      required
-                    />
-                    <p className="text-xs text-slate-600">Este nome será usado para identificar seu pedido na mesa {tableNumber}</p>
-                  </div>
-                </div>
-              )}
 
               {cart.map((item, index) => {
                 const itemKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
@@ -772,8 +727,6 @@ export function Cart({
               onClick={handleSubmitOrder}
               disabled={
                 Boolean(isSubmitting || 
-                (!tableNumber && orderType === "dinein") || 
-                (orderType === "dinein" && !dineInCustomerName?.trim()) ||
                 (!paymentMethod || !paymentMethod.trim()) ||
                 (!effectiveDeliveryInfo && orderType === "delivery") ||
                 (orderType === "delivery" && effectiveDeliveryInfo && (!effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)))

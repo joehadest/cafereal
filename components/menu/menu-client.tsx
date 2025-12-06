@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { CategorySection } from "./category-section"
 import { Cart } from "./cart"
-import { TableSelector } from "./table-selector"
 import { OrderTypeSelector } from "./order-type-selector"
 import { ProductOptionsModal } from "./product-options-modal"
 import { Button } from "@/components/ui/button"
@@ -22,12 +21,6 @@ type Category = {
   products: Product[]
 }
 
-type Table = {
-  id: string
-  table_number: number
-  capacity: number
-  status: string
-}
 
 type SelectedOptions = {
   variety: ProductVariety | null
@@ -49,14 +42,12 @@ type DeliveryInfo = {
 
 export function MenuClient({
   categories,
-  tables,
   restaurantName,
   restaurantLogo,
   deliveryFeeSetting,
   restaurantInfo,
 }: {
   categories: Category[]
-  tables: Table[]
   restaurantName: string
   restaurantLogo: string | null
   deliveryFeeSetting?: number
@@ -78,9 +69,8 @@ export function MenuClient({
     accepts_dine_in?: boolean | null
   }
 }) {
-  const [orderType, setOrderType] = useState<"delivery" | "dinein" | null>(null)
+  const [orderType, setOrderType] = useState<"delivery" | null>(null)
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null)
-  const [selectedTable, setSelectedTable] = useState<number | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
@@ -167,11 +157,6 @@ export function MenuClient({
       return
     }
 
-    if (orderType === "dinein" && !selectedTable) {
-      alert("Por favor, selecione uma mesa primeiro")
-      return
-    }
-
     // Sempre abrir o modal, mesmo se não tiver variedades ou extras
       setSelectedProduct(product)
       setSelectedProductCategory(categoryName)
@@ -248,13 +233,10 @@ export function MenuClient({
   const handleBackToOrderType = () => {
     setOrderType(null)
     setDeliveryInfo(null)
-    setSelectedTable(null)
   }
 
-  // O cardápio só aparece quando:
-  // - Para delivery: orderType está definido
-  // - Para dine-in: orderType está definido E mesa foi selecionada
-  const showMenu = orderType !== null && (orderType === "delivery" || (orderType === "dinein" && selectedTable !== null))
+  // O cardápio só aparece quando orderType está definido (apenas delivery agora)
+  const showMenu = orderType === "delivery"
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -404,11 +386,6 @@ export function MenuClient({
                     Delivery - {deliveryInfo.customerName}
                   </p>
                 )}
-                {orderType === "dinein" && selectedTable && (
-                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500">
-                    Mesa {selectedTable}
-                  </p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -512,9 +489,6 @@ export function MenuClient({
         </div>
       )}
 
-      {orderType === "dinein" && !selectedTable && (
-        <TableSelector tables={tables} onSelectTable={setSelectedTable} onBack={handleBackToOrderType} />
-      )}
 
       {showMenu && (
         <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
@@ -680,7 +654,6 @@ export function MenuClient({
         onClose={() => setIsCartOpen(false)}
         cart={cart}
         orderType={orderType}
-        tableNumber={selectedTable}
         deliveryInfo={deliveryInfo}
         deliveryFee={deliveryFee}
         onUpdateQuantity={updateQuantity}
