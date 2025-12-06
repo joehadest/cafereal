@@ -93,6 +93,11 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
               <div key={item.id} className="border-b border-dotted border-gray-300 pb-3 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start gap-2 mb-1">
                   <div className="flex-1 min-w-0">
+                    {item.category_name && (
+                      <div className="text-[10px] text-gray-600 font-semibold uppercase mb-0.5">
+                        [{item.category_name}]
+                      </div>
+                    )}
                     <div className="font-bold text-sm leading-tight break-words text-black">
                       {item.quantity}x {item.product_name}
                     </div>

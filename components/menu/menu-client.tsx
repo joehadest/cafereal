@@ -87,6 +87,7 @@ export function MenuClient({
   const [isLoadingUserData, setIsLoadingUserData] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [selectedProductCategory, setSelectedProductCategory] = useState<string | undefined>(undefined)
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
   const [hasChosenContinueWithoutLogin, setHasChosenContinueWithoutLogin] = useState(false)
   const router = useRouter()
@@ -151,7 +152,7 @@ export function MenuClient({
     }
   }
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = (product: Product, categoryName?: string) => {
     if (!orderType) {
       alert("Por favor, selecione o tipo de pedido primeiro (Delivery ou Comer no Local)")
       return
@@ -161,6 +162,7 @@ export function MenuClient({
     // Não mostrar se o usuário já escolheu continuar sem login
     if (orderType === "delivery" && !user && !hasChosenContinueWithoutLogin) {
       setSelectedProduct(product)
+      setSelectedProductCategory(categoryName)
       setShowLoginModal(true)
       return
     }
@@ -172,6 +174,7 @@ export function MenuClient({
 
     // Sempre abrir o modal, mesmo se não tiver variedades ou extras
       setSelectedProduct(product)
+      setSelectedProductCategory(categoryName)
       setIsOptionsModalOpen(true)
   }
 
@@ -179,6 +182,7 @@ export function MenuClient({
     const basePrice = options.variety ? options.variety.price : product.price
     const extrasPrice = options.extras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
     const finalPrice = basePrice + extrasPrice
+    const categoryName = selectedProductCategory
 
     setCart((prev) => {
       // Criar uma chave única baseada no produto + variedade + extras
@@ -200,7 +204,9 @@ export function MenuClient({
       }
       
       return [...prev, { 
-        ...product, 
+        ...product,
+        description: product.description,
+        categoryName: categoryName,
         quantity: 1,
         selectedVariety: options.variety,
         selectedExtras: options.extras,
@@ -571,7 +577,7 @@ export function MenuClient({
                     ref={(el) => registerCategoryRef(category.id, el)}
                     data-category-id={category.id}
                   >
-                    <CategorySection category={category} onAddToCart={handleProductClick} />
+                    <CategorySection category={category} onAddToCart={(product, categoryName) => handleProductClick(product, categoryName)} />
                   </div>
                 ))}
             </div>
@@ -637,6 +643,7 @@ export function MenuClient({
                         addToCart(selectedProduct, { variety: null, extras: [] })
                       }
                       setSelectedProduct(null)
+                      setSelectedProductCategory(undefined)
                     }
                   }} 
                   variant="outline" 
@@ -647,6 +654,7 @@ export function MenuClient({
                 <Button onClick={() => {
                   setShowLoginModal(false)
                   setSelectedProduct(null)
+                  setSelectedProductCategory(undefined)
                 }} variant="ghost" className="w-full text-slate-700">
                   Cancelar
                 </Button>
@@ -661,6 +669,7 @@ export function MenuClient({
         onClose={() => {
           setIsOptionsModalOpen(false)
           setSelectedProduct(null)
+          setSelectedProductCategory(undefined)
         }}
         product={selectedProduct}
         onAddToCart={addToCart}

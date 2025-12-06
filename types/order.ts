@@ -10,6 +10,7 @@ export type OrderItemExtra = {
 export type OrderItem = {
   id: string
   product_name: string
+  category_name?: string | null
   product_price: number
   quantity: number
   subtotal: number

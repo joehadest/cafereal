@@ -138,6 +138,11 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
               <div key={item.id} className="border-b border-dotted border-gray-300 pb-2 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start gap-1 mb-0.5">
                   <div className="flex-1 min-w-0" style={{ maxWidth: 'calc(100% - 50px)', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                    {item.category_name && (
+                      <div className="text-[10px] text-gray-600 font-semibold uppercase mb-0.5" style={{ wordBreak: 'break-word' }}>
+                        [{item.category_name}]
+                      </div>
+                    )}
                     <div className="font-bold text-xs leading-tight break-words" style={{ wordBreak: 'break-word' }}>
                       {item.quantity}x {item.product_name}
                     </div>

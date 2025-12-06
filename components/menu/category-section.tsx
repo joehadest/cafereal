@@ -23,7 +23,7 @@ export function CategorySection({
   onAddToCart,
 }: {
   category: Category
-  onAddToCart: (product: Product) => void
+  onAddToCart: (product: Product, categoryName: string) => void
 }) {
   // Filtrar produtos ativos e ordenar por display_order
   const activeProducts = category.products
@@ -54,7 +54,7 @@ export function CategorySection({
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
         {activeProducts.map((product) => (
           <div key={product.id} className="h-full">
-            <ProductCard product={product} onAddToCart={onAddToCart} />
+            <ProductCard product={product} onAddToCart={(p) => onAddToCart(p, category.name)} />
           </div>
         ))}
       </div>

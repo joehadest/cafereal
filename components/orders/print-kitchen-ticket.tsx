@@ -46,6 +46,11 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
             {order.order_items.map((item) => (
               <tr key={item.id} className="border-b-2 border-gray-400">
                 <td className="py-2 pr-3">
+                  {item.category_name && (
+                    <div className="text-[10px] text-gray-600 font-bold uppercase mb-0.5">
+                      [{item.category_name}]
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-1">
                     <span className="text-xl font-bold mr-3">{item.quantity}x</span>
                     <span className="text-sm font-bold flex-1 uppercase leading-tight">{item.product_name}</span>

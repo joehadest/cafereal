@@ -15,6 +15,8 @@ import type { ProductVariety, ProductExtra } from "@/types/product"
 type CartItem = {
   id: string
   name: string
+  description?: string | null
+  categoryName?: string
   price: number
   quantity: number
   finalPrice: number
@@ -167,17 +169,25 @@ export function Cart({
       }
 
       // Inserir itens do pedido com variedades
-      const orderItems = cart.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
-        quantity: item.quantity,
-        subtotal: item.finalPrice * item.quantity,
-        variety_id: item.selectedVariety?.id || null,
-        variety_name: item.selectedVariety?.name || null,
-        variety_price: item.selectedVariety?.price || null,
-      }))
+      const orderItems = cart.map((item) => {
+        // Incluir descrição do produto junto com o nome se existir
+        const productNameWithDescription = item.description 
+          ? `${item.name} - ${item.description}`
+          : item.name
+        
+        return {
+          order_id: order.id,
+          product_id: item.id,
+          product_name: productNameWithDescription,
+          category_name: item.categoryName || null,
+          product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
+          quantity: item.quantity,
+          subtotal: item.finalPrice * item.quantity,
+          variety_id: item.selectedVariety?.id || null,
+          variety_name: item.selectedVariety?.name || null,
+          variety_price: item.selectedVariety?.price || null,
+        }
+      })
 
       const { data: insertedItems, error: itemsError } = await supabase.from("order_items").insert(orderItems).select()
 
