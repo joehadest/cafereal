@@ -231,7 +231,7 @@ export function OrdersClient({
   const { deliveryOrders, dineInOrders, balcaoOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
     const delivery = visibleOrders.filter((o) => o.order_type === "delivery")
     const dineIn = visibleOrders.filter((o) => o.order_type === "dine-in" && o.table_number !== 0)
-    const balcao = visibleOrders.filter((o) => o.table_number === 0)
+    const balcao = visibleOrders.filter((o) => o.order_type === "dine-in" && o.table_number === 0)
     const pending = visibleOrders.filter((o) => o.status === "pending")
     const preparing = visibleOrders.filter((o) => o.status === "preparing")
     const ready = visibleOrders.filter((o) => o.status === "ready")

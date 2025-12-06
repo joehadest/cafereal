@@ -36,8 +36,8 @@ export default async function AdminDashboard() {
   const todayRevenue = todayOrders?.reduce((sum, order) => sum + order.total, 0) || 0
   const todayCompletedOrders = todayOrders?.filter((o) => o.status === "delivered").length || 0
   const todayDeliveryOrders = todayOrders?.filter((o) => o.order_type === "delivery").length || 0
-  const todayBalcaoOrders = todayOrders?.filter((o) => o.table_number === 0).length || 0
-  const todayBalcaoRevenue = todayOrders?.filter((o) => o.table_number === 0).reduce((sum, order) => sum + order.total, 0) || 0
+  const todayBalcaoOrders = todayOrders?.filter((o) => o.order_type === "dine-in" && o.table_number === 0).length || 0
+  const todayBalcaoRevenue = todayOrders?.filter((o) => o.order_type === "dine-in" && o.table_number === 0).reduce((sum, order) => sum + order.total, 0) || 0
 
   // Get weekly data (last 7 days)
   const weekAgo = new Date()

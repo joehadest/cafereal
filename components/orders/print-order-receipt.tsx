@@ -34,7 +34,7 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
   }
 
   return (
-    <div className="print-receipt hidden print:block bg-white text-black p-2 max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0 auto', boxSizing: 'border-box', overflow: 'hidden', wordWrap: 'break-word' }}>
+    <div className="print-receipt print:block bg-white text-black p-2 max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0 auto', boxSizing: 'border-box', overflow: 'hidden', wordWrap: 'break-word', display: 'block', visibility: 'visible' }}>
       {/* Header do Restaurante - Destacado */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1.5">

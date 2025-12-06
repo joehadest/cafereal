@@ -265,6 +265,7 @@ export function CounterClient({
     printContainer.style.width = "80mm"
     printContainer.style.visibility = "visible"
     printContainer.style.display = "block"
+    printContainer.style.opacity = "1"
 
     document.body.appendChild(printContainer)
 
@@ -272,8 +273,8 @@ export function CounterClient({
     const root = createRoot(printContainer)
 
     root.render(
-      <div id={`print-wrapper-${order.id}`} style={{ width: "80mm", display: "block", visibility: "visible" }}>
-        <div className="print-receipt" style={{ display: "block", visibility: "visible", position: "relative" }}>
+      <div id={`print-wrapper-${order.id}`} style={{ width: "80mm", display: "block", visibility: "visible", opacity: "1" }}>
+        <div className="print-receipt" style={{ display: "block", visibility: "visible", position: "relative", opacity: "1" }}>
           <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
         </div>
       </div>
@@ -284,18 +285,26 @@ export function CounterClient({
     style.id = `print-styles-${order.id}`
     style.innerHTML = `
       /* Forçar visibilidade antes da impressão */
+      #print-container-${order.id} {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
       #print-container-${order.id} .hidden {
         display: block !important;
         visibility: visible !important;
+        opacity: 1 !important;
       }
       #print-container-${order.id} .print-receipt,
       #print-container-${order.id} .print-kitchen,
       #print-container-${order.id} .print-customer {
         display: block !important;
         visibility: visible !important;
+        opacity: 1 !important;
       }
       #print-container-${order.id} * {
         visibility: visible !important;
+        opacity: 1 !important;
       }
       @media print {
         /* Ocultar tudo do body */
@@ -317,6 +326,7 @@ export function CounterClient({
           padding: 0 !important;
           visibility: visible !important;
           display: block !important;
+          opacity: 1 !important;
           page-break-inside: avoid !important;
           page-break-after: avoid !important;
           page-break-before: avoid !important;
@@ -334,6 +344,7 @@ export function CounterClient({
         #print-container-${order.id} .hidden { 
           visibility: visible !important; 
           display: block !important;
+          opacity: 1 !important;
         }
         #print-container-${order.id} .print-receipt,
         #print-container-${order.id} .print-kitchen,
@@ -351,6 +362,7 @@ export function CounterClient({
           height: auto !important;
           display: block !important;
           visibility: visible !important;
+          opacity: 1 !important;
         }
         @page {
           size: 80mm auto !important;
@@ -366,40 +378,81 @@ export function CounterClient({
     `
     document.head.appendChild(style)
 
-    // Aguardar um pouco para garantir que o React renderizou tudo
-    setTimeout(() => {
-      // Mover o container para a posição correta antes de imprimir
-      printContainer.style.position = "relative"
-      printContainer.style.left = "auto"
-      printContainer.style.top = "auto"
-      printContainer.style.visibility = "visible"
-      
-      // Forçar visibilidade de todos os elementos e remover classe hidden
-      const allElements = printContainer.querySelectorAll("*")
-      allElements.forEach((el) => {
-        const htmlEl = el as HTMLElement
-        htmlEl.style.visibility = "visible"
-        htmlEl.classList.remove("hidden")
-        if (htmlEl.classList.contains("print-receipt")) {
-          htmlEl.style.display = "block"
-        }
-      })
+    // Função para verificar se o conteúdo foi renderizado
+    const checkContentReady = (attempts = 0): void => {
+      const maxAttempts = 30 // 15 segundos no total
+      const receiptElement = printContainer.querySelector(".print-receipt")
+      const hasContent = receiptElement && receiptElement.textContent && receiptElement.textContent.trim().length > 0
+      const hasOrderItems = receiptElement && receiptElement.querySelector(".space-y-2") && receiptElement.querySelector(".space-y-2")!.children.length > 0
 
-      // Imprimir
-      window.print()
-      
-      // Limpar após impressão
-      setTimeout(() => {
-        if (printContainer.parentNode) {
-          document.body.removeChild(printContainer)
+      if ((hasContent && hasOrderItems) || attempts >= maxAttempts) {
+        // Mover o container para a posição correta antes de imprimir
+        printContainer.style.position = "relative"
+        printContainer.style.left = "auto"
+        printContainer.style.top = "auto"
+        printContainer.style.visibility = "visible"
+        printContainer.style.opacity = "1"
+        printContainer.style.display = "block"
+        
+        // Forçar visibilidade de todos os elementos e remover classe hidden
+        const allElements = printContainer.querySelectorAll("*")
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.visibility = "visible"
+          htmlEl.style.opacity = "1"
+          htmlEl.style.display = htmlEl.classList.contains("print-receipt") ? "block" : htmlEl.style.display || ""
+          htmlEl.classList.remove("hidden")
+        })
+
+        // Garantir que o elemento de impressão está visível
+        if (receiptElement) {
+          const receiptHtml = receiptElement as HTMLElement
+          receiptHtml.style.display = "block"
+          receiptHtml.style.visibility = "visible"
+          receiptHtml.style.opacity = "1"
+          receiptHtml.classList.remove("hidden")
         }
-        const styleElement = document.getElementById(`print-styles-${order.id}`)
-        if (styleElement && styleElement.parentNode) {
-          document.head.removeChild(styleElement)
-        }
-        root.unmount()
-      }, 1000)
-    }, 500)
+
+        // Aguardar múltiplos frames para garantir renderização completa
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Verificar novamente se o conteúdo está visível
+              const finalCheck = printContainer.querySelector(".print-receipt")
+              if (finalCheck) {
+                (finalCheck as HTMLElement).style.display = "block"
+                ;(finalCheck as HTMLElement).style.visibility = "visible"
+                ;(finalCheck as HTMLElement).style.opacity = "1"
+              }
+
+              // Pequeno delay adicional antes de imprimir
+              setTimeout(() => {
+                // Imprimir
+                window.print()
+                
+                // Limpar após impressão
+                setTimeout(() => {
+                  if (printContainer.parentNode) {
+                    document.body.removeChild(printContainer)
+                  }
+                  const styleElement = document.getElementById(`print-styles-${order.id}`)
+                  if (styleElement && styleElement.parentNode) {
+                    document.head.removeChild(styleElement)
+                  }
+                  root.unmount()
+                }, 1000)
+              }, 200)
+            })
+          })
+        })
+      } else {
+        // Tentar novamente após 500ms
+        setTimeout(() => checkContentReady(attempts + 1), 500)
+      }
+    }
+
+    // Iniciar verificação após um pequeno delay inicial para dar tempo ao React renderizar
+    setTimeout(() => checkContentReady(), 500)
   }
 
   return (
