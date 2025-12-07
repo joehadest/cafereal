@@ -71,7 +71,7 @@ export function CategoryNavBar({
   }
 
   return (
-    <div className="sticky top-[48px] sm:top-[76px] z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div className="bg-white border-b border-slate-200 shadow-sm">
       <div className="relative container mx-auto">
         {/* Left Arrow */}
         {showLeftArrow && (

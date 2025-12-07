@@ -44,6 +44,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
     image_url: "",
     active: true,
     max_extras: null as number | null,
+    print_sector: null as string | null,
+    product_class: null as string | null,
   })
 
   const [varieties, setVarieties] = useState<ProductVariety[]>([])
@@ -61,6 +63,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
         image_url: product.image_url || "",
         active: product.active,
         max_extras: (product as any).max_extras || null,
+        print_sector: (product as any).print_sector || null,
+        product_class: (product as any).product_class || null,
       })
       setImagePreview(product.image_url || null)
       setVarieties(product.varieties || [])
@@ -80,6 +84,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
       image_url: "",
       active: true,
       max_extras: null,
+      print_sector: null,
+      product_class: null,
     })
     setImageFile(null)
     setImagePreview(null)
@@ -164,6 +170,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
         image_url: imageUrl || null,
         active: formData.active ?? true,
         max_extras: formData.max_extras && formData.max_extras > 0 ? Number(formData.max_extras) : null,
+        print_sector: formData.print_sector || null,
+        product_class: formData.product_class?.trim() || null,
       }
 
       let productId = product?.id
@@ -833,6 +841,44 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                     <p className="text-xs text-slate-500">
                       Limite máximo de extras diferentes que podem ser selecionados. Deixe vazio para permitir todos.
                     </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="print_sector" className="text-slate-900 font-semibold">
+                      Setor de Impressão
+                    </Label>
+                    <Select
+                      value={formData.print_sector || "_none"}
+                      onValueChange={(value) => setFormData({ ...formData, print_sector: value === "_none" ? null : value })}
+                    >
+                      <SelectTrigger className="border-slate-200 text-sm">
+                        <SelectValue placeholder="Selecione o setor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="_none" className="text-sm">Nenhum</SelectItem>
+                        <SelectItem value="Cozinha" className="text-sm">Cozinha</SelectItem>
+                        <SelectItem value="Confeitaria" className="text-sm">Confeitaria</SelectItem>
+                        <SelectItem value="Copa/Bar" className="text-sm">Copa/Bar</SelectItem>
+                        <SelectItem value="Copa" className="text-sm">Copa</SelectItem>
+                        <SelectItem value="Bar" className="text-sm">Bar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">Onde o pedido deve ser impresso</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="product_class" className="text-slate-900 font-semibold">
+                      Classe do Produto
+                    </Label>
+                    <Input
+                      id="product_class"
+                      type="text"
+                      value={formData.product_class || ""}
+                      onChange={(e) => setFormData({ ...formData, product_class: e.target.value || null })}
+                      className="border-slate-200 text-sm"
+                      placeholder="Ex: Cuscuz, Tapiocas, Pães na Chapa..."
+                    />
+                    <p className="text-xs text-slate-500">Classificação do produto (ex: Cuscuz, Tapiocas, Salgados, etc.)</p>
                   </div>
 
                   <div className="space-y-2">

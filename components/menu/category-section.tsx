@@ -9,6 +9,7 @@ type Product = {
   price: number
   image_url: string | null
   active: boolean
+  product_class?: string | null
 }
 
 type Category = {

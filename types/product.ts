@@ -31,6 +31,8 @@ export type Product = {
   active: boolean
   image_url?: string
   max_extras?: number | null
+  print_sector?: string | null // Setor de impressão: Cozinha, Confeitaria, Copa/Bar
+  product_class?: string | null // Classe do produto: Cuscuz, Tapiocas, Pães na Chapa, etc.
   created_at: string
   updated_at: string
   categories?: { name: string }

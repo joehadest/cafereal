@@ -496,46 +496,47 @@ export function MenuClient({
 
 
       {showMenu && (
-        <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-          <div className="container mx-auto px-4 py-3 sm:py-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-10 sm:pl-12 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-slate-300 focus:border-slate-500 focus:ring-slate-500 rounded-lg"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  aria-label="Limpar busca"
-                >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              )}
+        <div className="sticky top-[48px] sm:top-[63px] z-30 bg-white">
+          <div className="border-b border-slate-200 shadow-sm">
+            <div className="container mx-auto px-4 py-3 sm:py-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Buscar produtos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-10 sm:pl-12 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-slate-300 focus:border-slate-500 focus:ring-slate-500 rounded-lg"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+          {filteredCategories.length > 0 && !searchTerm && (
+            <CategoryNavBar
+              categories={filteredCategories
+                .filter((cat) => cat.active !== false)
+                .sort((a: any, b: any) => {
+                  // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
+                  if (a.display_order !== b.display_order) {
+                    return (a.display_order || 0) - (b.display_order || 0)
+                  }
+                  return a.id.localeCompare(b.id)
+                })
+                .map((cat) => ({ id: cat.id, name: cat.name }))}
+              activeCategory={activeCategory}
+              onCategoryClick={handleCategoryClick}
+            />
+          )}
         </div>
-      )}
-
-      {showMenu && filteredCategories.length > 0 && !searchTerm && (
-        <CategoryNavBar
-          categories={filteredCategories
-            .filter((cat) => cat.active !== false)
-            .sort((a: any, b: any) => {
-              // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
-              if (a.display_order !== b.display_order) {
-                return (a.display_order || 0) - (b.display_order || 0)
-              }
-              return a.id.localeCompare(b.id)
-            })
-            .map((cat) => ({ id: cat.id, name: cat.name }))}
-          activeCategory={activeCategory}
-          onCategoryClick={handleCategoryClick}
-        />
       )}
 
       {showMenu && (

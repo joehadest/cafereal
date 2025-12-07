@@ -12,6 +12,7 @@ type Product = {
   description: string
   price: number
   image_url: string | null
+  product_class?: string | null
 }
 
 export function ProductCard({

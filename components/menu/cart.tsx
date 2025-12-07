@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store } from "lucide-react"
+import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store, UtensilsCrossed } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { openWhatsApp } from "@/lib/utils"
@@ -79,6 +79,7 @@ export function Cart({
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [pickupCustomerName, setPickupCustomerName] = useState("")
   const [pickupCustomerPhone, setPickupCustomerPhone] = useState("")
+  const [pickupTableNumber, setPickupTableNumber] = useState("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -162,7 +163,9 @@ export function Cart({
         if (pickupCustomerPhone.trim()) {
           orderData.customer_phone = pickupCustomerPhone.trim()
         }
-        orderData.table_number = 0
+        // Se informou mesa, usar o número; senão, usar 0 (não precisa de mesa)
+        const tableNum = pickupTableNumber.trim() ? parseInt(pickupTableNumber.trim()) : 0
+        orderData.table_number = isNaN(tableNum) ? 0 : tableNum
       } else if (orderType === "delivery" && effectiveDeliveryInfo) {
         orderData.table_number = 0
         // Garantir que os dados sejam salvos corretamente
@@ -308,7 +311,13 @@ export function Cart({
         message += `*TIPO:* RETIRADA NO LOCAL\n\n`
         message += `*DADOS DO CLIENTE:*\n`
         message += `Nome: ${(order.customer_name || "N/A").trim()}\n`
-        message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n\n`
+        message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n`
+        if (order.table_number && order.table_number > 0) {
+          message += `Mesa: ${order.table_number}\n`
+        } else {
+          message += `Mesa: Não precisa (indo buscar)\n`
+        }
+        message += `\n`
       } else {
         message += `*TIPO:* MESA ${order.table_number}\n\n`
       }
@@ -651,6 +660,23 @@ export function Cart({
                         required
                       />
                       <p className="text-xs text-slate-600">Usaremos seu telefone para avisar quando o pedido estiver pronto</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="cart-pickup-table" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                        <UtensilsCrossed className="h-4 w-4" />
+                        Qual mesa você está?
+                      </Label>
+                      <Input
+                        id="cart-pickup-table"
+                        type="number"
+                        placeholder="Não precisa de mesa (se estiver indo buscar)"
+                        value={pickupTableNumber}
+                        onChange={(e) => setPickupTableNumber(e.target.value)}
+                        className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
+                        min="0"
+                      />
+                      <p className="text-xs text-slate-600">Deixe em branco se estiver indo buscar</p>
                     </div>
                   </div>
                 </div>

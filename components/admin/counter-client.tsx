@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ShoppingCart, Plus, X, Package } from "lucide-react"
+import { ShoppingCart, Plus, X, Package, Search } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { createRoot } from "react-dom/client"
 import { PrintOrderReceipt } from "@/components/orders/print-order-receipt"
-import type { Product } from "@/types/product"
+import { ProductOptionsModal } from "@/components/menu/product-options-modal"
+import type { Product, ProductVariety, ProductExtra } from "@/types/product"
 import type { Order } from "@/types/order"
 
 type Category = {
@@ -78,9 +79,25 @@ export function CounterClient({
   const [productDescription, setProductDescription] = useState<string>("") // Descrição do que o cliente montou
   const [pricePerKg, setPricePerKg] = useState<string>("") // Preço por kg
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState<string>("")
 
   const totalPrice = cart.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0)
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
+
+  // Filtrar produtos baseado no termo de pesquisa
+  const filteredCategories = categories.map((category) => ({
+    ...category,
+    products: category.products?.filter((product: Product) => {
+      if (!searchTerm.trim()) return true
+      const searchLower = searchTerm.toLowerCase()
+      return (
+        product.name.toLowerCase().includes(searchLower) ||
+        product.description?.toLowerCase().includes(searchLower)
+      )
+    }) || [],
+  })).filter((category) => category.products && category.products.length > 0)
 
   const handleAddBalcaoItem = () => {
     setIsWeightModalOpen(true)
@@ -130,6 +147,24 @@ export function CounterClient({
 
   const removeFromCart = (index: number) => {
     setCart((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleAddProductToCart = (product: Product, options: SelectedOptions) => {
+    const basePrice = options.variety ? options.variety.price : product.price
+    const extrasPrice = options.extras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
+    const finalPrice = basePrice + extrasPrice
+
+    const item: CartItem = {
+      ...product,
+      quantity: 1,
+      selectedVariety: options.variety,
+      selectedExtras: options.extras,
+      finalPrice,
+    }
+
+    setCart((prev) => [...prev, item])
+    setSelectedProduct(null)
+    setIsProductModalOpen(false)
   }
 
   const handleCreateOrder = async () => {
@@ -186,12 +221,12 @@ export function CounterClient({
           order_id: order.id,
           product_id: item.id === "balcao-self-service" ? null : item.id, // Balcão não tem product_id
           product_name: item.name,
-          product_price: item.price, // Preço por kg
+          product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
           quantity: item.quantity,
           subtotal: item.finalPrice * item.quantity,
-          variety_id: null,
-          variety_name: null,
-          variety_price: null,
+          variety_id: item.selectedVariety?.id || null,
+          variety_name: item.selectedVariety?.name || null,
+          variety_price: item.selectedVariety?.price || null,
           notes: itemNotes || null,
         }
       })
@@ -485,7 +520,7 @@ export function CounterClient({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Área principal - Adicionar item do balcão */}
+        {/* Área principal - Adicionar item do balcão e cardápio */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardContent className="p-6">
@@ -507,6 +542,74 @@ export function CounterClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Seção de Cardápio */}
+          {categories && categories.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 mb-2">Cardápio</h2>
+                    <p className="text-slate-600 mb-4">
+                      Selecione itens do cardápio para adicionar ao pedido.
+                    </p>
+                    {/* Barra de pesquisa */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="text"
+                        placeholder="Pesquisar produtos..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                      />
+                      {searchTerm && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6"
+                          onClick={() => setSearchTerm("")}
+                        >
+                          <X className="h-4 w-4 text-slate-400" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {filteredCategories.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                      {filteredCategories.map((category) =>
+                        category.products && category.products.length > 0
+                          ? category.products.map((product: Product) => (
+                              <Button
+                                key={product.id}
+                                onClick={() => {
+                                  setSelectedProduct(product)
+                                  setIsProductModalOpen(true)
+                                }}
+                                variant="outline"
+                                className="h-auto p-4 flex flex-col items-start text-left hover:bg-slate-50"
+                              >
+                                <div className="font-semibold text-sm text-slate-900">{product.name}</div>
+                                {product.description && (
+                                  <div className="text-xs text-slate-600 mt-1 line-clamp-2">{product.description}</div>
+                                )}
+                                <div className="text-sm font-bold text-slate-900 mt-2">
+                                  R$ {product.price.toFixed(2).replace(".", ",")}
+                                </div>
+                              </Button>
+                            ))
+                          : null
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <p>Nenhum produto encontrado para "{searchTerm}"</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Carrinho e informações */}
@@ -605,7 +708,7 @@ export function CounterClient({
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {cart.map((item, index) => {
                     return (
-                      <div key={`balcao-item-${index}`} className="border border-slate-200 rounded-lg p-3">
+                      <div key={`cart-item-${index}`} className="border border-slate-200 rounded-lg p-3">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <p className="font-semibold text-sm text-slate-900">{item.name}</p>
@@ -618,6 +721,20 @@ export function CounterClient({
                                   Preço/kg: R$ {item.price.toFixed(2).replace(".", ",")}
                                 </p>
                               </>
+                            )}
+                            {item.selectedVariety && (
+                              <p className="text-xs text-slate-600 mt-1">
+                                Tamanho: {item.selectedVariety.name}
+                              </p>
+                            )}
+                            {item.selectedExtras && item.selectedExtras.length > 0 && (
+                              <div className="text-xs text-slate-600 mt-1">
+                                {item.selectedExtras.map((extraItem, idx) => (
+                                  <p key={idx}>
+                                    {extraItem.extra.name} {extraItem.quantity > 1 && `(x${extraItem.quantity})`}
+                                  </p>
+                                ))}
+                              </div>
                             )}
                           </div>
                           <Button
@@ -667,6 +784,17 @@ export function CounterClient({
           </Card>
         </div>
       </div>
+
+      {/* Modal de seleção de produto do cardápio */}
+      <ProductOptionsModal
+        isOpen={isProductModalOpen}
+        onClose={() => {
+          setIsProductModalOpen(false)
+          setSelectedProduct(null)
+        }}
+        product={selectedProduct}
+        onAddToCart={handleAddProductToCart}
+      />
 
       {/* Modal de peso e descrição do balcão */}
       <Dialog open={isWeightModalOpen} onOpenChange={setIsWeightModalOpen}>

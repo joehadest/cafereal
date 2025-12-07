@@ -5,8 +5,10 @@ import { OrderCard } from "./order-card"
 import { TableStatus } from "./table-status"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store } from "lucide-react"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import type { Order } from "@/types/order"
 import { useOrderNotifications } from "@/hooks/use-order-notifications"
 
@@ -44,6 +46,8 @@ export function OrdersClient({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date())
   const [deletedOrderIds, setDeletedOrderIds] = useState<Set<string>>(new Set())
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
+  const [isDeletingAll, setIsDeletingAll] = useState(false)
   const isPrintingRef = useRef(false)
   const isRefreshingRef = useRef(false)
   
@@ -224,6 +228,36 @@ export function OrdersClient({
     }
   }
 
+  const handleDeleteAllOrders = async () => {
+    setIsDeletingAll(true)
+    const supabase = createClient()
+
+    try {
+      // Deletar todos os pedidos (cascade vai deletar order_items e order_item_extras automaticamente)
+      const { error } = await supabase
+        .from("orders")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000") // Condição que sempre retorna true para deletar todos
+
+      if (error) {
+        console.error("Erro ao deletar pedidos:", error)
+        alert("Erro ao deletar pedidos. Tente novamente.")
+        setIsDeletingAll(false)
+        return
+      }
+
+      // Fechar modal e atualizar página
+      setIsDeleteAllModalOpen(false)
+      router.refresh()
+      alert("Todos os pedidos foram deletados com sucesso!")
+    } catch (error) {
+      console.error("Erro ao deletar pedidos:", error)
+      alert("Erro ao deletar pedidos. Tente novamente.")
+    } finally {
+      setIsDeletingAll(false)
+    }
+  }
+
   // Filtrar pedidos deletados da lista
   const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
   
@@ -321,6 +355,17 @@ export function OrdersClient({
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
+              {visibleOrders.length > 0 && (
+                <Button
+                  onClick={() => setIsDeleteAllModalOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-red-300 text-red-700 hover:bg-red-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                  <span className="hidden sm:inline text-xs md:text-sm">Limpar Todos</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -617,6 +662,50 @@ export function OrdersClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Modal de confirmação para deletar todos os pedidos */}
+      <Dialog open={isDeleteAllModalOpen} onOpenChange={setIsDeleteAllModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Limpar Todos os Pedidos</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja deletar todos os pedidos? Esta ação não pode ser desfeita.
+              <br />
+              <span className="font-semibold text-red-600 mt-2 block">
+                {visibleOrders.length} pedido(s) serão deletados permanentemente.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteAllModalOpen(false)}
+              disabled={isDeletingAll}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAllOrders}
+              disabled={isDeletingAll}
+              className="w-full sm:w-auto"
+            >
+              {isDeletingAll ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Deletando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar Todos
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
