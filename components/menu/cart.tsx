@@ -58,6 +58,17 @@ export function Cart({
     phone?: string | null
     address?: string | null
     pix_key?: string | null
+    logoUrl?: string | null
+    email?: string | null
+    opening_hours?: string | null
+    instagram?: string | null
+    facebook?: string | null
+    whatsapp?: string | null
+    delivery_fee?: number | null
+    min_order_value?: number | null
+    accepts_delivery?: boolean | null
+    accepts_pickup?: boolean | null
+    accepts_dine_in?: boolean | null
   } | null
 }) {
   const [notes, setNotes] = useState("")
@@ -66,6 +77,8 @@ export function Cart({
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | null>(null)
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
+  const [pickupCustomerName, setPickupCustomerName] = useState("")
+  const [pickupCustomerPhone, setPickupCustomerPhone] = useState("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -265,10 +278,10 @@ export function Cart({
       }
 
       // Formatar mensagem do pedido completa e com autoridade
-      const restaurantName = (restaurantInfo?.name || "Restaurante").trim()
-      const restaurantPhone = (restaurantInfo?.phone || "").trim()
-      const restaurantAddress = (restaurantInfo?.address || "").trim()
-      const pixKey = (restaurantInfo?.pix_key || "").trim()
+      const restaurantName = (restaurantInfo?.name || "Restaurante")?.trim() || "Restaurante"
+      const restaurantPhone = (restaurantInfo?.phone || "")?.trim() || ""
+      const restaurantAddress = (restaurantInfo?.address || "")?.trim() || ""
+      const pixKey = (restaurantInfo?.pix_key || "")?.trim() || ""
       
       let message = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
       message += `*${restaurantName.toUpperCase()}*\n`
@@ -799,8 +812,8 @@ export function Cart({
               disabled={
                 Boolean(isSubmitting || 
                 (!paymentMethod || !paymentMethod.trim()) ||
-                (!effectiveDeliveryInfo && orderType === "delivery") ||
-                (orderType === "delivery" && effectiveDeliveryInfo && (!effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)))
+                (orderType === "delivery" && (!effectiveDeliveryInfo || !effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)) ||
+                (orderType === "pickup" && (!pickupCustomerName?.trim() || !pickupCustomerPhone?.trim())))
               }
               className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white text-base sm:text-lg py-5 sm:py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold"
             >
