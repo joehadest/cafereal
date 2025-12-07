@@ -69,7 +69,7 @@ export function MenuClient({
     accepts_dine_in?: boolean | null
   }
 }) {
-  const [orderType, setOrderType] = useState<"delivery" | null>(null)
+  const [orderType, setOrderType] = useState<"delivery" | "pickup" | null>(null)
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -235,8 +235,8 @@ export function MenuClient({
     setDeliveryInfo(null)
   }
 
-  // O cardápio só aparece quando orderType está definido (apenas delivery agora)
-  const showMenu = orderType === "delivery"
+  // O cardápio só aparece quando orderType está definido (delivery ou pickup)
+  const showMenu = orderType === "delivery" || orderType === "pickup"
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -384,6 +384,11 @@ export function MenuClient({
                 {orderType === "delivery" && deliveryInfo && (
                   <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500 truncate">
                     Delivery - {deliveryInfo.customerName}
+                  </p>
+                )}
+                {orderType === "pickup" && (
+                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500 truncate">
+                    Retirada no Local
                   </p>
                 )}
               </div>

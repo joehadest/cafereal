@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone } from "lucide-react"
+import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { openWhatsApp } from "@/lib/utils"
@@ -46,7 +46,7 @@ export function Cart({
   isOpen: boolean
   onClose: () => void
   cart: CartItem[]
-  orderType: "delivery" | null
+  orderType: "delivery" | "pickup" | null
   deliveryInfo: DeliveryInfo | null
   deliveryFee: number
   onUpdateQuantity: (itemKey: string, quantity: number) => void
@@ -96,6 +96,18 @@ export function Cart({
       return
     }
     
+    if (orderType === "pickup") {
+      // Validação para retirada no local
+      if (!pickupCustomerName?.trim()) {
+        alert("Por favor, preencha o nome completo")
+        return
+      }
+      if (!pickupCustomerPhone?.trim()) {
+        alert("Por favor, preencha o telefone")
+        return
+      }
+    }
+
     if (orderType === "delivery" && !effectiveDeliveryInfo) {
       alert("Por favor, preencha todas as informações de entrega")
       return
@@ -122,14 +134,23 @@ export function Cart({
 
     try {
       const orderData: any = {
-        order_type: "delivery",
+        order_type: orderType === "delivery" ? "delivery" : "pickup",
         status: "pending",
         total: finalTotal,
         notes: notes || null,
         payment_method: paymentMethod.trim(),
       }
 
-      if (orderType === "delivery" && effectiveDeliveryInfo) {
+      if (orderType === "pickup") {
+        // Pedido de retirada - precisa de nome e telefone
+        if (pickupCustomerName.trim()) {
+          orderData.customer_name = pickupCustomerName.trim()
+        }
+        if (pickupCustomerPhone.trim()) {
+          orderData.customer_phone = pickupCustomerPhone.trim()
+        }
+        orderData.table_number = 0
+      } else if (orderType === "delivery" && effectiveDeliveryInfo) {
         orderData.table_number = 0
         // Garantir que os dados sejam salvos corretamente
         // Se manualDeliveryInfo foi preenchido, usar apenas ele para evitar duplicação
@@ -270,6 +291,11 @@ export function Cart({
         message += `Nome: ${(order.customer_name || "N/A").trim()}\n`
         message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n`
         message += `Endereço: ${(order.delivery_address || "N/A").trim()}\n\n`
+      } else if (order.order_type === "pickup") {
+        message += `*TIPO:* RETIRADA NO LOCAL\n\n`
+        message += `*DADOS DO CLIENTE:*\n`
+        message += `Nome: ${(order.customer_name || "N/A").trim()}\n`
+        message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n\n`
       } else {
         message += `*TIPO:* MESA ${order.table_number}\n\n`
       }
@@ -571,6 +597,51 @@ export function Cart({
                 </div>
               )}
 
+              {orderType === "pickup" && (
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 sm:p-4 rounded-xl border border-blue-200 shadow-sm space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
+                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm sm:text-base">
+                    <div className="p-1.5 bg-blue-200 rounded-lg">
+                      <Store className="h-4 w-4" />
+                    </div>
+                    <span>Informações para Retirada</span>
+                  </div>
+                  
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cart-pickup-name" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                        <User className="h-4 w-4" />
+                        Nome Completo <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="cart-pickup-name"
+                        type="text"
+                        placeholder="Seu nome completo"
+                        value={pickupCustomerName}
+                        onChange={(e) => setPickupCustomerName(e.target.value)}
+                        className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="cart-pickup-phone" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                        <Phone className="h-4 w-4" />
+                        Telefone <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="cart-pickup-phone"
+                        type="tel"
+                        placeholder="(00) 00000-0000"
+                        value={pickupCustomerPhone}
+                        onChange={(e) => setPickupCustomerPhone(e.target.value)}
+                        className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
+                        required
+                      />
+                      <p className="text-xs text-slate-600">Usaremos seu telefone para avisar quando o pedido estiver pronto</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {cart.map((item, index) => {
                 const itemKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
