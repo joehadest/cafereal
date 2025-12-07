@@ -151,8 +151,9 @@ export function Cart({
         order_type: orderType === "delivery" ? "delivery" : "pickup",
         status: "pending",
         total: finalTotal,
-        notes: notes || null,
-        payment_method: paymentMethod.trim(),
+        notes: notes?.trim() || null,
+        payment_method: paymentMethod?.trim() || null,
+        table_number: 0, // Sempre definir table_number (0 = não aplicável para delivery/pickup)
       }
 
       if (orderType === "pickup") {
@@ -166,24 +167,35 @@ export function Cart({
         // Se informou mesa, usar o número; senão, usar 0 (não precisa de mesa)
         const tableNum = pickupTableNumber.trim() ? parseInt(pickupTableNumber.trim()) : 0
         orderData.table_number = isNaN(tableNum) ? 0 : tableNum
-      } else if (orderType === "delivery" && effectiveDeliveryInfo) {
+      } else if (orderType === "delivery") {
+        // Sempre definir table_number como 0 para delivery
         orderData.table_number = 0
-        // Garantir que os dados sejam salvos corretamente
-        // Se manualDeliveryInfo foi preenchido, usar apenas ele para evitar duplicação
-        const infoToSave = manualDeliveryInfo && (manualDeliveryInfo.customerName || manualDeliveryInfo.customerPhone || manualDeliveryInfo.deliveryAddress)
-          ? manualDeliveryInfo
-          : effectiveDeliveryInfo
-        orderData.customer_name = infoToSave.customerName.trim()
-        orderData.customer_phone = infoToSave.customerPhone.trim()
-        // Remover quebras de linha e espaços extras do endereço
-        orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
-        orderData.delivery_fee = deliveryFee || 0
+        if (effectiveDeliveryInfo) {
+          // Garantir que os dados sejam salvos corretamente
+          // Se manualDeliveryInfo foi preenchido, usar apenas ele para evitar duplicação
+          const infoToSave = manualDeliveryInfo && (manualDeliveryInfo.customerName || manualDeliveryInfo.customerPhone || manualDeliveryInfo.deliveryAddress)
+            ? manualDeliveryInfo
+            : effectiveDeliveryInfo
+          orderData.customer_name = infoToSave.customerName.trim()
+          orderData.customer_phone = infoToSave.customerPhone.trim()
+          // Remover quebras de linha e espaços extras do endereço
+          orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
+          orderData.delivery_fee = deliveryFee || 0
+        }
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
 
       if (orderError) {
-        console.error("Erro ao criar pedido:", orderError)
+        console.error("Erro ao criar pedido:", {
+          message: orderError.message,
+          details: orderError.details,
+          hint: orderError.hint,
+          code: orderError.code,
+          error: orderError
+        })
+        console.error("Dados do pedido:", JSON.stringify(orderData, null, 2))
+        alert(`Erro ao criar pedido: ${orderError.message || 'Erro desconhecido'}. Verifique o console para mais detalhes.`)
         throw orderError
       }
 
@@ -244,9 +256,17 @@ export function Cart({
       setShowSuccessModal(true)
       // Não chamar onClose() aqui - deixar o modal controlar
       router.refresh()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting order:", error)
-      alert("Erro ao enviar pedido. Tente novamente.")
+      const errorMessage = error?.message || error?.details || error?.hint || "Erro desconhecido ao enviar pedido"
+      console.error("Detalhes do erro:", {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        error: error
+      })
+      alert(`Erro ao enviar pedido: ${errorMessage}. Tente novamente.`)
     } finally {
       setIsSubmitting(false)
     }
