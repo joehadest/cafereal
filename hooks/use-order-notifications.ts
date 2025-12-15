@@ -272,16 +272,19 @@ export function useOrderNotifications(onNewOrder?: OnNewOrderCallback) {
     checkNewOrders()
     setIsPollingActive(true)
 
-    // Verificar a cada 3 segundos para melhor responsividade
-    // Usar setInterval com tratamento de erro para garantir que continue funcionando
+    // Verificar a cada 15 segundos (otimizado para reduzir uso de recursos)
+    // Só verificar se a página estiver visível
     intervalRef.current = setInterval(() => {
       try {
-        checkNewOrders()
+        // Só fazer polling se a página estiver visível
+        if (typeof document !== "undefined" && !document.hidden) {
+          checkNewOrders()
+        }
       } catch (error) {
         console.error("Erro no polling de pedidos:", error)
         // Continuar tentando mesmo se houver erro
       }
-    }, 3000)
+    }, 15000) // Aumentado de 3s para 15s (reduz 80% das requisições)
 
     return () => {
       if (intervalRef.current) {

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -16,6 +16,7 @@ import type { Order } from "@/types/order"
 import { PrintOrderReceipt } from "./print-order-receipt"
 import { PrintKitchenTicket } from "./print-kitchen-ticket"
 import { PrintCustomerTicket } from "./print-customer-ticket"
+import { EditOrderModal } from "./edit-order-modal"
 
 type OrderItem = {
   id: string
@@ -60,6 +61,7 @@ function OrderCardComponent({
   const [isDeleting, setIsDeleting] = useState(false)
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
   const [printType, setPrintType] = useState<"receipt" | "kitchen" | "customer">("receipt")
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const config = statusConfig[order.status as keyof typeof statusConfig]
 
   const isDelivery = order.order_type === "delivery"
@@ -404,6 +406,15 @@ function OrderCardComponent({
                 <span className="whitespace-nowrap">{timeAgo}</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  onClick={() => setEditModalOpen(true)}
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-green-300 text-green-600 hover:bg-green-50 bg-transparent flex-shrink-0"
+                  title="Editar pedido"
+                >
+                  <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
                 <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
@@ -486,6 +497,15 @@ function OrderCardComponent({
                   <span className="text-xs break-words">{order.delivery_address}</span>
                 </div>
               )}
+              {order.reference_point && (
+                <div className="flex items-start gap-2 text-slate-800">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs break-words">
+                    <span className="font-semibold">Ponto de Referência: </span>
+                    {order.reference_point}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -557,6 +577,15 @@ function OrderCardComponent({
           </CardFooter>
         )}
       </Card>
+
+      <EditOrderModal
+        order={order}
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSuccess={() => {
+          router.refresh()
+        }}
+      />
     </>
   )
 }

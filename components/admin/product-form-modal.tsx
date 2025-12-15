@@ -639,8 +639,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-3xl max-h-[95vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
+      <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[80vw] xl:w-[75vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] xl:max-w-[75vw] 2xl:max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 pt-4 sm:pt-5 md:pt-6 lg:pt-6 pb-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-600 rounded-lg">
               <Package className="h-5 w-5 text-white" />
@@ -661,7 +661,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-4 sm:px-6 pt-3 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+            <div className="px-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 pt-3 border-b border-slate-200 bg-slate-50 flex-shrink-0">
               <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
                 <TabsTrigger value="details" className="text-xs sm:text-sm data-[state=active]:bg-slate-600 data-[state=active]:text-white">
                   <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -688,7 +688,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
               </TabsList>
             </div>
 
-            <div className="flex-1 px-4 sm:px-6 min-h-0 overflow-y-auto">
+            <div className="flex-1 px-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 min-h-0 overflow-y-auto">
               <TabsContent value="details" className="mt-0 py-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="image" className="text-slate-900 font-semibold">
@@ -736,8 +736,8 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2 sm:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+                  <div className="space-y-2 sm:col-span-2 md:col-span-2 lg:col-span-3 xl:col-span-3">
                     <Label htmlFor="name" className="text-slate-900 font-semibold">
                       Nome do Produto
                     </Label>
@@ -751,7 +751,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
                     />
                   </div>
 
-                  <div className="space-y-2 sm:col-span-2">
+                  <div className="space-y-2 sm:col-span-2 md:col-span-2 lg:col-span-3 xl:col-span-3">
                     <Label htmlFor="description" className="text-slate-900 font-semibold">
                       Descrição
                     </Label>
@@ -1097,7 +1097,7 @@ export function ProductFormModal({ isOpen, onClose, product, categories }: Produ
             </div>
           </Tabs>
 
-          <div className="border-t border-slate-200 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0">
+          <div className="border-t border-slate-200 px-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3 sm:py-4 bg-slate-50 flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0">
             <Button
               type="button"
               onClick={() => {

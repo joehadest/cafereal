@@ -1,8 +1,31 @@
 import { createClient } from "@/lib/supabase/server"
 import { MenuClient } from "@/components/menu/menu-client"
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ table?: string }>
+}) {
+  const params = await searchParams
   const supabase = await createClient()
+  
+  // Buscar informações da mesa se table estiver presente
+  let tableNumber: number | null = null
+  if (params.table) {
+    const tableNum = parseInt(params.table)
+    if (!isNaN(tableNum)) {
+      const { data: table } = await supabase
+        .from("restaurant_tables")
+        .select("table_number, active")
+        .eq("table_number", tableNum)
+        .eq("active", true)
+        .single()
+      
+      if (table) {
+        tableNumber = table.table_number
+      }
+    }
+  }
 
   const { data: restaurantSettings } = await supabase
     .from("restaurant_settings")
@@ -69,6 +92,7 @@ export default async function HomePage() {
       restaurantName={restaurantSettings?.name || "Cardápio Digital"}
       restaurantLogo={restaurantSettings?.logo_url || null}
       deliveryFeeSetting={restaurantSettings?.delivery_fee ?? 0}
+      initialTableNumber={tableNumber ?? undefined}
       restaurantInfo={{
         name: restaurantSettings?.name || "Cardápio Digital",
         logoUrl: restaurantSettings?.logo_url || null,

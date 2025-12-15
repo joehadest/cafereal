@@ -2,17 +2,18 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, Users, Eye, EyeOff } from "lucide-react"
+import { Plus, Pencil, Trash2, Users, Eye, EyeOff, QrCode, Download } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { QRCodeSVG } from "qrcode.react"
 
 type Table = {
   id: string
@@ -20,17 +21,28 @@ type Table = {
   capacity: number
   status: string
   active?: boolean
+  qr_code_id?: string | null
 }
 
 export function TablesClient({ tables }: { tables: Table[] }) {
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false)
+  const [selectedTableForQr, setSelectedTableForQr] = useState<Table | null>(null)
+  const [qrUrl, setQrUrl] = useState("")
   const [editingTable, setEditingTable] = useState<Table | null>(null)
   const [formData, setFormData] = useState({
     table_number: 0,
     capacity: 4,
     status: "available",
   })
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && selectedTableForQr?.qr_code_id) {
+      const baseUrl = window.location.origin
+      setQrUrl(`${baseUrl}/table/${selectedTableForQr.qr_code_id}`)
+    }
+  }, [selectedTableForQr])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,6 +108,36 @@ export function TablesClient({ tables }: { tables: Table[] }) {
     }
   }
 
+  const handleShowQrCode = (table: Table) => {
+    setSelectedTableForQr(table)
+    setIsQrDialogOpen(true)
+  }
+
+  const handleDownloadQrCode = () => {
+    if (!selectedTableForQr || !qrUrl) return
+    
+    const svg = document.getElementById(`qr-code-${selectedTableForQr.id}`)
+    if (!svg) return
+
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    const img = new Image()
+
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx?.drawImage(img, 0, 0)
+      const pngFile = canvas.toDataURL("image/png")
+      const downloadLink = document.createElement("a")
+      downloadLink.download = `mesa-${selectedTableForQr.table_number}-qr-code.png`
+      downloadLink.href = pngFile
+      downloadLink.click()
+    }
+
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col items-center gap-4 text-center animate-in slide-in-from-top duration-700">
@@ -135,13 +177,14 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                 <Input
                   id="table_number"
                   type="number"
-                  value={formData.table_number}
-                  onChange={(e) =>
+                  value={formData.table_number || ""}
+                  onChange={(e) => {
+                    const value = e.target.value
                     setFormData({
                       ...formData,
-                      table_number: Number.parseInt(e.target.value),
+                      table_number: value === "" ? 0 : Number.parseInt(value) || 0,
                     })
-                  }
+                  }}
                   required
                   className="border-slate-200"
                 />
@@ -153,13 +196,14 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                 <Input
                   id="capacity"
                   type="number"
-                  value={formData.capacity}
-                  onChange={(e) =>
+                  value={formData.capacity || ""}
+                  onChange={(e) => {
+                    const value = e.target.value
                     setFormData({
                       ...formData,
-                      capacity: Number.parseInt(e.target.value),
+                      capacity: value === "" ? 0 : Number.parseInt(value) || 0,
                     })
-                  }
+                  }}
                   required
                   className="border-slate-200"
                 />
@@ -238,6 +282,17 @@ export function TablesClient({ tables }: { tables: Table[] }) {
                   >
                     {table.status === "available" ? "Disponível" : table.status === "occupied" ? "Ocupada" : "Reservada"}
                   </Badge>
+                  {table.qr_code_id && (
+                    <Button
+                      onClick={() => handleShowQrCode(table)}
+                      size="sm"
+                      variant="outline"
+                      className="w-full mt-2 text-xs border-blue-500 text-blue-700 hover:bg-blue-50"
+                    >
+                      <QrCode className="h-3 w-3 mr-1" />
+                      Ver QR Code
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -299,6 +354,55 @@ export function TablesClient({ tables }: { tables: Table[] }) {
           </div>
         )}
       </div>
+
+      {/* Dialog para exibir QR Code */}
+      <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+        <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900">QR Code - Mesa {selectedTableForQr?.table_number}</DialogTitle>
+            <DialogDescription className="sr-only">
+              QR Code para a mesa {selectedTableForQr?.table_number}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTableForQr && qrUrl && (
+            <div className="space-y-4">
+              <div className="flex justify-center p-4 bg-white rounded-lg border border-slate-200">
+                <QRCodeSVG
+                  id={`qr-code-${selectedTableForQr.id}`}
+                  value={qrUrl}
+                  size={256}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600 text-center">
+                  Escaneie este QR code para acessar o menu da Mesa {selectedTableForQr.table_number}
+                </p>
+                <p className="text-xs text-slate-500 text-center break-all">
+                  {qrUrl}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleDownloadQrCode}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar QR Code
+                </Button>
+                <Button
+                  onClick={() => setIsQrDialogOpen(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

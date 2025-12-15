@@ -118,6 +118,14 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
                   : "Não informado"}
               </span>
             </div>
+            {order.reference_point && (
+              <div className="flex items-start gap-1.5">
+                <span className="font-bold text-black min-w-[50px]">Ponto de Ref.:</span>
+                <span className="flex-1 break-words leading-tight overflow-wrap-anywhere font-bold" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                  {order.reference_point.trim()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}

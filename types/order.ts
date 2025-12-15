@@ -31,6 +31,7 @@ export type Order = {
   customer_name?: string | null
   customer_phone?: string | null
   delivery_address?: string | null
+  reference_point?: string | null
   delivery_fee?: number
   created_at: string
   order_items: OrderItem[]

@@ -110,6 +110,14 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
               </p>
             </div>
           )}
+          {order.reference_point && (
+            <div className="text-xs overflow-visible">
+              <p className="font-bold mb-0.5">Ponto de Referência:</p>
+              <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
+                {order.reference_point.trim()}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

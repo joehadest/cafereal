@@ -38,6 +38,7 @@ type DeliveryInfo = {
   customerName: string
   customerPhone: string
   deliveryAddress: string
+  referencePoint?: string
 }
 
 export function MenuClient({
@@ -45,12 +46,14 @@ export function MenuClient({
   restaurantName,
   restaurantLogo,
   deliveryFeeSetting,
+  initialTableNumber,
   restaurantInfo,
 }: {
   categories: Category[]
   restaurantName: string
   restaurantLogo: string | null
   deliveryFeeSetting?: number
+  initialTableNumber?: number
   restaurantInfo?: {
     name: string
     logoUrl: string | null
@@ -69,7 +72,8 @@ export function MenuClient({
     accepts_dine_in?: boolean | null
   }
 }) {
-  const [orderType, setOrderType] = useState<"delivery" | "pickup" | null>(null)
+  const [orderType, setOrderType] = useState<"delivery" | "pickup" | "dine-in" | null>(initialTableNumber ? "dine-in" : null)
+  const [selectedTableNumber, setSelectedTableNumber] = useState<number | null>(initialTableNumber ?? null)
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -108,6 +112,22 @@ export function MenuClient({
       loadUserDeliveryData()
     }
   }, [orderType, user])
+
+  // Se houver mesa inicial, definir orderType como dine-in
+  useEffect(() => {
+    if (initialTableNumber && !orderType) {
+      setOrderType("dine-in")
+      setSelectedTableNumber(initialTableNumber)
+    }
+  }, [initialTableNumber, orderType])
+
+  // Se houver mesa inicial, definir orderType como dine-in
+  useEffect(() => {
+    if (initialTableNumber && !orderType) {
+      setOrderType("dine-in")
+      setSelectedTableNumber(initialTableNumber)
+    }
+  }, [initialTableNumber])
 
   const loadUserDeliveryData = async () => {
     setIsLoadingUserData(true)
@@ -235,8 +255,8 @@ export function MenuClient({
     setDeliveryInfo(null)
   }
 
-  // O cardápio só aparece quando orderType está definido (delivery ou pickup)
-  const showMenu = orderType === "delivery" || orderType === "pickup"
+  // O cardápio só aparece quando orderType está definido (delivery, pickup ou dine-in)
+  const showMenu = orderType === "delivery" || orderType === "pickup" || orderType === "dine-in"
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -662,6 +682,7 @@ export function MenuClient({
         orderType={orderType}
         deliveryInfo={deliveryInfo}
         deliveryFee={deliveryFee}
+        tableNumber={selectedTableNumber}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
         totalPrice={totalPrice}

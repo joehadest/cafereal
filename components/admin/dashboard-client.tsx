@@ -180,10 +180,14 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
 
     fetchData(start, end)
 
-    // Atualizar automaticamente a cada 5 segundos
+    // Atualizar automaticamente a cada 30 segundos (otimizado para reduzir uso de recursos)
+    // Só atualizar se a página estiver visível
     const interval = setInterval(() => {
-      fetchData(start, end)
-    }, 5000)
+      // Só fazer polling se a página estiver visível
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchData(start, end)
+      }
+    }, 30000) // Aumentado de 5s para 30s (reduz 83% das requisições)
 
     return () => clearInterval(interval)
   }, [period, startDate, endDate])

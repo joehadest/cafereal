@@ -106,6 +106,15 @@ export function CustomerOrderCard({ order }: { order: Order }) {
                 <span className="text-xs break-words">{order.delivery_address}</span>
               </div>
             )}
+            {order.reference_point && (
+              <div className="flex items-start gap-2 text-slate-800">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0" />
+                <span className="text-xs break-words">
+                  <span className="font-semibold">Ponto de Referência: </span>
+                  {order.reference_point}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

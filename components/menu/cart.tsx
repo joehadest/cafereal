@@ -10,6 +10,7 @@ import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sp
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { openWhatsApp } from "@/lib/utils"
+import { isRestaurantOpen } from "@/lib/utils/opening-hours"
 import type { ProductVariety, ProductExtra } from "@/types/product"
 
 type CartItem = {
@@ -28,6 +29,7 @@ type DeliveryInfo = {
   customerName: string
   customerPhone: string
   deliveryAddress: string
+  referencePoint?: string
 }
 
 export function Cart({
@@ -37,6 +39,7 @@ export function Cart({
   orderType,
   deliveryInfo,
   deliveryFee,
+  tableNumber,
   onUpdateQuantity,
   onRemoveItem,
   totalPrice,
@@ -46,7 +49,8 @@ export function Cart({
   isOpen: boolean
   onClose: () => void
   cart: CartItem[]
-  orderType: "delivery" | "pickup" | null
+  orderType: "delivery" | "pickup" | "dine-in" | null
+  tableNumber?: number | null
   deliveryInfo: DeliveryInfo | null
   deliveryFee: number
   onUpdateQuantity: (itemKey: string, quantity: number) => void
@@ -79,7 +83,6 @@ export function Cart({
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [pickupCustomerName, setPickupCustomerName] = useState("")
   const [pickupCustomerPhone, setPickupCustomerPhone] = useState("")
-  const [pickupTableNumber, setPickupTableNumber] = useState("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -104,6 +107,12 @@ export function Cart({
   const handleSubmitOrder = async () => {
     if (cart.length === 0) return
     
+    // Verificar se o estabelecimento está aberto
+    if (!isRestaurantOpen(restaurantInfo?.opening_hours)) {
+      alert("Desculpe, o estabelecimento está fechado no momento. Por favor, tente novamente durante o horário de funcionamento.")
+      return
+    }
+    
     // Validação para forma de pagamento
     if (!paymentMethod || !paymentMethod.trim()) {
       alert("Por favor, selecione a forma de pagamento")
@@ -118,6 +127,14 @@ export function Cart({
       }
       if (!pickupCustomerPhone?.trim()) {
         alert("Por favor, preencha o telefone")
+        return
+      }
+    }
+
+    if (orderType === "dine-in") {
+      // Validação para pedido na mesa
+      if (!tableNumber || tableNumber === 0) {
+        alert("Número da mesa não encontrado")
         return
       }
     }
@@ -148,12 +165,12 @@ export function Cart({
 
     try {
       const orderData: any = {
-        order_type: orderType === "delivery" ? "delivery" : "pickup",
+        order_type: orderType === "delivery" ? "delivery" : orderType === "pickup" ? "pickup" : "dine-in",
         status: "pending",
         total: finalTotal,
         notes: notes?.trim() || null,
         payment_method: paymentMethod?.trim() || null,
-        table_number: 0, // Sempre definir table_number (0 = não aplicável para delivery/pickup)
+        table_number: orderType === "dine-in" && tableNumber ? tableNumber : 0,
       }
 
       if (orderType === "pickup") {
@@ -164,9 +181,13 @@ export function Cart({
         if (pickupCustomerPhone.trim()) {
           orderData.customer_phone = pickupCustomerPhone.trim()
         }
-        // Se informou mesa, usar o número; senão, usar 0 (não precisa de mesa)
-        const tableNum = pickupTableNumber.trim() ? parseInt(pickupTableNumber.trim()) : 0
-        orderData.table_number = isNaN(tableNum) ? 0 : tableNum
+        // Retirada no local sempre usa table_number 0 (não precisa de mesa)
+        orderData.table_number = 0
+      } else if (orderType === "dine-in") {
+        // Pedido na mesa
+        if (tableNumber) {
+          orderData.table_number = tableNumber
+        }
       } else if (orderType === "delivery") {
         // Sempre definir table_number como 0 para delivery
         orderData.table_number = 0
@@ -180,6 +201,7 @@ export function Cart({
           orderData.customer_phone = infoToSave.customerPhone.trim()
           // Remover quebras de linha e espaços extras do endereço
           orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
+          orderData.reference_point = infoToSave.referencePoint?.trim() || null
           orderData.delivery_fee = deliveryFee || 0
         }
       }
@@ -326,17 +348,16 @@ export function Cart({
         message += `*DADOS DO CLIENTE:*\n`
         message += `Nome: ${(order.customer_name || "N/A").trim()}\n`
         message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n`
-        message += `Endereço: ${(order.delivery_address || "N/A").trim()}\n\n`
+        message += `Endereço: ${(order.delivery_address || "N/A").trim()}\n`
+        if (order.reference_point) {
+          message += `Ponto de Referência: ${order.reference_point.trim()}\n`
+        }
+        message += `\n`
       } else if (order.order_type === "pickup") {
         message += `*TIPO:* RETIRADA NO LOCAL\n\n`
         message += `*DADOS DO CLIENTE:*\n`
         message += `Nome: ${(order.customer_name || "N/A").trim()}\n`
         message += `Telefone: ${(order.customer_phone || "N/A").trim()}\n`
-        if (order.table_number && order.table_number > 0) {
-          message += `Mesa: ${order.table_number}\n`
-        } else {
-          message += `Mesa: Não precisa (indo buscar)\n`
-        }
         message += `\n`
       } else {
         message += `*TIPO:* MESA ${order.table_number}\n\n`
@@ -566,6 +587,15 @@ export function Cart({
                         <MapPin className="h-3.5 w-3.5 mt-0.5 text-slate-600 flex-shrink-0" />
                         <span className="flex-1 break-words">{effectiveDeliveryInfo.deliveryAddress}</span>
                       </div>
+                      {effectiveDeliveryInfo.referencePoint && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-3.5 w-3.5 mt-0.5 text-slate-600 flex-shrink-0" />
+                          <span className="flex-1 break-words">
+                            <span className="font-medium">Ponto de Referência: </span>
+                            {effectiveDeliveryInfo.referencePoint}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-3 sm:space-y-4">
@@ -585,6 +615,7 @@ export function Cart({
                               customerName: newValue,
                               customerPhone: prev?.customerPhone || "",
                               deliveryAddress: prev?.deliveryAddress || "",
+                              referencePoint: prev?.referencePoint || "",
                             }))
                           }}
                           className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
@@ -607,6 +638,7 @@ export function Cart({
                               customerName: prev?.customerName || "",
                               customerPhone: newValue,
                               deliveryAddress: prev?.deliveryAddress || "",
+                              referencePoint: prev?.referencePoint || "",
                             }))
                           }}
                           className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
@@ -628,10 +660,34 @@ export function Cart({
                               customerName: prev?.customerName || "",
                               customerPhone: prev?.customerPhone || "",
                               deliveryAddress: newValue,
+                              referencePoint: prev?.referencePoint || "",
                             }))
                           }}
                           className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base resize-none"
                           rows={3}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="cart-reference-point" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                          <MapPin className="h-4 w-4" />
+                          Ponto de Referência (opcional)
+                        </Label>
+                        <Input
+                          id="cart-reference-point"
+                          type="text"
+                          placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
+                          value={manualDeliveryInfo?.referencePoint || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value
+                            setManualDeliveryInfo((prev) => ({
+                              customerName: prev?.customerName || "",
+                              customerPhone: prev?.customerPhone || "",
+                              deliveryAddress: prev?.deliveryAddress || "",
+                              referencePoint: newValue,
+                            }))
+                          }}
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -681,23 +737,24 @@ export function Cart({
                       />
                       <p className="text-xs text-slate-600">Usaremos seu telefone para avisar quando o pedido estiver pronto</p>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="cart-pickup-table" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
-                        <UtensilsCrossed className="h-4 w-4" />
-                        Qual mesa você está?
-                      </Label>
-                      <Input
-                        id="cart-pickup-table"
-                        type="number"
-                        placeholder="Não precisa de mesa (se estiver indo buscar)"
-                        value={pickupTableNumber}
-                        onChange={(e) => setPickupTableNumber(e.target.value)}
-                        className="border-slate-200 focus:border-blue-400 focus:ring-blue-400 text-sm sm:text-base"
-                        min="0"
-                      />
-                      <p className="text-xs text-slate-600">Deixe em branco se estiver indo buscar</p>
+                  </div>
+                </div>
+              )}
+
+              {orderType === "dine-in" && tableNumber && (
+                <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-3 sm:p-4 rounded-xl border border-green-200 shadow-sm space-y-3 sm:space-y-4 animate-in slide-in-from-top duration-300">
+                  <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm sm:text-base">
+                    <div className="p-1.5 bg-green-200 rounded-lg">
+                      <UtensilsCrossed className="h-4 w-4" />
                     </div>
+                    <span>Pedido na Mesa</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-800">
+                      <span className="font-semibold">Mesa {tableNumber}</span>
+                    </p>
+                    <p className="text-xs text-slate-600">Seu pedido será enviado para a cozinha e preparado para esta mesa.</p>
                   </div>
                 </div>
               )}
@@ -832,6 +889,13 @@ export function Cart({
 
         {cart.length > 0 && (
           <div className="border-t border-slate-200 p-4 sm:p-6 space-y-3 sm:space-y-4 bg-gradient-to-br from-stone-50 to-white shadow-lg">
+            {!isRestaurantOpen(restaurantInfo?.opening_hours) && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+                <p className="text-sm sm:text-base text-red-800 font-medium text-center">
+                  ⚠️ O estabelecimento está fechado no momento. Não é possível realizar pedidos fora do horário de funcionamento.
+                </p>
+              </div>
+            )}
             <div className="space-y-2 sm:space-y-3">
               <div className="flex justify-between items-center text-sm text-slate-800">
                 <span className="font-medium">Subtotal:</span>
@@ -857,9 +921,11 @@ export function Cart({
               onClick={handleSubmitOrder}
               disabled={
                 Boolean(isSubmitting || 
+                !isRestaurantOpen(restaurantInfo?.opening_hours) ||
                 (!paymentMethod || !paymentMethod.trim()) ||
                 (orderType === "delivery" && (!effectiveDeliveryInfo || !effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)) ||
-                (orderType === "pickup" && (!pickupCustomerName?.trim() || !pickupCustomerPhone?.trim())))
+                (orderType === "pickup" && (!pickupCustomerName?.trim() || !pickupCustomerPhone?.trim())) ||
+                (orderType === "dine-in" && (!tableNumber || tableNumber === 0)))
               }
               className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white text-base sm:text-lg py-5 sm:py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold"
             >

@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { OrderCard } from "./order-card"
 import { TableStatus } from "./table-status"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2 } from "lucide-react"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2, Search, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -48,6 +49,7 @@ export function OrdersClient({
   const [deletedOrderIds, setDeletedOrderIds] = useState<Set<string>>(new Set())
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
   const isPrintingRef = useRef(false)
   const isRefreshingRef = useRef(false)
   
@@ -146,7 +148,7 @@ export function OrdersClient({
   // Atualizar quando a página volta ao foco (com throttle para evitar muitas atualizações)
   useEffect(() => {
     let lastUpdate = 0
-    const THROTTLE_MS = 2000 // Só atualizar a cada 2 segundos no máximo
+    const THROTTLE_MS = 5000 // Só atualizar a cada 5 segundos no máximo (otimizado)
 
     const handleRefresh = () => {
       try {
@@ -261,16 +263,26 @@ export function OrdersClient({
   // Filtrar pedidos deletados da lista
   const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
   
+  // Filtrar por busca de mesa
+  const filteredOrders = useMemo(() => {
+    if (!searchTerm.trim()) return visibleOrders
+    
+    const searchNum = parseInt(searchTerm.trim())
+    if (isNaN(searchNum)) return visibleOrders
+    
+    return visibleOrders.filter((o) => o.table_number === searchNum)
+  }, [visibleOrders, searchTerm])
+  
   // Usar useMemo para evitar recálculos desnecessários
   const { deliveryOrders, dineInOrders, balcaoOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
-    const delivery = visibleOrders.filter((o) => o.order_type === "delivery")
-    const dineIn = visibleOrders.filter((o) => o.order_type === "dine-in" && o.table_number !== 0)
-    const balcao = visibleOrders.filter((o) => o.order_type === "dine-in" && o.table_number === 0)
-    const pending = visibleOrders.filter((o) => o.status === "pending")
-    const preparing = visibleOrders.filter((o) => o.status === "preparing")
-    const ready = visibleOrders.filter((o) => o.status === "ready")
-    const outForDelivery = visibleOrders.filter((o) => o.status === "out_for_delivery")
-    const delivered = visibleOrders.filter((o) => o.status === "delivered")
+    const delivery = filteredOrders.filter((o) => o.order_type === "delivery")
+    const dineIn = filteredOrders.filter((o) => o.order_type === "dine-in" && o.table_number !== 0)
+    const balcao = filteredOrders.filter((o) => o.order_type === "dine-in" && o.table_number === 0)
+    const pending = filteredOrders.filter((o) => o.status === "pending")
+    const preparing = filteredOrders.filter((o) => o.status === "preparing")
+    const ready = filteredOrders.filter((o) => o.status === "ready")
+    const outForDelivery = filteredOrders.filter((o) => o.status === "out_for_delivery")
+    const delivered = filteredOrders.filter((o) => o.status === "delivered")
     
     return {
       deliveryOrders: delivery,
@@ -282,30 +294,35 @@ export function OrdersClient({
       outForDeliveryOrders: outForDelivery,
       deliveredOrders: delivered,
     }
-  }, [visibleOrders])
+  }, [filteredOrders])
 
   return (
     <div className="orders-full-width min-h-screen w-full bg-gradient-to-br from-stone-50 via-stone-100 to-slate-50">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm w-full">
         <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
-              <div className="bg-slate-600 p-1 sm:p-1.5 md:p-2 rounded-lg flex-shrink-0">
-                <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Primeira linha: Título e Botões */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
+                <div className="bg-slate-600 p-1 sm:p-1.5 md:p-2 rounded-lg flex-shrink-0">
+                  <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">Gerenciamento de Pedidos</h1>
+                  <p className="text-[10px] xs:text-xs sm:text-sm text-slate-700 break-words">
+                    <span className="whitespace-nowrap">
+                      {searchTerm ? `${filteredOrders.length} pedido(s) encontrado(s)` : `${visibleOrders.length} pedidos ativos`}
+                    </span>
+                    <span className="hidden xs:inline"> ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)</span>
+                    {isEnabled && (
+                      <span className="ml-1 sm:ml-2 text-green-600 text-[10px] xs:text-xs">• Auto</span>
+                    )}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">Gerenciamento de Pedidos</h1>
-                <p className="text-[10px] xs:text-xs sm:text-sm text-slate-700 break-words">
-                  <span className="whitespace-nowrap">{visibleOrders.length} pedidos ativos</span>
-                  <span className="hidden xs:inline"> ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)</span>
-                  {isEnabled && (
-                    <span className="ml-1 sm:ml-2 text-green-600 text-[10px] xs:text-xs">• Auto</span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
+              
+              <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
               {permission !== "granted" && (
                 <Button
                   onClick={async () => {
@@ -355,7 +372,7 @@ export function OrdersClient({
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
-              {visibleOrders.length > 0 && (
+              {filteredOrders.length > 0 && (
                 <Button
                   onClick={() => setIsDeleteAllModalOpen(true)}
                   variant="outline"
@@ -366,6 +383,31 @@ export function OrdersClient({
                   <span className="hidden sm:inline text-xs md:text-sm">Limpar Todos</span>
                 </Button>
               )}
+              </div>
+            </div>
+            
+            {/* Segunda linha: Barra de Pesquisa */}
+            <div className="w-full sm:w-auto sm:max-w-xs">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="number"
+                  placeholder="Buscar por número da mesa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-9 w-full border-slate-300 focus:border-slate-500"
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 hover:bg-slate-100"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-3 w-3 text-slate-500" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -672,7 +714,7 @@ export function OrdersClient({
               Tem certeza que deseja deletar todos os pedidos? Esta ação não pode ser desfeita.
               <br />
               <span className="font-semibold text-red-600 mt-2 block">
-                {visibleOrders.length} pedido(s) serão deletados permanentemente.
+                {filteredOrders.length} pedido(s) serão deletados permanentemente.
               </span>
             </DialogDescription>
           </DialogHeader>

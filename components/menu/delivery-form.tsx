@@ -14,6 +14,7 @@ type DeliveryInfo = {
   customerName: string
   customerPhone: string
   deliveryAddress: string
+  referencePoint?: string
 }
 
 type SavedAddress = {
