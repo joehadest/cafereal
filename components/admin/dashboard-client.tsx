@@ -405,7 +405,7 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
           trend={`${stats.todayCompletedOrders} concluídos hoje`}
         />
         <StatsCard
-          title="Balcão Hoje"
+          title="Retirada Local Hoje"
           value={stats.todayBalcaoOrders.toString()}
           icon={UtensilsCrossed}
           trend={`R$ ${stats.todayBalcaoRevenue.toFixed(2)}`}
@@ -442,7 +442,7 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
                       ) : order.table_number === 0 ? (
                         <>
                           <UtensilsCrossed className="h-4 w-4 text-slate-600" />
-                          <p className="font-semibold text-slate-900">Balcão</p>
+                          <p className="font-semibold text-slate-900">Retirada Local</p>
                         </>
                       ) : (
                         <>
@@ -505,7 +505,7 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
                       ) : order.table_number === 0 ? (
                         <>
                           <UtensilsCrossed className="h-4 w-4 text-green-600" />
-                          <p className="font-semibold text-green-900">Balcão</p>
+                          <p className="font-semibold text-green-900">Retirada Local</p>
                         </>
                       ) : (
                         <>

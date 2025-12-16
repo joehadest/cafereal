@@ -60,7 +60,12 @@ export default async function StaffOrdersPage() {
     .eq("active", true)
     .order("table_number")
 
-  // Buscar pedidos ativos para edição
+  // Buscar pedidos ativos do dia atual para edição
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayEnd = new Date(today)
+  todayEnd.setHours(23, 59, 59, 999)
+
   const { data: orders } = await supabase
     .from("orders")
     .select(`
@@ -71,6 +76,8 @@ export default async function StaffOrdersPage() {
       )
     `)
     .in("status", ["pending", "preparing", "ready", "out_for_delivery", "delivered"])
+    .gte("created_at", today.toISOString())
+    .lte("created_at", todayEnd.toISOString())
     .order("created_at", { ascending: false })
 
   // Buscar informações do restaurante

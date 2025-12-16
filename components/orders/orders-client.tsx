@@ -6,7 +6,8 @@ import { TableStatus } from "./table-status"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2, Search, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2, Search, X, Calendar } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -50,6 +51,7 @@ export function OrdersClient({
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [dateFilter, setDateFilter] = useState<string>("all")
   const isPrintingRef = useRef(false)
   const isRefreshingRef = useRef(false)
   
@@ -263,15 +265,72 @@ export function OrdersClient({
   // Filtrar pedidos deletados da lista
   const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
   
+  // Função para filtrar pedidos por data
+  const filterOrdersByDate = useCallback((orders: Order[], filter: string): Order[] => {
+    if (filter === "all") return orders
+    
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    today.setHours(0, 0, 0, 0)
+    
+    const todayEnd = new Date(today)
+    todayEnd.setHours(23, 59, 59, 999)
+    
+    switch (filter) {
+      case "today": {
+        return orders.filter((order) => {
+          const orderDate = new Date(order.created_at)
+          return orderDate >= today && orderDate <= todayEnd
+        })
+      }
+      case "yesterday": {
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayEnd = new Date(yesterday)
+        yesterdayEnd.setHours(23, 59, 59, 999)
+        
+        return orders.filter((order) => {
+          const orderDate = new Date(order.created_at)
+          return orderDate >= yesterday && orderDate <= yesterdayEnd
+        })
+      }
+      case "last7days": {
+        const sevenDaysAgo = new Date(today)
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        
+        return orders.filter((order) => {
+          const orderDate = new Date(order.created_at)
+          return orderDate >= sevenDaysAgo && orderDate <= todayEnd
+        })
+      }
+      case "last30days": {
+        const thirtyDaysAgo = new Date(today)
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        
+        return orders.filter((order) => {
+          const orderDate = new Date(order.created_at)
+          return orderDate >= thirtyDaysAgo && orderDate <= todayEnd
+        })
+      }
+      default:
+        return orders
+    }
+  }, [])
+  
+  // Filtrar por data primeiro
+  const dateFilteredOrders = useMemo(() => {
+    return filterOrdersByDate(visibleOrders, dateFilter)
+  }, [visibleOrders, dateFilter, filterOrdersByDate])
+  
   // Filtrar por busca de mesa
   const filteredOrders = useMemo(() => {
-    if (!searchTerm.trim()) return visibleOrders
+    if (!searchTerm.trim()) return dateFilteredOrders
     
     const searchNum = parseInt(searchTerm.trim())
-    if (isNaN(searchNum)) return visibleOrders
+    if (isNaN(searchNum)) return dateFilteredOrders
     
-    return visibleOrders.filter((o) => o.table_number === searchNum)
-  }, [visibleOrders, searchTerm])
+    return dateFilteredOrders.filter((o) => o.table_number === searchNum)
+  }, [dateFilteredOrders, searchTerm])
   
   // Usar useMemo para evitar recálculos desnecessários
   const { deliveryOrders, dineInOrders, balcaoOrders, pendingOrders, preparingOrders, readyOrders, outForDeliveryOrders, deliveredOrders } = useMemo(() => {
@@ -312,9 +371,9 @@ export function OrdersClient({
                   <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">Gerenciamento de Pedidos</h1>
                   <p className="text-[10px] xs:text-xs sm:text-sm text-slate-700 break-words">
                     <span className="whitespace-nowrap">
-                      {searchTerm ? `${filteredOrders.length} pedido(s) encontrado(s)` : `${visibleOrders.length} pedidos ativos`}
+                      {searchTerm ? `${filteredOrders.length} pedido(s) encontrado(s)` : `${dateFilteredOrders.length} pedido(s)${dateFilter !== "all" ? " no período" : " ativos"}`}
                     </span>
-                    <span className="hidden xs:inline"> ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} balcão)</span>
+                    <span className="hidden xs:inline"> ({deliveryOrders.length} delivery, {dineInOrders.length} mesa, {balcaoOrders.length} retirada local)</span>
                     {isEnabled && (
                       <span className="ml-1 sm:ml-2 text-green-600 text-[10px] xs:text-xs">• Auto</span>
                     )}
@@ -386,27 +445,44 @@ export function OrdersClient({
               </div>
             </div>
             
-            {/* Segunda linha: Barra de Pesquisa */}
-            <div className="w-full sm:w-auto sm:max-w-xs">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  type="number"
-                  placeholder="Buscar por número da mesa..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-9 w-full border-slate-300 focus:border-slate-500"
-                />
-                {searchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 hover:bg-slate-100"
-                    onClick={() => setSearchTerm("")}
-                  >
-                    <X className="h-3 w-3 text-slate-500" />
-                  </Button>
-                )}
+            {/* Segunda linha: Barra de Pesquisa e Filtro de Data */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="w-full sm:w-auto sm:max-w-xs">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="number"
+                    placeholder="Buscar por número da mesa..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 pr-9 w-full border-slate-300 focus:border-slate-500"
+                  />
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 hover:bg-slate-100"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      <X className="h-3 w-3 text-slate-500" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="w-full sm:w-auto sm:min-w-[180px]">
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="w-full sm:w-auto border-slate-300 focus:border-slate-500">
+                    <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                    <SelectValue placeholder="Filtrar por data" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pedidos</SelectItem>
+                    <SelectItem value="today">Hoje</SelectItem>
+                    <SelectItem value="yesterday">Ontem</SelectItem>
+                    <SelectItem value="last7days">Últimos 7 dias</SelectItem>
+                    <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -430,7 +506,7 @@ export function OrdersClient({
             </TabsTrigger>
             <TabsTrigger value="balcao" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
               <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Balcão ({balcaoOrders.length})</span>
+              <span>Retirada Local ({balcaoOrders.length})</span>
             </TabsTrigger>
             <TabsTrigger value="tables" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
               <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -639,7 +715,7 @@ export function OrdersClient({
 
           <TabsContent value="balcao" className="space-y-4 sm:space-y-8">
             {balcaoOrders.length === 0 ? (
-              <p className="text-slate-700 text-center py-6 sm:py-12 text-xs sm:text-sm md:text-base">Nenhum pedido do balcão</p>
+              <p className="text-slate-700 text-center py-6 sm:py-12 text-xs sm:text-sm md:text-base">Nenhum pedido de retirada local</p>
             ) : (
               <>
                 {balcaoOrders.filter((o) => o.status === "pending").length > 0 && (

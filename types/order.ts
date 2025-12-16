@@ -33,6 +33,7 @@ export type Order = {
   delivery_address?: string | null
   reference_point?: string | null
   delivery_fee?: number
+  payment_method?: string | null
   created_at: string
   order_items: OrderItem[]
 }

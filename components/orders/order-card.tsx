@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit, CreditCard } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -388,7 +388,7 @@ function OrderCardComponent({
               ) : order.table_number === 0 ? (
                 <div className="flex items-center gap-2">
                   <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
-                  <span className="text-lg sm:text-xl font-bold text-slate-900">Balcão</span>
+                  <span className="text-lg sm:text-xl font-bold text-slate-900">Retirada Local</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ function OrderCardComponent({
                           <RadioGroupItem value="customer" id="customer" />
                           <Label htmlFor="customer" className="flex items-center gap-2 cursor-pointer text-sm sm:text-base">
                             <Receipt className="h-4 w-4" />
-                            Comanda do Cliente {!isDelivery && (order.table_number === 0 ? "(Balcão)" : `(Mesa ${order.table_number})`)}
+                            Comanda do Cliente {!isDelivery && (order.table_number === 0 ? "(Retirada Local)" : `(Mesa ${order.table_number})`)}
                           </Label>
                         </div>
                       </RadioGroup>
@@ -477,6 +477,7 @@ function OrderCardComponent({
         </CardHeader>
 
         <CardContent className="space-y-2 sm:space-y-3 p-2.5 sm:p-3 md:p-6">
+          {/* Informações do Cliente e Pagamento - Delivery */}
           {isDelivery && (order.customer_name || order.customer_phone || order.delivery_address) && (
             <div className="bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200 space-y-1 sm:space-y-1.5 text-[11px] xs:text-xs sm:text-sm hover:bg-slate-100 transition-colors">
               {order.customer_name && (
@@ -503,6 +504,36 @@ function OrderCardComponent({
                   <span className="text-xs break-words">
                     <span className="font-semibold">Ponto de Referência: </span>
                     {order.reference_point}
+                  </span>
+                </div>
+              )}
+              {order.payment_method && (
+                <div className="flex items-center gap-2 text-slate-800">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span className="break-words">
+                    <span className="font-semibold">Pagamento: </span>
+                    {order.payment_method}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Informações do Cliente e Pagamento - Dine-in */}
+          {!isDelivery && (order.customer_name || order.payment_method) && (
+            <div className="bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200 space-y-1 sm:space-y-1.5 text-[11px] xs:text-xs sm:text-sm hover:bg-slate-100 transition-colors">
+              {order.customer_name && (
+                <div className="flex items-center gap-2 text-slate-900">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span className="font-semibold break-words">{order.customer_name}</span>
+                </div>
+              )}
+              {order.payment_method && (
+                <div className="flex items-center gap-2 text-slate-800">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span className="break-words">
+                    <span className="font-semibold">Pagamento: </span>
+                    {order.payment_method}
                   </span>
                 </div>
               )}

@@ -590,12 +590,12 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl md:text-2xl">Editar Pedido #{order.id.slice(0, 8).toUpperCase()}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl md:text-2xl lg:text-3xl">Editar Pedido #{order.id.slice(0, 8).toUpperCase()}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3 sm:space-y-4 py-2 sm:py-4">
+        <div className="space-y-3 sm:space-y-4 md:space-y-5 py-2 sm:py-4 md:py-6">
           {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="status" className="text-sm font-semibold">
@@ -645,9 +645,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 const itemTotal = itemSubtotal + extrasTotal
 
                 return (
-                  <div key={item.id} className="bg-white p-2 sm:p-3 rounded-lg border border-slate-200 space-y-2">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-2 sm:gap-2">
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
+                  <div key={item.id} className="bg-white p-2 sm:p-3 md:p-4 rounded-lg border border-slate-200">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div className="space-y-1">
                           <Input
                             value={item.product_name}
@@ -658,36 +658,38 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                                 )
                               )
                             }}
-                            className="font-medium text-xs sm:text-sm border-slate-300 focus:border-slate-500"
+                            className="font-medium text-xs sm:text-sm md:text-base border-slate-300 focus:border-slate-500"
                             placeholder="Nome do produto"
                           />
                         </div>
-                        {item.variety_name && (
-                          <p className="text-xs text-slate-600 mt-1">Tamanho: {item.variety_name || ""}</p>
-                        )}
-                        {item.order_item_extras && item.order_item_extras.length > 0 && (
-                          <div className="text-xs text-slate-600 mt-1">
-                            {item.order_item_extras.map((extra) => (
-                              <div key={extra.id}>
-                                + {extra.extra_name || ""} {extra.quantity > 1 && `(x${extra.quantity})`}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-1">
+                          {item.variety_name && (
+                            <p className="text-xs md:text-sm text-slate-600">Tamanho: {item.variety_name || ""}</p>
+                          )}
+                          {item.order_item_extras && item.order_item_extras.length > 0 && (
+                            <div className="text-xs md:text-sm text-slate-600">
+                              {item.order_item_extras.map((extra) => (
+                                <span key={extra.id} className="mr-2">
+                                  + {extra.extra_name || ""} {extra.quantity > 1 && `(x${extra.quantity})`}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         {item.notes && (
-                          <p className="text-xs text-slate-500 italic mt-1">Obs: {item.notes}</p>
+                          <p className="text-xs md:text-sm text-slate-500 italic">Obs: {item.notes}</p>
                         )}
-                        <p className="text-sm font-semibold text-slate-700 mt-2">
+                      </div>
+                      <div className="flex items-center justify-between md:justify-end gap-2 md:gap-3 flex-shrink-0">
+                        <p className="text-sm md:text-base font-semibold text-slate-700 md:min-w-[80px] md:text-right">
                           R$ {itemTotal.toFixed(2)}
                         </p>
-                      </div>
-                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
                         <div className="flex items-center gap-1 border border-slate-300 rounded-md">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-slate-100"
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 hover:bg-slate-100"
                             onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
                           >
@@ -701,13 +703,13 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                               const newQty = parseInt(e.target.value) || 1
                               updateItemQuantity(item.id, newQty)
                             }}
-                            className="w-10 sm:w-12 h-7 sm:h-8 text-center border-0 p-0 text-xs sm:text-sm"
+                            className="w-10 sm:w-12 md:w-14 h-7 sm:h-8 md:h-9 text-center border-0 p-0 text-xs sm:text-sm md:text-base"
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-slate-100"
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 hover:bg-slate-100"
                             onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
                           >
                             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -718,7 +720,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                             onClick={() => openReplaceModal(item.id)}
                             title="Substituir por outro produto"
                           >
@@ -728,7 +730,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 text-red-600 hover:bg-red-50 hover:text-red-700"
                             onClick={() => removeItem(item.id)}
                             title="Remover item"
                           >
@@ -754,32 +756,34 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 Informações de Entrega
               </h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="customerName" className="text-sm font-medium flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Nome do Cliente
-                </Label>
-                <Input
-                  id="customerName"
-                  value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Nome completo"
-                  className="border-slate-200"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerName" className="text-sm font-medium flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Nome do Cliente
+                  </Label>
+                  <Input
+                    id="customerName"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    placeholder="Nome completo"
+                    className="border-slate-200"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="customerPhone" className="text-sm font-medium flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Telefone
-                </Label>
-                <Input
-                  id="customerPhone"
-                  value={formData.customerPhone}
-                  onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                  placeholder="(00) 00000-0000"
-                  className="border-slate-200"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="customerPhone" className="text-sm font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Telefone
+                  </Label>
+                  <Input
+                    id="customerPhone"
+                    value={formData.customerPhone}
+                    onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                    placeholder="(00) 00000-0000"
+                    className="border-slate-200"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -797,34 +801,36 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="referencePoint" className="text-sm font-medium flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Ponto de Referência (opcional)
-                </Label>
-                <Input
-                  id="referencePoint"
-                  value={formData.referencePoint}
-                  onChange={(e) => setFormData({ ...formData, referencePoint: e.target.value })}
-                  placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
-                  className="border-slate-200"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="referencePoint" className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Ponto de Referência (opcional)
+                  </Label>
+                  <Input
+                    id="referencePoint"
+                    value={formData.referencePoint}
+                    onChange={(e) => setFormData({ ...formData, referencePoint: e.target.value })}
+                    placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
+                    className="border-slate-200"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="deliveryFee" className="text-sm font-medium flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Taxa de Entrega (R$)
-                </Label>
-                <Input
-                  id="deliveryFee"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.deliveryFee}
-                  onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
-                  className="border-slate-200"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryFee" className="text-sm font-medium flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Taxa de Entrega (R$)
+                  </Label>
+                  <Input
+                    id="deliveryFee"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.deliveryFee}
+                    onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
+                    className="border-slate-200"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -846,30 +852,30 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
           </div>
 
           {/* Resumo Financeiro */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-            <h3 className="font-semibold text-slate-900 mb-3">Resumo Financeiro</h3>
-            <div className="flex justify-between text-sm text-slate-700">
+          <div className="p-4 md:p-6 bg-slate-50 rounded-lg border border-slate-200 space-y-2 md:space-y-3">
+            <h3 className="font-semibold text-base md:text-lg text-slate-900 mb-3 md:mb-4">Resumo Financeiro</h3>
+            <div className="flex justify-between text-sm md:text-base text-slate-700">
               <span>Subtotal dos itens:</span>
               <span className="font-medium">R$ {subtotal.toFixed(2)}</span>
             </div>
             {isDelivery && formData.deliveryFee > 0 && (
-              <div className="flex justify-between text-sm text-slate-700">
+              <div className="flex justify-between text-sm md:text-base text-slate-700">
                 <span>Taxa de entrega:</span>
                 <span className="font-medium">R$ {Number(formData.deliveryFee).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between pt-2 border-t border-slate-300">
-              <span className="font-bold text-base text-slate-900">Total:</span>
-              <span className="font-bold text-lg text-slate-900">R$ {calculatedTotal.toFixed(2)}</span>
+            <div className="flex justify-between pt-2 md:pt-3 border-t border-slate-300">
+              <span className="font-bold text-base md:text-lg text-slate-900">Total:</span>
+              <span className="font-bold text-lg md:text-xl text-slate-900">R$ {calculatedTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
+        <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row">
+          <Button variant="outline" onClick={onClose} disabled={isSaving} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-slate-600 hover:bg-slate-700">
+          <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto bg-slate-600 hover:bg-slate-700">
             {isSaving ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </DialogFooter>
