@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { isAdminUser } from "@/lib/supabase/admin-check"
+import { SessionRefresher } from "@/components/admin/session-refresher"
 
 export default async function AdminLayout({
   children,
@@ -34,6 +35,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50">
+      <SessionRefresher />
       <AdminSidebar 
         user={user} 
         restaurantName={restaurantSettings?.name || "Admin Panel"}

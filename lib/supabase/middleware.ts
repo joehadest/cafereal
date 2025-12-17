@@ -26,7 +26,21 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse = NextResponse.next({
           request,
         })
-        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+        cookiesToSet.forEach(({ name, value, options }) => {
+          // Configura opções de cookie para garantir persistência da sessão
+          const cookieOptions = {
+            ...options,
+            // Garantir SameSite para compatibilidade
+            sameSite: (options?.sameSite as "lax" | "strict" | "none") || "lax",
+            // Secure apenas em produção
+            secure: options?.secure ?? (process.env.NODE_ENV === "production"),
+            // Manter httpOnly para cookies de autenticação
+            httpOnly: options?.httpOnly ?? (name.includes("auth-token") || name.includes("sb-")),
+            // Se não houver maxAge definido e for cookie de refresh, definir expiração longa
+            maxAge: options?.maxAge ?? (name.includes("refresh") ? 60 * 60 * 24 * 365 : undefined),
+          }
+          supabaseResponse.cookies.set(name, value, cookieOptions)
+        })
       },
     },
   })
