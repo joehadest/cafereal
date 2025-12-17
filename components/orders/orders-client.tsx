@@ -52,8 +52,29 @@ export function OrdersClient({
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState<string>("all")
+  // Estado local para manter os pedidos mesmo durante refresh
+  const [localOrders, setLocalOrders] = useState<Order[]>(orders)
   const isPrintingRef = useRef(false)
   const isRefreshingRef = useRef(false)
+  
+  // Atualizar estado local quando os pedidos do servidor mudarem
+  useEffect(() => {
+    if (orders) {
+      // Sempre atualizar quando houver dados do servidor
+      // Mas só limpar se o servidor retornar array vazio E não estivermos em refresh
+      if (orders.length > 0) {
+        setLocalOrders(orders)
+      } else if (orders.length === 0 && localOrders.length > 0 && !isRefreshingRef.current) {
+        // Se o servidor retornar array vazio mas temos dados locais E não estamos em refresh,
+        // manter os dados locais (pode ser um erro temporário ou problema de autenticação)
+        console.warn("Servidor retornou array vazio, mantendo dados locais para evitar perda de dados")
+      } else if (orders.length === 0 && localOrders.length === 0) {
+        // Se ambos estão vazios, atualizar normalmente
+        setLocalOrders([])
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders])
   
   // Escutar eventos de pedidos deletados para removê-los da lista imediatamente
   useEffect(() => {
@@ -87,6 +108,8 @@ export function OrdersClient({
             if (refreshResult && typeof refreshResult.catch === 'function') {
               refreshResult.catch((error) => {
                 console.warn("Erro ao atualizar página:", error)
+                // Em caso de erro, não limpar os dados locais
+                // Os dados serão mantidos até o próximo refresh bem-sucedido
               }).finally(() => {
                 setTimeout(() => {
                   isRefreshingRef.current = false
@@ -100,6 +123,7 @@ export function OrdersClient({
             }
           } catch (error) {
             console.warn("Erro ao atualizar página:", error)
+            // Em caso de erro, não limpar os dados locais
             isRefreshingRef.current = false
           }
         } else {
@@ -213,6 +237,8 @@ export function OrdersClient({
       if (refreshResult && typeof refreshResult.catch === 'function') {
         refreshResult.catch((error) => {
           console.warn("Erro ao atualizar manualmente:", error)
+          // Em caso de erro, não limpar os dados locais
+          // Os dados serão mantidos até o próximo refresh bem-sucedido
         }).finally(() => {
           setTimeout(() => {
             setIsRefreshing(false)
@@ -227,6 +253,7 @@ export function OrdersClient({
       }
     } catch (error) {
       console.warn("Erro ao atualizar manualmente:", error)
+      // Em caso de erro, não limpar os dados locais
       setIsRefreshing(false)
       isRefreshingRef.current = false
     }
@@ -262,8 +289,8 @@ export function OrdersClient({
     }
   }
 
-  // Filtrar pedidos deletados da lista
-  const visibleOrders = orders.filter((o) => !deletedOrderIds.has(o.id))
+  // Filtrar pedidos deletados da lista (usar localOrders para manter dados durante refresh)
+  const visibleOrders = localOrders.filter((o) => !deletedOrderIds.has(o.id))
   
   // Função para filtrar pedidos por data
   const filterOrdersByDate = useCallback((orders: Order[], filter: string): Order[] => {
