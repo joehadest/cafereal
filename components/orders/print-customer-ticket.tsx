@@ -70,9 +70,14 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
         <div className="flex justify-between items-center mb-2">
           <span className="font-bold text-base text-black">Pedido #{order.id.slice(0, 8).toUpperCase()}</span>
         </div>
-        {isDelivery && order.customer_name && (
+        {order.customer_name && (
           <div className="text-xs text-black">
             <span className="font-bold">Cliente:</span> {order.customer_name}
+          </div>
+        )}
+        {order.payment_method && (
+          <div className="text-xs text-black">
+            <span className="font-bold">Pagamento:</span> {order.payment_method}
           </div>
         )}
       </div>

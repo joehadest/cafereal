@@ -97,28 +97,40 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
         </div>
       </div>
 
-      {/* Informações do Cliente (Delivery) */}
-      {isDelivery && (
+      {/* Informações do Cliente */}
+      {(order.customer_name || order.payment_method) && (
         <div className="mb-2 pb-2 border-b border-gray-300 bg-gray-50 -mx-3 px-3 py-2 rounded">
           <h2 className="font-bold text-xs mb-1.5 uppercase text-black">Dados do Cliente</h2>
           <div className="space-y-1 text-xs">
-            <div className="flex items-start gap-1.5">
-              <span className="font-bold text-black min-w-[50px]">Nome:</span>
-              <span className="flex-1 break-words font-bold">{order.customer_name}</span>
-            </div>
-            <div className="flex items-start gap-1.5">
-              <span className="font-bold text-black min-w-[50px]">Telefone:</span>
-              <span className="flex-1 break-words font-bold">{order.customer_phone}</span>
-            </div>
-            <div className="flex items-start gap-1.5">
-              <span className="font-bold text-black min-w-[50px]">Endereço:</span>
-              <span className="flex-1 break-words leading-tight overflow-wrap-anywhere font-bold" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                {order.delivery_address
-                  ? order.delivery_address.replace(/\n/g, ", ").replace(/\s+/g, " ").trim()
-                  : "Não informado"}
-              </span>
-            </div>
-            {order.reference_point && (
+            {order.customer_name && (
+              <div className="flex items-start gap-1.5">
+                <span className="font-bold text-black min-w-[50px]">Nome:</span>
+                <span className="flex-1 break-words font-bold">{order.customer_name}</span>
+              </div>
+            )}
+            {order.payment_method && (
+              <div className="flex items-start gap-1.5">
+                <span className="font-bold text-black min-w-[50px]">Pagamento:</span>
+                <span className="flex-1 break-words font-bold">{order.payment_method}</span>
+              </div>
+            )}
+            {isDelivery && order.customer_phone && (
+              <div className="flex items-start gap-1.5">
+                <span className="font-bold text-black min-w-[50px]">Telefone:</span>
+                <span className="flex-1 break-words font-bold">{order.customer_phone}</span>
+              </div>
+            )}
+            {isDelivery && (
+              <div className="flex items-start gap-1.5">
+                <span className="font-bold text-black min-w-[50px]">Endereço:</span>
+                <span className="flex-1 break-words leading-tight overflow-wrap-anywhere font-bold" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                  {order.delivery_address
+                    ? order.delivery_address.replace(/\n/g, ", ").replace(/\s+/g, " ").trim()
+                    : "Não informado"}
+                </span>
+              </div>
+            )}
+            {isDelivery && order.reference_point && (
               <div className="flex items-start gap-1.5">
                 <span className="font-bold text-black min-w-[50px]">Ponto de Ref.:</span>
                 <span className="flex-1 break-words leading-tight overflow-wrap-anywhere font-bold" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>

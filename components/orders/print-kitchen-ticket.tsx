@@ -91,18 +91,25 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
         </div>
       )}
 
-      {/* Info Cliente (se Delivery) */}
-      {isDelivery && order.customer_name && (
+      {/* Info Cliente */}
+      {(order.customer_name || order.payment_method) && (
         <div className="border-t-2 border-dashed border-gray-600 pt-2 mt-2 space-y-0.5">
-          <p className="text-xs">
-            <strong>Cliente:</strong> {order.customer_name}
-          </p>
-          {order.customer_phone && (
+          {order.customer_name && (
+            <p className="text-xs">
+              <strong>Cliente:</strong> {order.customer_name}
+            </p>
+          )}
+          {order.payment_method && (
+            <p className="text-xs">
+              <strong>Pagamento:</strong> {order.payment_method}
+            </p>
+          )}
+          {isDelivery && order.customer_phone && (
             <p className="text-xs">
               <strong>Telefone:</strong> {order.customer_phone}
             </p>
           )}
-          {order.delivery_address && (
+          {isDelivery && order.delivery_address && (
             <div className="text-xs overflow-visible">
               <p className="font-bold mb-0.5">Endereço:</p>
               <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
@@ -110,7 +117,7 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
               </p>
             </div>
           )}
-          {order.reference_point && (
+          {isDelivery && order.reference_point && (
             <div className="text-xs overflow-visible">
               <p className="font-bold mb-0.5">Ponto de Referência:</p>
               <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">

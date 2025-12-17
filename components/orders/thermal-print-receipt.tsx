@@ -75,9 +75,26 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
                   <p className="text-xs ml-2">{order.reference_point.trim()}</p>
                 </>
               )}
+              {order.payment_method && (
+                <p className="text-sm">
+                  <strong>Pagamento:</strong> {order.payment_method}
+                </p>
+              )}
             </>
           ) : (
-            <p className="font-bold text-lg">MESA {order.table_number}</p>
+            <>
+              <p className="font-bold text-lg">MESA {order.table_number}</p>
+              {order.customer_name && (
+                <p className="text-sm">
+                  <strong>Cliente:</strong> {order.customer_name}
+                </p>
+              )}
+              {order.payment_method && (
+                <p className="text-sm">
+                  <strong>Pagamento:</strong> {order.payment_method}
+                </p>
+              )}
+            </>
           )}
         </div>
 
