@@ -8,8 +8,17 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'CafeReal',
-  description: 'CafeReal',
+  description: 'CafeReal - Sistema de gestão para restaurantes',
   generator: 'CafeReal',
+  applicationName: 'CafeReal',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CafeReal',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -31,6 +40,10 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/favicon/site.webmanifest',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#475569' },
+    { media: '(prefers-color-scheme: dark)', color: '#1e293b' },
+  ],
 }
 
 export default function RootLayout({
