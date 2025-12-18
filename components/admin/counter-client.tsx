@@ -52,9 +52,11 @@ const BALCAO_PRODUCT: Product = {
   category_id: "",
   active: true,
   display_order: 0,
-  image_url: null,
+  image_url: undefined,
   varieties: [],
   extras: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 }
 
 export function CounterClient({
@@ -671,6 +673,7 @@ export function CounterClient({
                       <SelectValue placeholder="Selecione a forma de pagamento" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="Não informado">Não informado</SelectItem>
                       <SelectItem value="PIX">PIX</SelectItem>
                       <SelectItem value="Dinheiro">Dinheiro</SelectItem>
                       <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>

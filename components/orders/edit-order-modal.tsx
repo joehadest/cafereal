@@ -50,6 +50,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     notes: order.notes || "",
     deliveryFee: order.delivery_fee || 0,
     total: order.total,
+    paymentMethod: order.payment_method || "",
   })
   const [orderItems, setOrderItems] = useState<EditableOrderItem[]>([])
   const [replaceItemModalOpen, setReplaceItemModalOpen] = useState(false)
@@ -74,6 +75,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         notes: order.notes || "",
         deliveryFee: order.delivery_fee || 0,
         total: order.total,
+        paymentMethod: order.payment_method || "",
       })
       // Inicializar itens editáveis
       setOrderItems(
@@ -412,6 +414,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         status: formData.status,
         notes: formData.notes?.trim() || null,
         total: calculatedTotal,
+        payment_method: formData.paymentMethod?.trim() || null,
       }
 
       if (isDelivery) {
@@ -420,6 +423,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         updateData.delivery_address = formData.deliveryAddress.trim() || null
         updateData.reference_point = formData.referencePoint?.trim() || null
         updateData.delivery_fee = Number(formData.deliveryFee) || 0
+      } else {
+        // Para pedidos dine-in, também permitir editar nome do cliente
+        updateData.customer_name = formData.customerName.trim() || null
       }
 
       const { error: orderError } = await supabase.from("orders").update(updateData).eq("id", order.id)
@@ -830,6 +836,70 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                     onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
                     className="border-slate-200"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deliveryPaymentMethod" className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Forma de Pagamento
+                </Label>
+                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
+                  <SelectTrigger id="deliveryPaymentMethod">
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Não informado">Não informado</SelectItem>
+                    <SelectItem value="PIX">PIX</SelectItem>
+                    <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                    <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Informações do Cliente e Pagamento (Dine-in) */}
+          {!isDelivery && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Informações do Cliente e Pagamento
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dineInCustomerName" className="text-sm font-medium flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Nome do Cliente
+                  </Label>
+                  <Input
+                    id="dineInCustomerName"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    placeholder="Nome do cliente"
+                    className="border-slate-200"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="paymentMethod" className="text-sm font-medium flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Forma de Pagamento
+                  </Label>
+                  <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
+                    <SelectTrigger id="paymentMethod">
+                      <SelectValue placeholder="Selecione a forma de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Não informado">Não informado</SelectItem>
+                      <SelectItem value="PIX">PIX</SelectItem>
+                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                      <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>

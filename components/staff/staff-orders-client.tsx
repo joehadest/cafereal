@@ -685,6 +685,7 @@ export function StaffOrdersClient({
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Não informado">Não informado</SelectItem>
                     <SelectItem value="PIX">PIX</SelectItem>
                     <SelectItem value="Dinheiro">Dinheiro</SelectItem>
                     <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
