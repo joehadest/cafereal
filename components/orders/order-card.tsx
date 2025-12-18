@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit, CreditCard } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit, CreditCard, CheckSquare, Square } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -55,7 +55,16 @@ const statusConfig = {
 function OrderCardComponent({
   order,
   restaurantInfo,
-}: { order: Order; restaurantInfo?: { name: string; phone?: string; address?: string; cnpj?: string } }) {
+  isSelectionMode = false,
+  isSelected = false,
+  onToggleSelection,
+}: { 
+  order: Order
+  restaurantInfo?: { name: string; phone?: string; address?: string; cnpj?: string }
+  isSelectionMode?: boolean
+  isSelected?: boolean
+  onToggleSelection?: (orderId: string) => void
+}) {
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -376,10 +385,23 @@ function OrderCardComponent({
 
   return (
     <>
-      <Card className="border-slate-200 hover:shadow-md hover:border-slate-400 transition-shadow">
+      <Card className={`border-slate-200 hover:shadow-md hover:border-slate-400 transition-shadow ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}>
         <CardHeader className="pb-2 sm:pb-3 p-2.5 sm:p-3 md:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-2">
+              {isSelectionMode && (
+                <button
+                  onClick={() => onToggleSelection?.(order.id)}
+                  className="flex items-center justify-center p-1 hover:bg-slate-100 rounded transition-colors"
+                  type="button"
+                >
+                  {isSelected ? (
+                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                  ) : (
+                    <Square className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
+                  )}
+                </button>
+              )}
               {isDelivery ? (
                 <div className="flex items-center gap-2">
                   <Bike className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />

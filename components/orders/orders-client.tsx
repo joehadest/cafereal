@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2, Search, X, Calendar } from "lucide-react"
+import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Store, Trash2, Search, X, Calendar, CheckSquare, Square, Merge } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -52,6 +52,9 @@ export function OrdersClient({
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState<string>("all")
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set())
+  const [isMerging, setIsMerging] = useState(false)
   // Estado local para manter os pedidos mesmo durante refresh
   const [localOrders, setLocalOrders] = useState<Order[]>(orders)
   const isPrintingRef = useRef(false)
@@ -289,6 +292,169 @@ export function OrdersClient({
     }
   }
 
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId)
+      } else {
+        newSet.add(orderId)
+      }
+      return newSet
+    })
+  }
+
+  const handleMergeOrders = async () => {
+    if (selectedOrderIds.size < 2) {
+      alert("Selecione pelo menos 2 pedidos para juntar")
+      return
+    }
+
+    if (!confirm(`Tem certeza que deseja juntar ${selectedOrderIds.size} pedidos em um único pedido? Os pedidos originais serão cancelados.`)) {
+      return
+    }
+
+    setIsMerging(true)
+    const supabase = createClient()
+
+    try {
+      // Buscar todos os pedidos selecionados com seus itens
+      const selectedOrders = localOrders.filter((o) => selectedOrderIds.has(o.id))
+      
+      if (selectedOrders.length < 2) {
+        alert("Erro: Não foi possível encontrar os pedidos selecionados")
+        setIsMerging(false)
+        return
+      }
+
+      // Usar o primeiro pedido como base
+      const baseOrder = selectedOrders[0]
+      
+      // Coletar todos os itens de todos os pedidos
+      const allItems: any[] = []
+      let totalSum = 0
+      const allNotes: string[] = []
+
+      for (const order of selectedOrders) {
+        totalSum += order.total
+        if (order.notes) {
+          allNotes.push(`Pedido #${order.id.slice(0, 8).toUpperCase()}: ${order.notes}`)
+        }
+        
+        for (const item of order.order_items || []) {
+          allItems.push({
+            order_id: null, // Será preenchido após criar o novo pedido
+            product_id: (item as any).product_id || null,
+            product_name: item.product_name,
+            product_price: item.product_price,
+            quantity: item.quantity,
+            subtotal: item.subtotal || (item.product_price * item.quantity),
+            variety_id: (item as any).variety_id || null,
+            variety_name: (item as any).variety_name || null,
+            variety_price: (item as any).variety_price || null,
+            notes: item.notes,
+            category_name: (item as any).category_name || null,
+            order_item_extras: (item as any).order_item_extras || [],
+          })
+        }
+      }
+
+      // Criar novo pedido com os dados do primeiro pedido
+      const newOrderData: any = {
+        order_type: baseOrder.order_type,
+        status: baseOrder.status, // Manter o status do primeiro pedido
+        table_number: baseOrder.table_number,
+        total: totalSum,
+        customer_name: baseOrder.customer_name,
+        customer_phone: baseOrder.customer_phone,
+        delivery_address: baseOrder.delivery_address,
+        reference_point: baseOrder.reference_point,
+        delivery_fee: baseOrder.delivery_fee || 0,
+        payment_method: baseOrder.payment_method,
+        notes: allNotes.length > 0 ? `Pedidos juntados:\n${allNotes.join('\n')}` : `Pedidos juntados: ${selectedOrders.map(o => `#${o.id.slice(0, 8).toUpperCase()}`).join(', ')}`,
+      }
+
+      // Inserir novo pedido
+      const { data: newOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert(newOrderData)
+        .select()
+        .single()
+
+      if (orderError) throw orderError
+
+      // Inserir todos os itens
+      const itemsToInsert = allItems.map((item) => ({
+        order_id: newOrder.id,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_price: item.product_price,
+        quantity: item.quantity,
+        subtotal: item.subtotal,
+        variety_id: item.variety_id,
+        variety_name: item.variety_name,
+        variety_price: item.variety_price,
+        notes: item.notes,
+        category_name: item.category_name,
+      }))
+
+      const { data: insertedItems, error: itemsError } = await supabase
+        .from("order_items")
+        .insert(itemsToInsert)
+        .select()
+
+      if (itemsError) throw itemsError
+
+      // Inserir extras dos itens
+      // Mapear extras aos itens inseridos usando product_name e quantity como chave
+      const extrasToInsert: any[] = []
+      if (insertedItems) {
+        allItems.forEach((item, index) => {
+          if (item.order_item_extras && item.order_item_extras.length > 0 && insertedItems[index]) {
+            item.order_item_extras.forEach((extra: any) => {
+              extrasToInsert.push({
+                order_item_id: insertedItems[index].id,
+                extra_id: extra.extra_id || null,
+                extra_name: extra.extra_name,
+                extra_price: extra.extra_price,
+                quantity: extra.quantity,
+              })
+            })
+          }
+        })
+      }
+
+      if (extrasToInsert.length > 0) {
+        const { error: extrasError } = await supabase
+          .from("order_item_extras")
+          .insert(extrasToInsert)
+
+        if (extrasError) throw extrasError
+      }
+
+      // Cancelar os pedidos originais
+      const { error: cancelError } = await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .in("id", Array.from(selectedOrderIds))
+
+      if (cancelError) throw cancelError
+
+      // Limpar seleção e desativar modo de seleção
+      setSelectedOrderIds(new Set())
+      setIsSelectionMode(false)
+
+      // Atualizar página
+      router.refresh()
+      alert(`${selectedOrders.length} pedidos foram juntados com sucesso em um único pedido!`)
+    } catch (error) {
+      console.error("Erro ao juntar pedidos:", error)
+      alert("Erro ao juntar pedidos. Tente novamente.")
+    } finally {
+      setIsMerging(false)
+    }
+  }
+
   // Filtrar pedidos deletados da lista (usar localOrders para manter dados durante refresh)
   const visibleOrders = localOrders.filter((o) => !deletedOrderIds.has(o.id))
   
@@ -458,6 +624,45 @@ export function OrdersClient({
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
+              {!isSelectionMode && filteredOrders.length > 0 && (
+                <Button
+                  onClick={() => setIsSelectionMode(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                  <span className="hidden sm:inline text-xs md:text-sm">Juntar Pedidos</span>
+                </Button>
+              )}
+              {isSelectionMode && (
+                <>
+                  <Button
+                    onClick={handleMergeOrders}
+                    variant="outline"
+                    size="sm"
+                    disabled={selectedOrderIds.size < 2 || isMerging}
+                    className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    <Merge className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                    <span className="hidden sm:inline text-xs md:text-sm">
+                      {isMerging ? "Juntando..." : `Juntar (${selectedOrderIds.size})`}
+                    </span>
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsSelectionMode(false)
+                      setSelectedOrderIds(new Set())
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                    <span className="hidden sm:inline text-xs md:text-sm">Cancelar</span>
+                  </Button>
+                </>
+              )}
               {filteredOrders.length > 0 && (
                 <Button
                   onClick={() => setIsDeleteAllModalOpen(true)}
@@ -550,7 +755,14 @@ export function OrdersClient({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {pendingOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                 ))}
                 {pendingOrders.length === 0 && (
                   <p className="text-slate-700 col-span-full text-center py-6 sm:py-8 text-sm sm:text-base">
@@ -568,7 +780,14 @@ export function OrdersClient({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {preparingOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                 ))}
                 {preparingOrders.length === 0 && (
                   <p className="text-slate-700 col-span-full text-center py-6 sm:py-8 text-sm sm:text-base">
@@ -586,7 +805,14 @@ export function OrdersClient({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {readyOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                 ))}
                 {readyOrders.length === 0 && (
                   <p className="text-slate-700 col-span-full text-center py-6 sm:py-8 text-sm sm:text-base">
@@ -604,7 +830,14 @@ export function OrdersClient({
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {outForDeliveryOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                    <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                   ))}
                 </div>
               </section>
@@ -619,7 +852,14 @@ export function OrdersClient({
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {deliveredOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                    <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                   ))}
                 </div>
               </section>
@@ -638,7 +878,14 @@ export function OrdersClient({
                       {deliveryOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -650,7 +897,14 @@ export function OrdersClient({
                       {deliveryOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -662,7 +916,14 @@ export function OrdersClient({
                       {deliveryOrders
                         .filter((o) => o.status === "ready" || o.status === "out_for_delivery")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -674,7 +935,14 @@ export function OrdersClient({
                       {deliveryOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -695,7 +963,14 @@ export function OrdersClient({
                       {dineInOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -707,7 +982,14 @@ export function OrdersClient({
                       {dineInOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -719,7 +1001,14 @@ export function OrdersClient({
                       {dineInOrders
                         .filter((o) => o.status === "ready")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -731,7 +1020,14 @@ export function OrdersClient({
                       {dineInOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -752,7 +1048,14 @@ export function OrdersClient({
                       {balcaoOrders
                         .filter((o) => o.status === "pending")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -764,7 +1067,14 @@ export function OrdersClient({
                       {balcaoOrders
                         .filter((o) => o.status === "preparing")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -776,7 +1086,14 @@ export function OrdersClient({
                       {balcaoOrders
                         .filter((o) => o.status === "ready")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
@@ -788,7 +1105,14 @@ export function OrdersClient({
                       {balcaoOrders
                         .filter((o) => o.status === "delivered")
                         .map((order) => (
-                          <OrderCard key={order.id} order={order} restaurantInfo={restaurantInfo} />
+                          <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    restaurantInfo={restaurantInfo}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelection={toggleOrderSelection}
+                  />
                         ))}
                     </div>
                   </section>
