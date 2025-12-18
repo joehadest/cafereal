@@ -176,7 +176,7 @@ export function CounterClient({
     }
 
     if (!selectedTable) {
-      alert("Selecione uma mesa ou balcão")
+      alert("Selecione uma mesa, balcão ou retirada no local")
       return
     }
 
@@ -184,25 +184,48 @@ export function CounterClient({
     const supabase = createClient()
 
     try {
-      const tableNumber = parseInt(selectedTable)
-      const orderData: any = {
-        order_type: "dine-in",
-        status: "pending",
-        table_number: tableNumber,
-        total: totalPrice,
-        notes: notes || null,
-        payment_method: paymentMethod.trim() || null,
-      }
+      let orderData: any
+      
+      if (selectedTable === "pickup") {
+        // Pedido de retirada no local
+        orderData = {
+          order_type: "pickup",
+          status: "pending",
+          table_number: 0,
+          total: totalPrice,
+          notes: notes || null,
+          payment_method: paymentMethod.trim() || null,
+        }
+        
+        // Adicionar informações do cliente para retirada
+        if (customerName.trim()) {
+          orderData.customer_name = customerName.trim()
+        }
+        if (customerPhone.trim()) {
+          orderData.customer_phone = customerPhone.trim()
+        }
+      } else {
+        // Pedido dine-in (mesa ou balcão)
+        const tableNumber = parseInt(selectedTable)
+        orderData = {
+          order_type: "dine-in",
+          status: "pending",
+          table_number: tableNumber,
+          total: totalPrice,
+          notes: notes || null,
+          payment_method: paymentMethod.trim() || null,
+        }
 
-      // Adicionar informações do cliente se preenchidas
-      if (customerName.trim()) {
-        orderData.customer_name = customerName.trim()
-      }
-      if (customerPhone.trim()) {
-        orderData.customer_phone = customerPhone.trim()
-      }
-      if (customerAddress.trim()) {
-        orderData.delivery_address = customerAddress.trim()
+        // Adicionar informações do cliente se preenchidas
+        if (customerName.trim()) {
+          orderData.customer_name = customerName.trim()
+        }
+        if (customerPhone.trim()) {
+          orderData.customer_phone = customerPhone.trim()
+        }
+        if (customerAddress.trim()) {
+          orderData.delivery_address = customerAddress.trim()
+        }
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
@@ -620,13 +643,14 @@ export function CounterClient({
             <CardContent className="p-4">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="table">Mesa / Balcão</Label>
+                  <Label htmlFor="table">Mesa / Balcão / Retirada</Label>
                   <Select value={selectedTable} onValueChange={setSelectedTable}>
                     <SelectTrigger id="table">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">Balcão</SelectItem>
+                      <SelectItem value="pickup">Retirada no Local</SelectItem>
                       {tables.map((table) => (
                         <SelectItem key={table.id} value={table.table_number.toString()}>
                           Mesa {table.table_number}

@@ -39,6 +39,13 @@ type EditableOrderItem = {
   isReplaced?: boolean // Flag para indicar que foi substituído
 }
 
+type Table = {
+  id: string
+  table_number: number
+  capacity: number
+  status: string
+}
+
 export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderModalProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -52,6 +59,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     total: order.total,
     paymentMethod: order.payment_method || "",
   })
+  const [orderType, setOrderType] = useState<string>(order.order_type || "dine-in")
+  const [tableNumber, setTableNumber] = useState<string>(order.table_number?.toString() || "0")
+  const [tables, setTables] = useState<Table[]>([])
   const [orderItems, setOrderItems] = useState<EditableOrderItem[]>([])
   const [replaceItemModalOpen, setReplaceItemModalOpen] = useState(false)
   const [addItemModalOpen, setAddItemModalOpen] = useState(false)
@@ -77,6 +87,8 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         total: order.total,
         paymentMethod: order.payment_method || "",
       })
+      setOrderType(order.order_type || "dine-in")
+      setTableNumber(order.table_number?.toString() || "0")
       // Inicializar itens editáveis
       setOrderItems(
         order.order_items.map((item) => ({
@@ -99,10 +111,26 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
           isReplaced: false,
         }))
       )
+      
+      // Buscar mesas
+      const fetchTables = async () => {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from("restaurant_tables")
+          .select("*")
+          .eq("active", true)
+          .order("table_number")
+        if (data) {
+          setTables(data)
+        }
+      }
+      fetchTables()
     }
   }, [order, isOpen])
 
-  const isDelivery = order.order_type === "delivery"
+  const isDelivery = orderType === "delivery"
+  const isPickup = orderType === "pickup"
+  const isDineIn = orderType === "dine-in"
 
   // Calcular subtotal dos itens editáveis
   const subtotal = orderItems.reduce((sum, item) => {
@@ -113,7 +141,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     return sum + itemSubtotal + extrasTotal
   }, 0)
 
-  // Calcular total com taxa de entrega
+  // Calcular total com taxa de entrega (apenas para delivery)
   const calculatedTotal = subtotal + (isDelivery ? Number(formData.deliveryFee) : 0)
 
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
@@ -417,15 +445,21 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         payment_method: formData.paymentMethod?.trim() || null,
       }
 
-      if (isDelivery) {
+      // Atualizar order_type e table_number
+      updateData.order_type = orderType
+      if (orderType === "pickup") {
+        updateData.table_number = 0
+        updateData.customer_name = formData.customerName.trim() || null
+        updateData.customer_phone = formData.customerPhone.trim() || null
+      } else if (orderType === "dine-in") {
+        updateData.table_number = parseInt(tableNumber) || 0
+        updateData.customer_name = formData.customerName.trim() || null
+      } else if (isDelivery) {
         updateData.customer_name = formData.customerName.trim() || null
         updateData.customer_phone = formData.customerPhone.trim() || null
         updateData.delivery_address = formData.deliveryAddress.trim() || null
         updateData.reference_point = formData.referencePoint?.trim() || null
         updateData.delivery_fee = Number(formData.deliveryFee) || 0
-      } else {
-        // Para pedidos dine-in, também permitir editar nome do cliente
-        updateData.customer_name = formData.customerName.trim() || null
       }
 
       const { error: orderError } = await supabase.from("orders").update(updateData).eq("id", order.id)
@@ -621,6 +655,51 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
               </SelectContent>
             </Select>
           </div>
+
+          {/* Tipo de Pedido */}
+          {!isDelivery && (
+            <div className="space-y-2">
+              <Label htmlFor="orderType" className="text-sm font-semibold">
+                Tipo de Pedido
+              </Label>
+              <Select value={orderType} onValueChange={(value) => {
+                setOrderType(value)
+                if (value === "pickup") {
+                  setTableNumber("0")
+                }
+              }}>
+                <SelectTrigger id="orderType">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dine-in">Mesa / Balcão</SelectItem>
+                  <SelectItem value="pickup">Retirada no Local</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Seleção de Mesa (apenas para dine-in) */}
+          {isDineIn && (
+            <div className="space-y-2">
+              <Label htmlFor="tableNumber" className="text-sm font-semibold">
+                Mesa / Balcão
+              </Label>
+              <Select value={tableNumber} onValueChange={setTableNumber}>
+                <SelectTrigger id="tableNumber">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Balcão</SelectItem>
+                  {tables.map((table) => (
+                    <SelectItem key={table.id} value={table.table_number.toString()}>
+                      Mesa {table.table_number}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Itens do Pedido */}
           <div className="space-y-3 p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -861,7 +940,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
           )}
 
           {/* Informações do Cliente e Pagamento (Dine-in) */}
-          {!isDelivery && (
+          {isDineIn && (
             <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
               <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -901,6 +980,65 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Informações do Cliente e Pagamento (Pickup) */}
+          {isPickup && (
+            <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Informações de Retirada no Local
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pickupCustomerName" className="text-sm font-medium flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Nome do Cliente
+                  </Label>
+                  <Input
+                    id="pickupCustomerName"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    placeholder="Nome do cliente"
+                    className="border-slate-200"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pickupCustomerPhone" className="text-sm font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Telefone
+                  </Label>
+                  <Input
+                    id="pickupCustomerPhone"
+                    value={formData.customerPhone}
+                    onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                    placeholder="(00) 00000-0000"
+                    className="border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pickupPaymentMethod" className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Forma de Pagamento
+                </Label>
+                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
+                  <SelectTrigger id="pickupPaymentMethod">
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Não informado">Não informado</SelectItem>
+                    <SelectItem value="PIX">PIX</SelectItem>
+                    <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                    <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
