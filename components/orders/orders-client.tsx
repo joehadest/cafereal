@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from "@/components/ui/badge"
 import type { Order } from "@/types/order"
 import { useOrderNotifications } from "@/hooks/use-order-notifications"
+import { AutoPrintSettings, useAutoPrintSettings } from "./auto-print-settings"
+import { autoPrintOrder } from "./auto-print-utils"
 
 type OrderItem = {
   id: string
@@ -78,10 +80,56 @@ export function OrdersClient({
   const [localOrders, setLocalOrders] = useState<Order[]>(orders)
   const isPrintingRef = useRef(false)
   const isRefreshingRef = useRef(false)
+  const printedOrderIdsRef = useRef<Set<string>>(new Set())
+  const previousOrderStatusesRef = useRef<Map<string, string>>(new Map())
+  const isInitialLoadRef = useRef(true)
+  
+  // Configurações de impressão automática
+  const autoPrintSettings = useAutoPrintSettings()
   
   // Atualizar estado local quando os pedidos do servidor mudarem
   useEffect(() => {
     if (orders) {
+      // Detectar novos pedidos e mudanças de status para impressão automática
+      // Não imprimir na primeira carga da página (apenas em atualizações subsequentes)
+      if (autoPrintSettings.enabled && orders.length > 0 && !isInitialLoadRef.current) {
+        orders.forEach((order) => {
+          const orderId = order.id
+          const previousStatus = previousOrderStatusesRef.current.get(orderId)
+          const isNewOrder = !printedOrderIdsRef.current.has(orderId)
+          const statusChanged = previousStatus && previousStatus !== order.status
+
+          // Imprimir se for novo pedido e estiver configurado para imprimir em novos pedidos
+          if (isNewOrder && autoPrintSettings.printOnNewOrder && autoPrintSettings.printType !== "none") {
+            printedOrderIdsRef.current.add(orderId)
+            setTimeout(() => {
+              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+            }, 500)
+          }
+          // Imprimir se o status mudou e estiver configurado para imprimir em mudanças de status
+          else if (statusChanged && autoPrintSettings.printOnStatusChange && autoPrintSettings.printType !== "none") {
+            setTimeout(() => {
+              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+            }, 500)
+          }
+
+          // Atualizar status anterior
+          previousOrderStatusesRef.current.set(orderId, order.status)
+        })
+      }
+
+      // Marcar pedidos existentes como já processados na primeira carga
+      if (isInitialLoadRef.current && orders.length > 0) {
+        orders.forEach((order) => {
+          printedOrderIdsRef.current.add(order.id)
+          previousOrderStatusesRef.current.set(order.id, order.status)
+        })
+        // Marcar que a carga inicial foi concluída após um pequeno delay
+        setTimeout(() => {
+          isInitialLoadRef.current = false
+        }, 1000)
+      }
+
       // Sempre atualizar quando houver dados do servidor
       // Mas só limpar se o servidor retornar array vazio E não estivermos em refresh
       if (orders.length > 0) {
@@ -96,7 +144,7 @@ export function OrdersClient({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders])
+  }, [orders, autoPrintSettings])
   
   // Escutar eventos de pedidos deletados para removê-los da lista imediatamente
   useEffect(() => {
@@ -125,24 +173,11 @@ export function OrdersClient({
       setTimeout(() => {
         if (!isPrintingRef.current) {
           try {
-            const refreshResult = router.refresh()
-            // Se retornar uma Promise, tratar erros
-            if (refreshResult && typeof refreshResult.catch === 'function') {
-              refreshResult.catch((error) => {
-                console.warn("Erro ao atualizar página:", error)
-                // Em caso de erro, não limpar os dados locais
-                // Os dados serão mantidos até o próximo refresh bem-sucedido
-              }).finally(() => {
-                setTimeout(() => {
-                  isRefreshingRef.current = false
-                }, 500)
-              })
-            } else {
-              // Se não retornar Promise, apenas resetar o flag após um delay
-              setTimeout(() => {
-                isRefreshingRef.current = false
-              }, 500)
-            }
+            router.refresh()
+            // Resetar o flag após um delay
+            setTimeout(() => {
+              isRefreshingRef.current = false
+            }, 500)
           } catch (error) {
             console.warn("Erro ao atualizar página:", error)
             // Em caso de erro, não limpar os dados locais
@@ -166,20 +201,11 @@ export function OrdersClient({
       if (!isRefreshingRef.current) {
         isRefreshingRef.current = true
         try {
-          const refreshResult = router.refresh()
-          if (refreshResult && typeof refreshResult.catch === 'function') {
-            refreshResult.catch((error) => {
-              console.warn("Erro ao atualizar após notificação:", error)
-            }).finally(() => {
-              setTimeout(() => {
-                isRefreshingRef.current = false
-              }, 500)
-            })
-          } else {
-            setTimeout(() => {
-              isRefreshingRef.current = false
-            }, 500)
-          }
+          router.refresh()
+          // Resetar o flag após um delay
+          setTimeout(() => {
+            isRefreshingRef.current = false
+          }, 500)
         } catch (error) {
           console.warn("Erro ao atualizar após notificação:", error)
           isRefreshingRef.current = false
@@ -200,20 +226,11 @@ export function OrdersClient({
 
     const handleRefresh = () => {
       try {
-        const refreshResult = router.refresh()
-        if (refreshResult && typeof refreshResult.catch === 'function') {
-          refreshResult.catch((error) => {
-            console.warn("Erro ao atualizar:", error)
-          }).finally(() => {
-            setTimeout(() => {
-              isRefreshingRef.current = false
-            }, 500)
-          })
-        } else {
-          setTimeout(() => {
-            isRefreshingRef.current = false
-          }, 500)
-        }
+        router.refresh()
+        // Resetar o flag após um delay
+        setTimeout(() => {
+          isRefreshingRef.current = false
+        }, 500)
       } catch (error) {
         console.warn("Erro ao atualizar:", error)
         isRefreshingRef.current = false
@@ -255,27 +272,14 @@ export function OrdersClient({
     setIsRefreshing(true)
     isRefreshingRef.current = true
     try {
-      const refreshResult = router.refresh()
-      if (refreshResult && typeof refreshResult.catch === 'function') {
-        refreshResult.catch((error) => {
-          console.warn("Erro ao atualizar manualmente:", error)
-          // Em caso de erro, não limpar os dados locais
-          // Os dados serão mantidos até o próximo refresh bem-sucedido
-        }).finally(() => {
-          setTimeout(() => {
-            setIsRefreshing(false)
-            isRefreshingRef.current = false
-          }, 500)
-        })
-      } else {
-        setTimeout(() => {
-          setIsRefreshing(false)
-          isRefreshingRef.current = false
-        }, 500)
-      }
+      router.refresh()
+      // Resetar os flags após um delay
+      setTimeout(() => {
+        setIsRefreshing(false)
+        isRefreshingRef.current = false
+      }, 500)
     } catch (error) {
       console.warn("Erro ao atualizar manualmente:", error)
-      // Em caso de erro, não limpar os dados locais
       setIsRefreshing(false)
       isRefreshingRef.current = false
     }
@@ -653,6 +657,7 @@ export function OrdersClient({
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
+              <AutoPrintSettings />
               {filteredOrders.length > 0 && (
                 <Button
                   onClick={handleOpenMergeModal}
