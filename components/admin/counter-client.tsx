@@ -529,24 +529,24 @@ export function CounterClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Balcão Self-Service</h1>
-          <p className="text-slate-600 mt-1">Pedidos montados pelo cliente e vendidos por peso</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Balcão Self-Service</h1>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">Pedidos montados pelo cliente e vendidos por peso</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <div className="text-right">
             <p className="text-sm text-slate-600">Total do Pedido</p>
-            <p className="text-2xl font-bold text-slate-900">R$ {totalPrice.toFixed(2).replace(".", ",")}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">R$ {totalPrice.toFixed(2).replace(".", ",")}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Área principal - Adicionar item do balcão e cardápio */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 min-w-0">
           <Card>
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -570,12 +570,12 @@ export function CounterClient({
 
           {/* Seção de Cardápio */}
           {categories && categories.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
+            <Card className="w-full overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 mb-2">Cardápio</h2>
-                    <p className="text-slate-600 mb-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Cardápio</h2>
+                    <p className="text-sm sm:text-base text-slate-600 mb-4">
                       Selecione itens do cardápio para adicionar ao pedido.
                     </p>
                     {/* Barra de pesquisa */}
@@ -601,30 +601,32 @@ export function CounterClient({
                     </div>
                   </div>
                   {filteredCategories.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                      {filteredCategories.map((category) =>
-                        category.products && category.products.length > 0
-                          ? category.products.map((product: Product) => (
-                              <Button
-                                key={product.id}
-                                onClick={() => {
-                                  setSelectedProduct(product)
-                                  setIsProductModalOpen(true)
-                                }}
-                                variant="outline"
-                                className="h-auto p-4 flex flex-col items-start text-left hover:bg-slate-50"
-                              >
-                                <div className="font-semibold text-sm text-slate-900">{product.name}</div>
-                                {product.description && (
-                                  <div className="text-xs text-slate-600 mt-1 line-clamp-2">{product.description}</div>
-                                )}
-                                <div className="text-sm font-bold text-slate-900 mt-2">
-                                  R$ {product.price.toFixed(2).replace(".", ",")}
-                                </div>
-                              </Button>
-                            ))
-                          : null
-                      )}
+                    <div className="max-h-96 overflow-y-auto overflow-x-hidden">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {filteredCategories.map((category) =>
+                          category.products && category.products.length > 0
+                            ? category.products.map((product: Product) => (
+                                <Button
+                                  key={product.id}
+                                  onClick={() => {
+                                    setSelectedProduct(product)
+                                    setIsProductModalOpen(true)
+                                  }}
+                                  variant="outline"
+                                  className="h-auto p-3 sm:p-4 flex flex-col items-start text-left hover:bg-slate-50 w-full min-w-0"
+                                >
+                                  <div className="font-semibold text-sm text-slate-900 break-words w-full">{product.name}</div>
+                                  {product.description && (
+                                    <div className="text-xs text-slate-600 mt-1 line-clamp-2 break-words w-full">{product.description}</div>
+                                  )}
+                                  <div className="text-sm font-bold text-slate-900 mt-2 w-full">
+                                    R$ {product.price.toFixed(2).replace(".", ",")}
+                                  </div>
+                                </Button>
+                              ))
+                            : null
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-500">

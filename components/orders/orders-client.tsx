@@ -11,6 +11,7 @@ import { ClipboardList, LayoutGrid, RefreshCw, Bike, UtensilsCrossed, Bell, Stor
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 import type { Order } from "@/types/order"
 import { useOrderNotifications } from "@/hooks/use-order-notifications"
 
@@ -51,8 +52,26 @@ export function OrdersClient({
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [dateFilter, setDateFilter] = useState<string>("all")
-  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [dateFilter, setDateFilterState] = useState<string>("all")
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false)
+  
+  // Carregar filtro do localStorage após a hidratação
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedFilter = localStorage.getItem("ordersDateFilter")
+      if (savedFilter) {
+        setDateFilterState(savedFilter)
+      }
+    }
+  }, [])
+  
+  // Função para atualizar o filtro de data e salvar no localStorage
+  const setDateFilter = useCallback((value: string) => {
+    setDateFilterState(value)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ordersDateFilter", value)
+    }
+  }, [])
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set())
   const [isMerging, setIsMerging] = useState(false)
   // Estado local para manter os pedidos mesmo durante refresh
@@ -304,6 +323,16 @@ export function OrdersClient({
     })
   }
 
+  const handleOpenMergeModal = () => {
+    setSelectedOrderIds(new Set())
+    setIsMergeModalOpen(true)
+  }
+
+  const handleCloseMergeModal = () => {
+    setIsMergeModalOpen(false)
+    setSelectedOrderIds(new Set())
+  }
+
   const handleMergeOrders = async () => {
     if (selectedOrderIds.size < 2) {
       alert("Selecione pelo menos 2 pedidos para juntar")
@@ -440,9 +469,9 @@ export function OrdersClient({
 
       if (cancelError) throw cancelError
 
-      // Limpar seleção e desativar modo de seleção
+      // Limpar seleção e fechar modal
       setSelectedOrderIds(new Set())
-      setIsSelectionMode(false)
+      setIsMergeModalOpen(false)
 
       // Atualizar página
       router.refresh()
@@ -624,44 +653,16 @@ export function OrdersClient({
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
               </Button>
-              {!isSelectionMode && filteredOrders.length > 0 && (
+              {filteredOrders.length > 0 && (
                 <Button
-                  onClick={() => setIsSelectionMode(true)}
+                  onClick={handleOpenMergeModal}
                   variant="outline"
                   size="sm"
                   className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
                 >
-                  <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                  <Merge className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
                   <span className="hidden sm:inline text-xs md:text-sm">Juntar Pedidos</span>
                 </Button>
-              )}
-              {isSelectionMode && (
-                <>
-                  <Button
-                    onClick={handleMergeOrders}
-                    variant="outline"
-                    size="sm"
-                    disabled={selectedOrderIds.size < 2 || isMerging}
-                    className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
-                  >
-                    <Merge className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                    <span className="hidden sm:inline text-xs md:text-sm">
-                      {isMerging ? "Juntando..." : `Juntar (${selectedOrderIds.size})`}
-                    </span>
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setIsSelectionMode(false)
-                      setSelectedOrderIds(new Set())
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
-                  >
-                    <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                    <span className="hidden sm:inline text-xs md:text-sm">Cancelar</span>
-                  </Button>
-                </>
               )}
               {filteredOrders.length > 0 && (
                 <Button
@@ -759,9 +760,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                 ))}
                 {pendingOrders.length === 0 && (
@@ -784,9 +782,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                 ))}
                 {preparingOrders.length === 0 && (
@@ -809,9 +804,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                 ))}
                 {readyOrders.length === 0 && (
@@ -834,9 +826,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                   ))}
                 </div>
@@ -856,9 +845,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                   ))}
                 </div>
@@ -882,9 +868,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -901,9 +884,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -920,9 +900,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -939,9 +916,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -967,9 +941,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -986,9 +957,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1005,9 +973,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1024,9 +989,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1052,9 +1014,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1071,9 +1030,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1090,9 +1046,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1109,9 +1062,6 @@ export function OrdersClient({
                     key={order.id} 
                     order={order} 
                     restaurantInfo={restaurantInfo}
-                    isSelectionMode={isSelectionMode}
-                    isSelected={selectedOrderIds.has(order.id)}
-                    onToggleSelection={toggleOrderSelection}
                   />
                         ))}
                     </div>
@@ -1169,6 +1119,131 @@ export function OrdersClient({
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Deletar Todos
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Juntar Pedidos */}
+      <Dialog open={isMergeModalOpen} onOpenChange={handleCloseMergeModal}>
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl">Juntar Pedidos</DialogTitle>
+            <DialogDescription>
+              Selecione pelo menos 2 pedidos para juntar em um único pedido. Os pedidos originais serão cancelados.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto py-4">
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-12 text-slate-600">
+                <p>Nenhum pedido disponível para juntar</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredOrders.map((order) => {
+                  const isSelected = selectedOrderIds.has(order.id)
+                  const isDelivery = order.order_type === "delivery"
+                  const orderTime = new Date(order.created_at).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                  
+                  return (
+                    <div
+                      key={order.id}
+                      onClick={() => toggleOrderSelection(order.id)}
+                      className={`p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          {isSelected ? (
+                            <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                          ) : (
+                            <Square className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-semibold text-slate-900">
+                              Pedido #{order.id.slice(0, 8).toUpperCase()}
+                            </span>
+                            {isDelivery ? (
+                              <Badge className="bg-blue-500 text-white">Delivery</Badge>
+                            ) : order.table_number === 0 ? (
+                              <Badge className="bg-slate-500 text-white">Retirada Local</Badge>
+                            ) : (
+                              <Badge className="bg-green-500 text-white">Mesa {order.table_number}</Badge>
+                            )}
+                            <Badge className={`${
+                              order.status === "pending" ? "bg-yellow-500" :
+                              order.status === "preparing" ? "bg-blue-500" :
+                              order.status === "ready" ? "bg-green-500" :
+                              order.status === "out_for_delivery" ? "bg-purple-500" :
+                              "bg-emerald-500"
+                            } text-white`}>
+                              {order.status === "pending" ? "Pendente" :
+                               order.status === "preparing" ? "Em Preparo" :
+                               order.status === "ready" ? "Pronto" :
+                               order.status === "out_for_delivery" ? "Saiu para Entrega" :
+                               "Entregue"}
+                            </Badge>
+                            <span className="text-xs text-slate-600">{orderTime}</span>
+                          </div>
+                          {order.customer_name && (
+                            <p className="text-sm text-slate-700 mb-1">
+                              <span className="font-semibold">Cliente:</span> {order.customer_name}
+                            </p>
+                          )}
+                          {order.payment_method && (
+                            <p className="text-sm text-slate-700 mb-1">
+                              <span className="font-semibold">Pagamento:</span> {order.payment_method}
+                            </p>
+                          )}
+                          <div className="text-sm text-slate-600 mb-1">
+                            <span className="font-semibold">Itens:</span> {order.order_items.length} item(s)
+                          </div>
+                          <p className="text-base font-bold text-slate-900">
+                            Total: R$ {order.total.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row border-t pt-4 mt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseMergeModal}
+              disabled={isMerging}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleMergeOrders}
+              disabled={selectedOrderIds.size < 2 || isMerging}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              {isMerging ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Juntando...
+                </>
+              ) : (
+                <>
+                  <Merge className="h-4 w-4 mr-2" />
+                  Juntar {selectedOrderIds.size} Pedido(s)
                 </>
               )}
             </Button>

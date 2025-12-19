@@ -294,19 +294,21 @@ export function StaffOrdersClient({
             <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">Anotar Pedido</h1>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {activeOrders.length > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowOrdersList(!showOrdersList)}
-                className="relative text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden sm:inline">Pedidos</span>
-                <span className="sm:hidden">({activeOrders.length})</span>
-                <span className="hidden sm:inline">({activeOrders.length})</span>
-              </Button>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowOrdersList(!showOrdersList)}
+              className="relative text-xs sm:text-sm px-2 sm:px-3"
+            >
+              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <span className="hidden sm:inline">Pedidos</span>
+              {activeOrders.length > 0 && (
+                <>
+                  <span className="sm:hidden">({activeOrders.length})</span>
+                  <span className="hidden sm:inline">({activeOrders.length})</span>
+                </>
+              )}
+            </Button>
             <div className="relative">
               <Button
                 size="sm"
@@ -335,12 +337,17 @@ export function StaffOrdersClient({
       </div>
 
       {/* Lista de Pedidos Existentes */}
-      {showOrdersList && activeOrders.length > 0 && (
+      {showOrdersList && (
         <div className="bg-white border-b border-slate-200 p-2 sm:p-4 max-h-[50vh] overflow-y-auto">
           <div className="space-y-2">
             <h2 className="text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3">Pedidos Existentes</h2>
-            <div className="space-y-2">
-              {activeOrders.map((order) => {
+            {activeOrders.length === 0 ? (
+              <div className="text-center py-6 text-slate-600">
+                <p className="text-xs sm:text-sm">Nenhum pedido do dia atual</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activeOrders.map((order) => {
                 const isDelivery = order.order_type === "delivery"
                 const orderTime = new Date(order.created_at).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
@@ -397,7 +404,8 @@ export function StaffOrdersClient({
                   </div>
                 )
               })}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
