@@ -15,6 +15,7 @@ interface AutoPrintSettings {
   printType: PrintType
   printOnNewOrder: boolean
   printOnStatusChange: boolean
+  printOnItemsChange: boolean
 }
 
 const DEFAULT_SETTINGS: AutoPrintSettings = {
@@ -22,6 +23,7 @@ const DEFAULT_SETTINGS: AutoPrintSettings = {
   printType: "kitchen",
   printOnNewOrder: true,
   printOnStatusChange: false,
+  printOnItemsChange: false,
 }
 
 export function AutoPrintSettings() {
@@ -67,6 +69,10 @@ export function AutoPrintSettings() {
 
   const handlePrintOnStatusChange = (printOnStatusChange: boolean) => {
     saveSettings({ ...settings, printOnStatusChange })
+  }
+
+  const handlePrintOnItemsChange = (printOnItemsChange: boolean) => {
+    saveSettings({ ...settings, printOnItemsChange })
   }
 
   return (
@@ -169,6 +175,22 @@ export function AutoPrintSettings() {
                     id="print-on-status-change"
                     checked={settings.printOnStatusChange}
                     onCheckedChange={handlePrintOnStatusChange}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="print-on-items-change" className="font-normal">
+                      Ao alterar itens do pedido
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Imprime automaticamente quando itens são adicionados, removidos ou modificados no pedido.
+                    </p>
+                  </div>
+                  <Switch
+                    id="print-on-items-change"
+                    checked={settings.printOnItemsChange}
+                    onCheckedChange={handlePrintOnItemsChange}
                   />
                 </div>
               </div>

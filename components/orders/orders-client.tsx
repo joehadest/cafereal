@@ -12,19 +12,10 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import type { Order } from "@/types/order"
+import type { Order, OrderItem, OrderItemExtra } from "@/types/order"
 import { useOrderNotifications } from "@/hooks/use-order-notifications"
 import { AutoPrintSettings, useAutoPrintSettings } from "./auto-print-settings"
 import { autoPrintOrder } from "./auto-print-utils"
-
-type OrderItem = {
-  id: string
-  product_name: string
-  product_price: number
-  quantity: number
-  subtotal: number
-  notes: string | null
-}
 
 type Table = {
   id: string
@@ -82,22 +73,106 @@ export function OrdersClient({
   const isRefreshingRef = useRef(false)
   const printedOrderIdsRef = useRef<Set<string>>(new Set())
   const previousOrderStatusesRef = useRef<Map<string, string>>(new Map())
+  const previousOrderItemsRef = useRef<Map<string, OrderItem[]>>(new Map())
   const isInitialLoadRef = useRef(true)
   
   // Configurações de impressão automática
   const autoPrintSettings = useAutoPrintSettings()
+
+  // Função para comparar itens de pedido e detectar mudanças
+  const hasItemsChanged = useCallback((previousItems: OrderItem[], currentItems: OrderItem[]): boolean => {
+    // Se a quantidade de itens mudou, houve mudança
+    if (previousItems.length !== currentItems.length) {
+      return true
+    }
+
+    // Criar mapas para facilitar a comparação
+    const previousMap = new Map(previousItems.map(item => [item.id, item]))
+    const currentMap = new Map(currentItems.map(item => [item.id, item]))
+
+    // Verificar se algum item foi removido ou adicionado
+    for (const id of previousMap.keys()) {
+      if (!currentMap.has(id)) {
+        return true // Item foi removido
+      }
+    }
+
+    for (const id of currentMap.keys()) {
+      if (!previousMap.has(id)) {
+        return true // Item foi adicionado
+      }
+    }
+
+    // Comparar cada item individualmente
+    for (const [id, currentItem] of currentMap.entries()) {
+      const previousItem = previousMap.get(id)
+      if (!previousItem) continue
+
+      // Comparar propriedades principais
+      if (
+        previousItem.quantity !== currentItem.quantity ||
+        previousItem.product_price !== currentItem.product_price ||
+        previousItem.subtotal !== currentItem.subtotal ||
+        previousItem.product_name !== currentItem.product_name ||
+        previousItem.notes !== currentItem.notes ||
+        previousItem.variety_id !== currentItem.variety_id ||
+        previousItem.variety_name !== currentItem.variety_name ||
+        previousItem.variety_price !== currentItem.variety_price
+      ) {
+        return true
+      }
+
+      // Comparar extras
+      const previousExtras = previousItem.order_item_extras || []
+      const currentExtras = currentItem.order_item_extras || []
+
+      if (previousExtras.length !== currentExtras.length) {
+        return true
+      }
+
+      // Comparar cada extra
+      const previousExtrasMap = new Map(previousExtras.map((extra: OrderItemExtra) => [extra.id, extra]))
+      const currentExtrasMap = new Map(currentExtras.map((extra: OrderItemExtra) => [extra.id, extra]))
+
+      for (const [extraId, currentExtra] of currentExtrasMap.entries()) {
+        const previousExtra = previousExtrasMap.get(extraId)
+        if (!previousExtra) {
+          return true // Extra foi adicionado
+        }
+        if (
+          previousExtra.extra_id !== currentExtra.extra_id ||
+          previousExtra.extra_name !== currentExtra.extra_name ||
+          previousExtra.extra_price !== currentExtra.extra_price ||
+          previousExtra.quantity !== currentExtra.quantity
+        ) {
+          return true // Extra foi modificado
+        }
+      }
+
+      // Verificar se algum extra foi removido
+      for (const extraId of previousExtrasMap.keys()) {
+        if (!currentExtrasMap.has(extraId)) {
+          return true // Extra foi removido
+        }
+      }
+    }
+
+    return false // Nenhuma mudança detectada
+  }, [])
   
   // Atualizar estado local quando os pedidos do servidor mudarem
   useEffect(() => {
     if (orders) {
-      // Detectar novos pedidos e mudanças de status para impressão automática
+      // Detectar novos pedidos e mudanças de status/itens para impressão automática
       // Não imprimir na primeira carga da página (apenas em atualizações subsequentes)
       if (autoPrintSettings.enabled && orders.length > 0 && !isInitialLoadRef.current) {
         orders.forEach((order) => {
           const orderId = order.id
           const previousStatus = previousOrderStatusesRef.current.get(orderId)
+          const previousItems = previousOrderItemsRef.current.get(orderId) || []
           const isNewOrder = !printedOrderIdsRef.current.has(orderId)
           const statusChanged = previousStatus && previousStatus !== order.status
+          const itemsChanged = hasItemsChanged(previousItems, order.order_items || [])
 
           // Imprimir se for novo pedido e estiver configurado para imprimir em novos pedidos
           if (isNewOrder && autoPrintSettings.printOnNewOrder && autoPrintSettings.printType !== "none") {
@@ -112,9 +187,16 @@ export function OrdersClient({
               autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
             }, 500)
           }
+          // Imprimir se os itens mudaram e estiver configurado para imprimir em mudanças de itens
+          else if (itemsChanged && autoPrintSettings.printOnItemsChange && autoPrintSettings.printType !== "none") {
+            setTimeout(() => {
+              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+            }, 500)
+          }
 
-          // Atualizar status anterior
+          // Atualizar status e itens anteriores
           previousOrderStatusesRef.current.set(orderId, order.status)
+          previousOrderItemsRef.current.set(orderId, [...(order.order_items || [])])
         })
       }
 
@@ -123,6 +205,7 @@ export function OrdersClient({
         orders.forEach((order) => {
           printedOrderIdsRef.current.add(order.id)
           previousOrderStatusesRef.current.set(order.id, order.status)
+          previousOrderItemsRef.current.set(order.id, [...(order.order_items || [])])
         })
         // Marcar que a carga inicial foi concluída após um pequeno delay
         setTimeout(() => {
@@ -144,7 +227,7 @@ export function OrdersClient({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders, autoPrintSettings])
+  }, [orders, autoPrintSettings, hasItemsChanged])
   
   // Escutar eventos de pedidos deletados para removê-los da lista imediatamente
   useEffect(() => {
