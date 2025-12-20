@@ -115,10 +115,18 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
           width: 80mm !important;
           margin: 0 !important;
           padding: 0 !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
         #bulk-print-container .print-item {
-          page-break-inside: avoid !important;
+          page-break-inside: auto !important;
           margin-bottom: 0 !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
         #bulk-print-container .print-item:not(:last-child) {
           page-break-after: always !important;

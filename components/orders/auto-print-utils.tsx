@@ -23,7 +23,8 @@ export function autoPrintOrder(
     phone?: string
     address?: string
     cnpj?: string
-  }
+  },
+  newItemIds?: Set<string>
 ) {
   // Verificar se o pedido tem dados
   if (!order || !order.order_items || order.order_items.length === 0) {
@@ -49,15 +50,15 @@ export function autoPrintOrder(
     <div id={`auto-print-wrapper-${order.id}`} style={{ width: "80mm", display: "block", visibility: "visible" }}>
       {printType === "kitchen" ? (
         <div className="print-kitchen" style={{ display: "block", visibility: "visible", position: "relative" }}>
-          <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
+          <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} newItemIds={newItemIds} />
         </div>
       ) : printType === "customer" ? (
         <div className="print-customer" style={{ display: "block", visibility: "visible", position: "relative" }}>
-          <PrintCustomerTicket order={order} restaurantInfo={restaurantInfo} />
+          <PrintCustomerTicket order={order} restaurantInfo={restaurantInfo} newItemIds={newItemIds} />
         </div>
       ) : (
         <div className="print-receipt" style={{ display: "block", visibility: "visible", position: "relative" }}>
-          <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
+          <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} newItemIds={newItemIds} />
         </div>
       )}
     </div>
@@ -101,12 +102,16 @@ export function autoPrintOrder(
         padding: 0 !important;
         visibility: visible !important;
         display: block !important;
-        page-break-inside: avoid !important;
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
-        break-inside: avoid !important;
-        break-after: avoid !important;
-        break-before: avoid !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+        page-break-before: auto !important;
+        break-inside: auto !important;
+        break-after: auto !important;
+        break-before: auto !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
       }
       #auto-print-container-${order.id} *, 
       #auto-print-container-${order.id} .print-kitchen,
@@ -125,14 +130,16 @@ export function autoPrintOrder(
         position: relative !important;
         left: auto !important;
         top: auto !important;
-        page-break-inside: avoid !important;
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
-        break-inside: avoid !important;
-        break-after: avoid !important;
-        break-before: avoid !important;
-        max-height: 100vh !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+        page-break-before: auto !important;
+        break-inside: auto !important;
+        break-after: auto !important;
+        break-before: auto !important;
         height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
         display: block !important;
         visibility: visible !important;
       }

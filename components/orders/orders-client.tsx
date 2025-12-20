@@ -79,6 +79,20 @@ export function OrdersClient({
   // Configurações de impressão automática
   const autoPrintSettings = useAutoPrintSettings()
 
+  // Função para identificar itens novos (adicionados)
+  const getNewItemIds = useCallback((previousItems: OrderItem[], currentItems: OrderItem[]): Set<string> => {
+    const newItemIds = new Set<string>()
+    const previousItemIds = new Set(previousItems.map(item => item.id))
+    
+    currentItems.forEach(item => {
+      if (!previousItemIds.has(item.id)) {
+        newItemIds.add(item.id)
+      }
+    })
+    
+    return newItemIds
+  }, [])
+
   // Função para comparar itens de pedido e detectar mudanças
   const hasItemsChanged = useCallback((previousItems: OrderItem[], currentItems: OrderItem[]): boolean => {
     // Se a quantidade de itens mudou, houve mudança
@@ -189,8 +203,10 @@ export function OrdersClient({
           }
           // Imprimir se os itens mudaram e estiver configurado para imprimir em mudanças de itens
           else if (itemsChanged && autoPrintSettings.printOnItemsChange && autoPrintSettings.printType !== "none") {
+            // Identificar itens novos para destacar na impressão
+            const newItemIds = getNewItemIds(previousItems, order.order_items || [])
             setTimeout(() => {
-              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo, newItemIds)
             }, 500)
           }
 

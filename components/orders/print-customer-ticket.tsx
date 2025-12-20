@@ -11,6 +11,7 @@ interface PrintCustomerTicketProps {
     address?: string
     cnpj?: string
   }
+  newItemIds?: Set<string>
 }
 
 // Função para formatar CNPJ
@@ -21,12 +22,12 @@ const formatCNPJ = (cnpj: string | null | undefined): string | null => {
   return cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
-export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTicketProps) {
+export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: PrintCustomerTicketProps) {
   const isDelivery = order.order_type === "delivery"
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-customer hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm' }}>
+    <div className="print-customer hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header do Restaurante */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">
         <div className="mb-2">
@@ -82,20 +83,34 @@ export function PrintCustomerTicket({ order, restaurantInfo }: PrintCustomerTick
         )}
       </div>
 
+      {/* Aviso de Itens Adicionados */}
+      {newItemIds && newItemIds.size > 0 && (
+        <div className="bg-blue-500 text-white p-2 mb-3 text-center border-2 border-blue-700 rounded">
+          <p className="text-sm font-bold uppercase">✨ Itens Adicionados</p>
+          <p className="text-xs mt-1">Os itens marcados abaixo foram adicionados agora</p>
+        </div>
+      )}
+
       {/* Itens do Pedido */}
       <div className="mb-3 pb-3 border-b-2 border-gray-800">
         <h2 className="font-bold text-sm mb-3 uppercase text-black">Seu Pedido</h2>
         <div className="space-y-3">
           {order.order_items.map((item) => {
-            const itemPrice = item.variety_price ?? item.product_price
             const extrasPrice = (item.order_item_extras || []).reduce(
               (sum, extra) => sum + extra.extra_price * extra.quantity,
               0
             )
-            const itemTotal = (itemPrice + extrasPrice) * item.quantity
+            // Usar subtotal do item (já calculado corretamente, incluindo para itens por peso) e adicionar extras
+            const itemTotal = item.subtotal + extrasPrice
+            const isNewItem = newItemIds?.has(item.id)
 
             return (
-              <div key={item.id} className="border-b border-dotted border-gray-300 pb-3 last:border-0 last:pb-0">
+              <div key={item.id} className={`border-b border-dotted pb-3 last:border-0 last:pb-0 ${isNewItem ? 'border-blue-500 bg-blue-50 rounded p-2' : 'border-gray-300'}`}>
+                {isNewItem && (
+                  <div className="bg-blue-500 text-white px-2 py-1 mb-2 inline-block rounded">
+                    <span className="text-xs font-bold uppercase">✨ NOVO ✨</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start gap-2 mb-1">
                   <div className="flex-1 min-w-0">
                     {item.category_name && (

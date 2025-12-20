@@ -261,12 +261,16 @@ function OrderCardComponent({
           padding: 0 !important;
           visibility: visible !important;
           display: block !important;
-          page-break-inside: avoid !important;
-          page-break-after: avoid !important;
-          page-break-before: avoid !important;
-          break-inside: avoid !important;
-          break-after: avoid !important;
-          break-before: avoid !important;
+          page-break-inside: auto !important;
+          page-break-after: auto !important;
+          page-break-before: auto !important;
+          break-inside: auto !important;
+          break-after: auto !important;
+          break-before: auto !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
         #print-container-${order.id} *, 
         #print-container-${order.id} .print-kitchen,
@@ -285,14 +289,16 @@ function OrderCardComponent({
           position: relative !important;
           left: auto !important;
           top: auto !important;
-          page-break-inside: avoid !important;
-          page-break-after: avoid !important;
-          page-break-before: avoid !important;
-          break-inside: avoid !important;
-          break-after: avoid !important;
-          break-before: avoid !important;
-          max-height: 100vh !important;
+          page-break-inside: auto !important;
+          page-break-after: auto !important;
+          page-break-before: auto !important;
+          break-inside: auto !important;
+          break-after: auto !important;
+          break-before: auto !important;
           height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
           display: block !important;
           visibility: visible !important;
         }

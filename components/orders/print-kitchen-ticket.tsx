@@ -5,14 +5,15 @@ import type { Order } from "@/types/order"
 interface PrintKitchenTicketProps {
   order: Order
   restaurantName?: string
+  newItemIds?: Set<string>
 }
 
-export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicketProps) {
+export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintKitchenTicketProps) {
   const isDelivery = order.order_type === "delivery"
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-kitchen hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm' }}>
+    <div className="print-kitchen hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header - Destacado */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1">
@@ -39,21 +40,36 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
         </p>
       </div>
 
+      {/* Aviso de Itens Adicionados */}
+      {newItemIds && newItemIds.size > 0 && (
+        <div className="bg-red-500 text-white p-2 mb-2 text-center border-2 border-red-700">
+          <p className="text-sm font-bold uppercase">⚠️ ITENS ADICIONADOS ⚠️</p>
+          <p className="text-xs mt-1">Os itens marcados abaixo foram adicionados agora</p>
+        </div>
+      )}
+
       {/* Itens - Formato Cozinha */}
       <div className="mb-2">
         <table className="w-full text-xs">
           <tbody>
-            {order.order_items.map((item) => (
-              <tr key={item.id} className="border-b-2 border-gray-400">
+            {order.order_items.map((item) => {
+              const isNewItem = newItemIds?.has(item.id)
+              return (
+              <tr key={item.id} className={`border-b-2 ${isNewItem ? 'border-red-500 bg-red-50' : 'border-gray-400'}`}>
                 <td className="py-2 pr-3">
+                  {isNewItem && (
+                    <div className="bg-red-500 text-white px-2 py-1 mb-1 inline-block rounded">
+                      <span className="text-xs font-bold uppercase">✨ NOVO ✨</span>
+                    </div>
+                  )}
                   {item.category_name && (
                     <div className="text-[10px] text-gray-600 font-bold uppercase mb-0.5">
                       [{item.category_name}]
                     </div>
                   )}
                   <div className="flex items-start justify-between mb-1">
-                    <span className="text-xl font-bold mr-3">{item.quantity}x</span>
-                    <span className="text-sm font-bold flex-1 uppercase leading-tight">{item.product_name}</span>
+                    <span className={`text-xl font-bold mr-3 ${isNewItem ? 'text-red-600' : ''}`}>{item.quantity}x</span>
+                    <span className={`text-sm font-bold flex-1 uppercase leading-tight ${isNewItem ? 'text-red-700' : ''}`}>{item.product_name}</span>
                   </div>
                   {item.variety_name && (
                     <div className="ml-10 mt-0.5 mb-0.5">
@@ -78,7 +94,7 @@ export function PrintKitchenTicket({ order, restaurantName }: PrintKitchenTicket
                   )}
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

@@ -11,6 +11,7 @@ interface PrintOrderReceiptProps {
     address?: string
     cnpj?: string
   }
+  newItemIds?: Set<string>
 }
 
 // Função para formatar CNPJ
@@ -21,7 +22,7 @@ const formatCNPJ = (cnpj: string | null | undefined): string | null => {
   return cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
-export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptProps) {
+export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOrderReceiptProps) {
   const isDelivery = order.order_type === "delivery"
   const timestamp = new Date(order.created_at)
 
@@ -34,7 +35,7 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
   }
 
   return (
-    <div className="print-receipt print:block bg-white text-black p-2 max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0 auto', boxSizing: 'border-box', overflow: 'hidden', wordWrap: 'break-word', display: 'block', visibility: 'visible' }}>
+    <div className="print-receipt print:block bg-white text-black p-2 max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0 auto', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header do Restaurante - Destacado */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1.5">
@@ -142,20 +143,34 @@ export function PrintOrderReceipt({ order, restaurantInfo }: PrintOrderReceiptPr
         </div>
       )}
 
+      {/* Aviso de Itens Adicionados */}
+      {newItemIds && newItemIds.size > 0 && (
+        <div className="bg-orange-500 text-white p-2 mb-2 text-center border-2 border-orange-700 rounded">
+          <p className="text-xs font-bold uppercase">⚠️ ITENS ADICIONADOS ⚠️</p>
+          <p className="text-[10px] mt-0.5">Os itens marcados abaixo foram adicionados agora</p>
+        </div>
+      )}
+
       {/* Itens do Pedido */}
       <div className="mb-2 pb-2 border-b-2 border-gray-800">
         <h2 className="font-bold text-xs mb-2 uppercase text-black">Itens do Pedido</h2>
         <div className="space-y-2">
           {order.order_items.map((item) => {
-              const itemPrice = item.variety_price ?? item.product_price
               const extrasPrice = (item.order_item_extras || []).reduce(
                 (sum, extra) => sum + extra.extra_price * extra.quantity,
                 0
               )
-              const itemTotal = (itemPrice + extrasPrice) * item.quantity
+              // Usar subtotal do item (já calculado corretamente, incluindo para itens por peso) e adicionar extras
+              const itemTotal = item.subtotal + extrasPrice
+              const isNewItem = newItemIds?.has(item.id)
 
               return (
-              <div key={item.id} className="border-b border-dotted border-gray-300 pb-2 last:border-0 last:pb-0">
+              <div key={item.id} className={`border-b border-dotted pb-2 last:border-0 last:pb-0 ${isNewItem ? 'border-orange-500 bg-orange-50 rounded p-1.5' : 'border-gray-300'}`}>
+                {isNewItem && (
+                  <div className="bg-orange-500 text-white px-1.5 py-0.5 mb-1 inline-block rounded">
+                    <span className="text-[10px] font-bold uppercase">✨ NOVO ✨</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start gap-1 mb-0.5">
                   <div className="flex-1 min-w-0" style={{ maxWidth: 'calc(100% - 50px)', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                     {item.category_name && (
