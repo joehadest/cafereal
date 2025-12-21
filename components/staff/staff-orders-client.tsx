@@ -75,12 +75,24 @@ export function StaffOrdersClient({
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [showOrdersList, setShowOrdersList] = useState(false)
 
+  // Função auxiliar para calcular o preço unitário final de um item
+  const calculateFinalPrice = (item: CartItem): number => {
+    if (!item) return 0
+    const basePrice = item.selectedVariety?.price ?? item.price ?? 0
+    const extrasPrice = (item.selectedExtras || []).reduce((sum, extraItem) => {
+      if (!extraItem || !extraItem.extra) return sum
+      return sum + ((extraItem.extra.price || 0) * (extraItem.quantity || 0))
+    }, 0)
+    return basePrice + extrasPrice
+  }
+
   // Calcular o total garantindo que o finalPrice seja sempre o preço unitário correto
-  const totalPrice = cart.reduce((sum, item) => {
+  const totalPrice = (Array.isArray(cart) ? cart : []).reduce((sum, item) => {
+    if (!item) return sum
     const unitPrice = calculateFinalPrice(item)
-    return sum + (unitPrice * item.quantity)
+    return sum + (unitPrice * (item.quantity || 0))
   }, 0)
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + (item?.quantity || 0), 0)
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -108,43 +120,44 @@ export function StaffOrdersClient({
     ? filteredCategories.filter((cat) => cat.id === activeCategory)
     : filteredCategories
 
-  // Função auxiliar para calcular o preço unitário final de um item
-  const calculateFinalPrice = (item: CartItem): number => {
-    const basePrice = item.selectedVariety ? item.selectedVariety.price : item.price
-    const extrasPrice = (item.selectedExtras || []).reduce((sum, extraItem) => sum + (extraItem.extra.price * extraItem.quantity), 0)
-    return basePrice + extrasPrice
-  }
-
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product)
     setIsProductModalOpen(true)
   }
 
   const addToCart = (product: Product, options: SelectedOptions) => {
-    const basePrice = options.variety ? options.variety.price : product.price
+    if (!product) return
+    
+    const basePrice = options.variety?.price ?? product.price ?? 0
     // Calcular o preço dos extras (soma de todos os extras com suas quantidades)
-    const extrasPrice = options.extras.reduce((sum, extraItem) => sum + (extraItem.extra.price * extraItem.quantity), 0)
+    const extrasPrice = (options.extras || []).reduce((sum, extraItem) => {
+      if (!extraItem || !extraItem.extra) return sum
+      return sum + ((extraItem.extra.price || 0) * (extraItem.quantity || 0))
+    }, 0)
     // finalPrice é o preço unitário (base + extras)
     const finalPrice = basePrice + extrasPrice
 
     setCart((prev) => {
-      const itemKey = `${product.id}-${options.variety?.id || 'base'}-${options.extras.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      const prevArray = Array.isArray(prev) ? prev : []
+      const itemKey = `${product.id}-${options.variety?.id || 'base'}-${(options.extras || []).map(e => `${e?.extra?.id || ''}:${e?.quantity || 0}`).join(',') || 'no-extras'}`
       
-      const existing = prev.find((item) => {
-        const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      const existing = prevArray.find((item) => {
+        if (!item) return false
+        const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${(item.selectedExtras || []).map(e => `${e?.extra?.id || ''}:${e?.quantity || 0}`).join(',') || 'no-extras'}`
         return itemKey === itemKey2
       })
 
       if (existing) {
         // Se o item já existe, apenas incrementa a quantidade mantendo o finalPrice unitário
-        return prev.map((item) => {
-          const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+        return prevArray.map((item) => {
+          if (!item) return item
+          const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${(item.selectedExtras || []).map(e => `${e?.extra?.id || ''}:${e?.quantity || 0}`).join(',') || 'no-extras'}`
           if (itemKey === itemKey2) {
             // Recalcular o finalPrice para garantir que está correto
             const recalculatedFinalPrice = calculateFinalPrice({ ...item, selectedVariety: options.variety, selectedExtras: options.extras } as CartItem)
             return { 
               ...item, 
-              quantity: item.quantity + 1,
+              quantity: (item.quantity || 0) + 1,
               finalPrice: recalculatedFinalPrice
             }
           }
@@ -152,11 +165,11 @@ export function StaffOrdersClient({
         })
       }
       
-      return [...prev, { 
+      return [...prevArray, { 
         ...product,
         quantity: 1,
-        selectedVariety: options.variety,
-        selectedExtras: options.extras,
+        selectedVariety: options.variety || null,
+        selectedExtras: options.extras || [],
         finalPrice
       }]
     })
