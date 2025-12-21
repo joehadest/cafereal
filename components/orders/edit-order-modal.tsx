@@ -167,15 +167,15 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
 
   // Calcular total pago e pendente
   const paidTotal = orderItems.reduce((sum, item) => {
-    if (!item.paid) return sum
+    if (!item || !item.paid) return sum
     const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
     const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
-      return extraSum + extra.extra_price * extra.quantity
+      return extraSum + (extra.extra_price || 0) * (extra.quantity || 0)
     }, 0)
     return sum + itemSubtotal + extrasTotal
   }, 0)
 
-  const pendingTotal = subtotal - paidTotal
+  const pendingTotal = Math.max(0, subtotal - paidTotal)
 
   // Calcular total com taxa de entrega (apenas para delivery)
   const calculatedTotal = subtotal + (isDelivery ? Number(formData.deliveryFee) : 0)
@@ -203,7 +203,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     setOrderItems((prev) =>
       prev.map((item) => {
         if (item.id === itemId) {
-          return { ...item, paid: !item.paid }
+          return { ...item, paid: !(item.paid || false) }
         }
         return item
       })
@@ -1231,13 +1231,13 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 {paidTotal > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-green-700 font-medium">Pago:</span>
-                    <span className="text-green-700 font-semibold">R$ {paidTotal.toFixed(2)}</span>
+                    <span className="text-green-700 font-semibold">R$ {Number(paidTotal || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {pendingTotal > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-orange-700 font-medium">Pendente:</span>
-                    <span className="text-orange-700 font-semibold">R$ {pendingTotal.toFixed(2)}</span>
+                    <span className="text-orange-700 font-semibold">R$ {Number(pendingTotal || 0).toFixed(2)}</span>
                   </div>
                 )}
               </div>
