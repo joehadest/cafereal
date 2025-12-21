@@ -25,6 +25,7 @@ type EditableOrderItem = {
   product_name: string
   product_price: number
   quantity: number
+  subtotal?: number // Subtotal do banco (importante para itens por peso)
   variety_id?: string | null
   variety_name?: string | null
   variety_price?: number | null
@@ -37,6 +38,7 @@ type EditableOrderItem = {
   }>
   notes?: string | null
   isReplaced?: boolean // Flag para indicar que foi substituído
+  weight?: number // Peso em kg para produtos vendidos por peso
 }
 
 type Table = {
@@ -73,6 +75,10 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const [isLoadingProducts, setIsLoadingProducts] = useState(false)
   const [newItemQuantity, setNewItemQuantity] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isWeightModalOpen, setIsWeightModalOpen] = useState(false)
+  const [productWeight, setProductWeight] = useState<string>("")
+  const [productDescription, setProductDescription] = useState<string>("")
+  const [pricePerKg, setPricePerKg] = useState<string>("")
 
   useEffect(() => {
     if (isOpen) {
@@ -91,25 +97,38 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
       setTableNumber(order.table_number?.toString() || "0")
       // Inicializar itens editáveis
       setOrderItems(
-        order.order_items.map((item) => ({
-          id: item.id,
-          product_id: (item as any).product_id || null,
-          product_name: item.product_name,
-          product_price: item.product_price,
-          quantity: item.quantity,
-          variety_id: item.variety_id || null,
-          variety_name: item.variety_name,
-          variety_price: item.variety_price || null,
-          order_item_extras: (item.order_item_extras || []).map((extra) => ({
-            id: extra.id,
-            extra_id: (extra as any).extra_id || null,
-            extra_name: extra.extra_name,
-            extra_price: extra.extra_price,
-            quantity: extra.quantity,
-          })),
-          notes: item.notes,
-          isReplaced: false,
-        }))
+        order.order_items.map((item) => {
+          // Extrair peso e preço/kg das notas se for item por peso
+          let weight: number | undefined = undefined
+          if (item.notes && item.notes.includes("Peso:")) {
+            const pesoMatch = item.notes.match(/Peso:\s*([\d,]+)\s*kg/)
+            if (pesoMatch) {
+              weight = parseFloat(pesoMatch[1].replace(",", "."))
+            }
+          }
+          
+          return {
+            id: item.id,
+            product_id: (item as any).product_id || null,
+            product_name: item.product_name,
+            product_price: item.product_price,
+            quantity: item.quantity,
+            subtotal: item.subtotal, // Preservar subtotal do banco
+            variety_id: item.variety_id || null,
+            variety_name: item.variety_name,
+            variety_price: item.variety_price || null,
+            order_item_extras: (item.order_item_extras || []).map((extra) => ({
+              id: extra.id,
+              extra_id: (extra as any).extra_id || null,
+              extra_name: extra.extra_name,
+              extra_price: extra.extra_price,
+              quantity: extra.quantity,
+            })),
+            notes: item.notes,
+            isReplaced: false,
+            weight: weight,
+          }
+        })
       )
       
       // Buscar mesas
@@ -133,8 +152,11 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const isDineIn = orderType === "dine-in"
 
   // Calcular subtotal dos itens editáveis
+  // Para itens por peso, usar o subtotal do banco; caso contrário, calcular
   const subtotal = orderItems.reduce((sum, item) => {
-    const itemSubtotal = item.product_price * item.quantity
+    // Se o item tem subtotal do banco (especialmente para itens por peso), usar ele
+    // Caso contrário, calcular baseado em product_price * quantity
+    const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
     const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
       return extraSum + extra.extra_price * extra.quantity
     }, 0)
@@ -147,7 +169,18 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     setOrderItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+      prev.map((item) => {
+        if (item.id === itemId) {
+          // Se for item por peso, recalcular subtotal baseado no peso * preço/kg * quantidade
+          if (item.weight !== undefined && item.weight > 0) {
+            const newSubtotal = item.product_price * item.weight * newQuantity
+            return { ...item, quantity: newQuantity, subtotal: newSubtotal }
+          }
+          // Caso contrário, apenas atualizar quantidade (subtotal será recalculado ao salvar)
+          return { ...item, quantity: newQuantity }
+        }
+        return item
+      })
     )
   }
 
@@ -405,6 +438,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
       product_name: productName,
       product_price: basePrice,
       quantity: newItemQuantity,
+      subtotal: undefined, // Será calculado ao salvar
       variety_id: selectedVariety?.id || null,
       variety_name: selectedVariety?.name || null,
       variety_price: selectedVariety?.price || null,
@@ -425,6 +459,50 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     setSelectedVariety(null)
     setSelectedExtras([])
     setNewItemQuantity(1)
+  }
+
+  const handleAddItemByWeight = () => {
+    const weight = parseFloat(productWeight.replace(",", "."))
+    const price = parseFloat(pricePerKg.replace(",", "."))
+    
+    if (isNaN(weight) || weight <= 0) {
+      alert("Por favor, insira um peso válido")
+      return
+    }
+    
+    if (isNaN(price) || price <= 0) {
+      alert("Por favor, insira um preço por kg válido")
+      return
+    }
+
+    const finalPrice = price * weight
+    const description = productDescription.trim() || "Item por peso"
+    
+    // Criar nota com informações de peso
+    const itemNotes = `Peso: ${weight.toFixed(3).replace(".", ",")} kg | Preço/kg: R$ ${price.toFixed(2).replace(".", ",")}`
+
+    // Criar novo item temporário (será inserido no banco ao salvar)
+    const newItem: EditableOrderItem = {
+      id: `temp-${Date.now()}-${Math.random()}`, // ID temporário
+      product_id: null, // Item por peso não tem product_id
+      product_name: description,
+      product_price: price, // Preço por kg
+      quantity: 1,
+      subtotal: finalPrice, // Subtotal já calculado (peso * preço/kg)
+      variety_id: null,
+      variety_name: null,
+      variety_price: null,
+      order_item_extras: [],
+      notes: itemNotes,
+      isReplaced: false,
+      weight: weight,
+    }
+
+    setOrderItems((prev) => [...prev, newItem])
+    setIsWeightModalOpen(false)
+    setProductWeight("")
+    setProductDescription("")
+    setPricePerKg("")
   }
 
   const handleSave = async () => {
@@ -497,7 +575,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
       // 5. Inserir novos itens
       if (newItems.length > 0) {
         const itemsToInsert = newItems.map((item) => {
-          const itemSubtotal = item.product_price * item.quantity
+          // Se o item tem subtotal (especialmente para itens por peso), usar ele
+          // Caso contrário, calcular baseado em product_price * quantity
+          const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
           const extrasTotal = (item.order_item_extras || []).reduce(
             (sum, extra) => sum + extra.extra_price * extra.quantity,
             0
@@ -558,7 +638,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         const originalItem = order.order_items.find((oi) => oi.id === item.id)
 
         if (originalItem) {
-          const itemSubtotal = item.product_price * item.quantity
+          // Se o item tem subtotal (especialmente para itens por peso), usar ele
+          // Caso contrário, calcular baseado em product_price * quantity
+          const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
           const extrasTotal = (item.order_item_extras || []).reduce(
             (sum, extra) => sum + extra.extra_price * extra.quantity,
             0
@@ -708,21 +790,40 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 <ShoppingBag className="h-4 w-4" />
                 Itens do Pedido
               </h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openAddItemModal}
-                className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:text-blue-700 text-xs sm:text-sm w-full sm:w-auto"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden sm:inline">Adicionar Item</span>
-                <span className="sm:hidden">Adicionar</span>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openAddItemModal}
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:text-blue-700 text-xs sm:text-sm"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Adicionar Item</span>
+                  <span className="sm:hidden">Adicionar</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsWeightModalOpen(true)
+                    setProductWeight("")
+                    setProductDescription("")
+                    setPricePerKg("")
+                  }}
+                  className="text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 text-xs sm:text-sm"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Por Peso</span>
+                  <span className="sm:hidden">Peso</span>
+                </Button>
+              </div>
             </div>
             <div className="space-y-3">
               {orderItems.map((item) => {
-                const itemSubtotal = item.product_price * item.quantity
+                // Usar subtotal do banco se disponível (para itens por peso), senão calcular
+                const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
                 const extrasTotal = (item.order_item_extras || []).reduce(
                   (sum, extra) => sum + extra.extra_price * extra.quantity,
                   0
@@ -763,6 +864,11 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                         </div>
                         {item.notes && (
                           <p className="text-xs md:text-sm text-slate-500 italic">Obs: {item.notes}</p>
+                        )}
+                        {item.weight && (
+                          <p className="text-xs md:text-sm text-slate-600 font-medium">
+                            Peso: {item.weight.toFixed(3).replace(".", ",")} kg | Preço/kg: R$ {item.product_price.toFixed(2).replace(".", ",")}
+                          </p>
                         )}
                       </div>
                       <div className="flex items-center justify-between md:justify-end gap-2 md:gap-3 flex-shrink-0">
@@ -1544,6 +1650,104 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             <Button
               onClick={handleAddItem}
               disabled={!selectedProduct}
+              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto text-sm sm:text-base"
+            >
+              Adicionar ao Pedido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Adicionar Item por Peso */}
+      <Dialog open={isWeightModalOpen} onOpenChange={setIsWeightModalOpen}>
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg md:text-xl">Adicionar Item por Peso</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="weightDescription">Descrição do Item</Label>
+              <Input
+                id="weightDescription"
+                type="text"
+                placeholder="Ex: Prato montado, Salada, etc."
+                value={productDescription}
+                onChange={(e) => setProductDescription(e.target.value)}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weight">Peso (kg)</Label>
+              <Input
+                id="weight"
+                type="text"
+                placeholder="0,000"
+                value={productWeight}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9,]/g, "").replace(",", ".")
+                  setProductWeight(value.replace(".", ","))
+                }}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pricePerKg">Preço por kg (R$)</Label>
+              <Input
+                id="pricePerKg"
+                type="text"
+                placeholder="0,00"
+                value={pricePerKg}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9,]/g, "").replace(",", ".")
+                  setPricePerKg(value.replace(".", ","))
+                }}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            {productWeight && pricePerKg && !isNaN(parseFloat(productWeight.replace(",", "."))) && !isNaN(parseFloat(pricePerKg.replace(",", "."))) && (
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <span className="font-semibold">Peso:</span> {parseFloat(productWeight.replace(",", ".")).toFixed(3).replace(".", ",")} kg
+                  </p>
+                  <p>
+                    <span className="font-semibold">Preço/kg:</span> R$ {parseFloat(pricePerKg.replace(",", ".")).toFixed(2).replace(".", ",")}
+                  </p>
+                  <p className="font-bold text-base mt-2">
+                    Total: R$ {(parseFloat(pricePerKg.replace(",", ".")) * parseFloat(productWeight.replace(",", "."))).toFixed(2).replace(".", ",")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsWeightModalOpen(false)
+                setProductWeight("")
+                setProductDescription("")
+                setPricePerKg("")
+              }}
+              className="w-full sm:w-auto text-sm sm:text-base"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleAddItemByWeight}
+              disabled={
+                !productWeight || 
+                !pricePerKg ||
+                isNaN(parseFloat(productWeight.replace(",", "."))) || 
+                parseFloat(productWeight.replace(",", ".")) <= 0 ||
+                isNaN(parseFloat(pricePerKg.replace(",", "."))) || 
+                parseFloat(pricePerKg.replace(",", ".")) <= 0
+              }
               className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto text-sm sm:text-base"
             >
               Adicionar ao Pedido
