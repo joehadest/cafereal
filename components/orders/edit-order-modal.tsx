@@ -176,8 +176,9 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             const newSubtotal = item.product_price * item.weight * newQuantity
             return { ...item, quantity: newQuantity, subtotal: newSubtotal }
           }
-          // Caso contrário, apenas atualizar quantidade (subtotal será recalculado ao salvar)
-          return { ...item, quantity: newQuantity }
+          // Para itens normais, limpar o subtotal para forçar recálculo baseado na nova quantidade
+          // Isso garante que o total seja atualizado corretamente
+          return { ...item, quantity: newQuantity, subtotal: undefined }
         }
         return item
       })
