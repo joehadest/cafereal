@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, Phone, MapPin, FileText, DollarSign, Bike, Minus, Plus, Trash2, ShoppingBag, RefreshCw, Search } from "lucide-react"
+import { User, Phone, MapPin, FileText, DollarSign, Bike, Minus, Plus, Trash2, ShoppingBag, RefreshCw, Search, CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Order } from "@/types/order"
 import type { Product, ProductVariety, ProductExtra } from "@/types/product"
@@ -39,6 +39,7 @@ type EditableOrderItem = {
   notes?: string | null
   isReplaced?: boolean // Flag para indicar que foi substituído
   weight?: number // Peso em kg para produtos vendidos por peso
+  paid?: boolean // Indica se o item foi pago separadamente
 }
 
 type Table = {
@@ -127,6 +128,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             notes: item.notes,
             isReplaced: false,
             weight: weight,
+            paid: (item as any).paid || false,
           }
         })
       )
@@ -163,6 +165,18 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     return sum + itemSubtotal + extrasTotal
   }, 0)
 
+  // Calcular total pago e pendente
+  const paidTotal = orderItems.reduce((sum, item) => {
+    if (!item.paid) return sum
+    const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
+    const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
+      return extraSum + extra.extra_price * extra.quantity
+    }, 0)
+    return sum + itemSubtotal + extrasTotal
+  }, 0)
+
+  const pendingTotal = subtotal - paidTotal
+
   // Calcular total com taxa de entrega (apenas para delivery)
   const calculatedTotal = subtotal + (isDelivery ? Number(formData.deliveryFee) : 0)
 
@@ -179,6 +193,17 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
           // Para itens normais, limpar o subtotal para forçar recálculo baseado na nova quantidade
           // Isso garante que o total seja atualizado corretamente
           return { ...item, quantity: newQuantity, subtotal: undefined }
+        }
+        return item
+      })
+    )
+  }
+
+  const toggleItemPaid = (itemId: string) => {
+    setOrderItems((prev) =>
+      prev.map((item) => {
+        if (item.id === itemId) {
+          return { ...item, paid: !item.paid }
         }
         return item
       })
@@ -596,6 +621,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             variety_name: item.variety_name,
             variety_price: item.variety_price,
             notes: item.notes,
+            paid: item.paid || false,
           }
         })
 
@@ -653,6 +679,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             quantity: item.quantity,
             product_name: item.product_name.trim(),
             subtotal: newSubtotal,
+            paid: item.paid || false,
           }
 
           // Se foi substituído, atualizar product_id, variety_id, etc.
@@ -832,9 +859,15 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 const itemTotal = itemSubtotal + extrasTotal
 
                 return (
-                  <div key={item.id} className="bg-white p-2 sm:p-3 md:p-4 rounded-lg border border-slate-200">
+                  <div key={item.id} className={`bg-white p-2 sm:p-3 md:p-4 rounded-lg border ${item.paid ? 'border-green-300 bg-green-50' : 'border-slate-200'}`}>
                     <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                       <div className="flex-1 min-w-0 space-y-2">
+                        {item.paid && (
+                          <div className="flex items-center gap-1 text-green-700 text-xs sm:text-sm font-medium">
+                            <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span>Pago</span>
+                          </div>
+                        )}
                         <div className="space-y-1">
                           <Input
                             value={item.product_name}
@@ -908,6 +941,16 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                           </Button>
                         </div>
                         <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant={item.paid ? "default" : "outline"}
+                            size="icon"
+                            className={`h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 ${item.paid ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-green-600 hover:bg-green-50 hover:text-green-700 border-green-300'}`}
+                            onClick={() => toggleItemPaid(item.id)}
+                            title={item.paid ? "Marcar como não pago" : "Marcar como pago"}
+                          >
+                            <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
                           <Button
                             type="button"
                             variant="ghost"
@@ -1180,8 +1223,24 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
               </div>
             )}
             <div className="flex justify-between pt-2 md:pt-3 border-t border-slate-300">
-              <span className="font-bold text-base md:text-lg text-slate-900">Total:</span>
-              <span className="font-bold text-lg md:text-xl text-slate-900">R$ {calculatedTotal.toFixed(2)}</span>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-base md:text-lg text-slate-900">Total:</span>
+                  <span className="font-bold text-lg md:text-xl text-slate-900">R$ {calculatedTotal.toFixed(2)}</span>
+                </div>
+                {paidTotal > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-green-700 font-medium">Pago:</span>
+                    <span className="text-green-700 font-semibold">R$ {paidTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {pendingTotal > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-orange-700 font-medium">Pendente:</span>
+                    <span className="text-orange-700 font-semibold">R$ {pendingTotal.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
