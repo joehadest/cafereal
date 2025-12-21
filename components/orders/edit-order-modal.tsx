@@ -153,32 +153,46 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const isPickup = orderType === "pickup"
   const isDineIn = orderType === "dine-in"
 
-  // Calcular subtotal dos itens editáveis
-  // Para itens por peso, usar o subtotal do banco; caso contrário, calcular
-  const subtotal = orderItems.reduce((sum, item) => {
-    // Se o item tem subtotal do banco (especialmente para itens por peso), usar ele
-    // Caso contrário, calcular baseado em product_price * quantity
-    const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
-    const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
-      return extraSum + extra.extra_price * extra.quantity
+  // Calcular subtotal dos itens editáveis usando useMemo para evitar problemas de inicialização
+  const { subtotal, paidTotal, pendingTotal, calculatedTotal } = useMemo(() => {
+    // Garantir que orderItems seja um array válido
+    const items = Array.isArray(orderItems) ? orderItems : []
+    
+    // Calcular subtotal dos itens editáveis
+    // Para itens por peso, usar o subtotal do banco; caso contrário, calcular
+    const calcSubtotal = items.reduce((sum, item) => {
+      if (!item) return sum
+      // Se o item tem subtotal do banco (especialmente para itens por peso), usar ele
+      // Caso contrário, calcular baseado em product_price * quantity
+      const itemSubtotal = item.subtotal !== undefined ? item.subtotal : ((item.product_price || 0) * (item.quantity || 0))
+      const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
+        return extraSum + ((extra?.extra_price || 0) * (extra?.quantity || 0))
+      }, 0)
+      return sum + itemSubtotal + extrasTotal
     }, 0)
-    return sum + itemSubtotal + extrasTotal
-  }, 0)
 
-  // Calcular total pago e pendente
-  const paidTotal = orderItems.reduce((sum, item) => {
-    if (!item || !item.paid) return sum
-    const itemSubtotal = item.subtotal !== undefined ? item.subtotal : (item.product_price * item.quantity)
-    const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
-      return extraSum + (extra.extra_price || 0) * (extra.quantity || 0)
+    // Calcular total pago e pendente
+    const calcPaidTotal = items.reduce((sum, item) => {
+      if (!item || !item.paid) return sum
+      const itemSubtotal = item.subtotal !== undefined ? item.subtotal : ((item.product_price || 0) * (item.quantity || 0))
+      const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
+        return extraSum + ((extra?.extra_price || 0) * (extra?.quantity || 0))
+      }, 0)
+      return sum + itemSubtotal + extrasTotal
     }, 0)
-    return sum + itemSubtotal + extrasTotal
-  }, 0)
 
-  const pendingTotal = Math.max(0, subtotal - paidTotal)
+    const calcPendingTotal = Math.max(0, calcSubtotal - calcPaidTotal)
 
-  // Calcular total com taxa de entrega (apenas para delivery)
-  const calculatedTotal = subtotal + (isDelivery ? Number(formData.deliveryFee) : 0)
+    // Calcular total com taxa de entrega (apenas para delivery)
+    const calcCalculatedTotal = calcSubtotal + (isDelivery ? Number(formData?.deliveryFee || 0) : 0)
+
+    return {
+      subtotal: calcSubtotal,
+      paidTotal: calcPaidTotal,
+      pendingTotal: calcPendingTotal,
+      calculatedTotal: calcCalculatedTotal
+    }
+  }, [orderItems, isDelivery, formData?.deliveryFee])
 
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return
