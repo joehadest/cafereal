@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList } from "lucide-react"
+import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ProductOptionsModal } from "@/components/menu/product-options-modal"
@@ -75,7 +75,11 @@ export function StaffOrdersClient({
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [showOrdersList, setShowOrdersList] = useState(false)
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0)
+  // Calcular o total garantindo que o finalPrice seja sempre o preço unitário correto
+  const totalPrice = cart.reduce((sum, item) => {
+    const unitPrice = calculateFinalPrice(item)
+    return sum + (unitPrice * item.quantity)
+  }, 0)
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   // Filtrar categorias e produtos baseado no termo de busca
@@ -104,6 +108,13 @@ export function StaffOrdersClient({
     ? filteredCategories.filter((cat) => cat.id === activeCategory)
     : filteredCategories
 
+  // Função auxiliar para calcular o preço unitário final de um item
+  const calculateFinalPrice = (item: CartItem): number => {
+    const basePrice = item.selectedVariety ? item.selectedVariety.price : item.price
+    const extrasPrice = (item.selectedExtras || []).reduce((sum, extraItem) => sum + (extraItem.extra.price * extraItem.quantity), 0)
+    return basePrice + extrasPrice
+  }
+
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product)
     setIsProductModalOpen(true)
@@ -111,7 +122,9 @@ export function StaffOrdersClient({
 
   const addToCart = (product: Product, options: SelectedOptions) => {
     const basePrice = options.variety ? options.variety.price : product.price
-    const extrasPrice = options.extras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
+    // Calcular o preço dos extras (soma de todos os extras com suas quantidades)
+    const extrasPrice = options.extras.reduce((sum, extraItem) => sum + (extraItem.extra.price * extraItem.quantity), 0)
+    // finalPrice é o preço unitário (base + extras)
     const finalPrice = basePrice + extrasPrice
 
     setCart((prev) => {
@@ -123,10 +136,17 @@ export function StaffOrdersClient({
       })
 
       if (existing) {
+        // Se o item já existe, apenas incrementa a quantidade mantendo o finalPrice unitário
         return prev.map((item) => {
           const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
           if (itemKey === itemKey2) {
-            return { ...item, quantity: item.quantity + 1 }
+            // Recalcular o finalPrice para garantir que está correto
+            const recalculatedFinalPrice = calculateFinalPrice({ ...item, selectedVariety: options.variety, selectedExtras: options.extras } as CartItem)
+            return { 
+              ...item, 
+              quantity: item.quantity + 1,
+              finalPrice: recalculatedFinalPrice
+            }
           }
           return item
         })
@@ -150,7 +170,9 @@ export function StaffOrdersClient({
     setCart((prev) => prev.map((item) => {
       const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
       if (currentKey === itemKey) {
-        return { ...item, quantity }
+        // Recalcular o finalPrice para garantir que está correto
+        const recalculatedFinalPrice = calculateFinalPrice(item)
+        return { ...item, quantity, finalPrice: recalculatedFinalPrice }
       }
       return item
     }))
@@ -206,13 +228,14 @@ export function StaffOrdersClient({
 
       // Inserir itens do pedido
       const orderItems = cart.map((item) => {
+        const unitPrice = calculateFinalPrice(item)
         return {
           order_id: order.id,
           product_id: item.id,
           product_name: item.name,
           product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
           quantity: item.quantity,
-          subtotal: item.finalPrice * item.quantity,
+          subtotal: unitPrice * item.quantity,
           variety_id: item.selectedVariety?.id || null,
           variety_name: item.selectedVariety?.name || null,
           variety_price: item.selectedVariety?.price || null,
@@ -290,6 +313,15 @@ export function StaffOrdersClient({
       <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/admin")}
+              className="p-1.5 sm:p-2 h-auto flex-shrink-0 hover:bg-slate-100"
+              title="Voltar ao painel"
+            >
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" />
+            </Button>
             <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700 flex-shrink-0" />
             <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">Anotar Pedido</h1>
           </div>
@@ -638,7 +670,7 @@ export function StaffOrdersClient({
                         </p>
                       )}
                       <p className="text-xs sm:text-sm font-bold text-slate-900">
-                        R$ {(item.finalPrice * item.quantity).toFixed(2)}
+                        R$ {(calculateFinalPrice(item) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
