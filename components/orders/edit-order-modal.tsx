@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { User, Phone, MapPin, FileText, DollarSign, Bike, Minus, Plus, Trash2, ShoppingBag, RefreshCw, Search, CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Order } from "@/types/order"
@@ -80,6 +81,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const [productWeight, setProductWeight] = useState<string>("")
   const [productDescription, setProductDescription] = useState<string>("")
   const [pricePerKg, setPricePerKg] = useState<string>("")
+  const [selectedItemsForPayment, setSelectedItemsForPayment] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (isOpen) {
@@ -97,41 +99,43 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
       setOrderType(order.order_type || "dine-in")
       setTableNumber(order.table_number?.toString() || "0")
       // Inicializar itens editáveis
-      setOrderItems(
-        order.order_items.map((item) => {
-          // Extrair peso e preço/kg das notas se for item por peso
-          let weight: number | undefined = undefined
-          if (item.notes && item.notes.includes("Peso:")) {
-            const pesoMatch = item.notes.match(/Peso:\s*([\d,]+)\s*kg/)
-            if (pesoMatch) {
-              weight = parseFloat(pesoMatch[1].replace(",", "."))
-            }
+      const initializedItems = order.order_items.map((item) => {
+        // Extrair peso e preço/kg das notas se for item por peso
+        let weight: number | undefined = undefined
+        if (item.notes && item.notes.includes("Peso:")) {
+          const pesoMatch = item.notes.match(/Peso:\s*([\d,]+)\s*kg/)
+          if (pesoMatch) {
+            weight = parseFloat(pesoMatch[1].replace(",", "."))
           }
-          
-          return {
-            id: item.id,
-            product_id: (item as any).product_id || null,
-            product_name: item.product_name,
-            product_price: item.product_price,
-            quantity: item.quantity,
-            subtotal: item.subtotal, // Preservar subtotal do banco
-            variety_id: item.variety_id || null,
-            variety_name: item.variety_name,
-            variety_price: item.variety_price || null,
-            order_item_extras: (item.order_item_extras || []).map((extra) => ({
-              id: extra.id,
-              extra_id: (extra as any).extra_id || null,
-              extra_name: extra.extra_name,
-              extra_price: extra.extra_price,
-              quantity: extra.quantity,
-            })),
-            notes: item.notes,
-            isReplaced: false,
-            weight: weight,
-            paid: (item as any).paid || false,
-          }
-        })
-      )
+        }
+        
+        return {
+          id: item.id,
+          product_id: (item as any).product_id || null,
+          product_name: item.product_name,
+          product_price: item.product_price,
+          quantity: item.quantity,
+          subtotal: item.subtotal, // Preservar subtotal do banco
+          variety_id: item.variety_id || null,
+          variety_name: item.variety_name,
+          variety_price: item.variety_price || null,
+          order_item_extras: (item.order_item_extras || []).map((extra) => ({
+            id: extra.id,
+            extra_id: (extra as any).extra_id || null,
+            extra_name: extra.extra_name,
+            extra_price: extra.extra_price,
+            quantity: extra.quantity,
+          })),
+          notes: item.notes,
+          isReplaced: false,
+          weight: weight,
+          paid: (item as any).paid || false,
+        }
+      })
+      setOrderItems(initializedItems)
+      
+      // Inicializar todos os itens como selecionados
+      setSelectedItemsForPayment(new Set(initializedItems.map(item => item.id)))
       
       // Buscar mesas
       const fetchTables = async () => {
@@ -154,7 +158,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const isDineIn = orderType === "dine-in"
 
   // Calcular subtotal dos itens editáveis usando useMemo para evitar problemas de inicialização
-  const { subtotal, paidTotal, pendingTotal, calculatedTotal } = useMemo(() => {
+  const { subtotal, paidTotal, pendingTotal, calculatedTotal, selectedTotalPrice } = useMemo(() => {
     // Garantir que orderItems seja um array válido
     const items = Array.isArray(orderItems) ? orderItems : []
     
@@ -186,13 +190,47 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     // Calcular total com taxa de entrega (apenas para delivery)
     const calcCalculatedTotal = calcSubtotal + (isDelivery ? Number(formData?.deliveryFee || 0) : 0)
 
+    // Calcular total dos itens selecionados para pagamento
+    const calcSelectedTotal = items.reduce((sum, item) => {
+      if (!item || !selectedItemsForPayment.has(item.id)) return sum
+      const itemSubtotal = item.subtotal !== undefined ? item.subtotal : ((item.product_price || 0) * (item.quantity || 0))
+      const extrasTotal = (item.order_item_extras || []).reduce((extraSum, extra) => {
+        return extraSum + ((extra?.extra_price || 0) * (extra?.quantity || 0))
+      }, 0)
+      return sum + itemSubtotal + extrasTotal
+    }, 0)
+
     return {
       subtotal: calcSubtotal,
       paidTotal: calcPaidTotal,
       pendingTotal: calcPendingTotal,
-      calculatedTotal: calcCalculatedTotal
+      calculatedTotal: calcCalculatedTotal,
+      selectedTotalPrice: calcSelectedTotal
     }
-  }, [orderItems, isDelivery, formData?.deliveryFee])
+  }, [orderItems, isDelivery, formData?.deliveryFee, selectedItemsForPayment])
+
+  // Função para alternar seleção de item
+  const toggleItemSelection = (itemId: string) => {
+    setSelectedItemsForPayment((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId)
+      } else {
+        newSet.add(itemId)
+      }
+      return newSet
+    })
+  }
+
+  // Função para selecionar/desselecionar todos
+  const toggleSelectAll = () => {
+    if (selectedItemsForPayment.size === orderItems.length) {
+      setSelectedItemsForPayment(new Set())
+    } else {
+      const allIds = orderItems.map(item => item.id)
+      setSelectedItemsForPayment(new Set(allIds))
+    }
+  }
 
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return
@@ -230,6 +268,12 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
       return
     }
     setOrderItems((prev) => prev.filter((item) => item.id !== itemId))
+    // Remover também da seleção se estiver selecionado
+    setSelectedItemsForPayment((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(itemId)
+      return newSet
+    })
   }
 
   const openReplaceModal = async (itemId: string) => {
@@ -494,6 +538,8 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     }
 
     setOrderItems((prev) => [...prev, newItem])
+    // Adicionar automaticamente ao selecionados quando adiciona novo item
+    setSelectedItemsForPayment((prev) => new Set([...prev, newItem.id]))
     setAddItemModalOpen(false)
     setSelectedProduct(null)
     setSelectedVariety(null)
@@ -539,6 +585,8 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     }
 
     setOrderItems((prev) => [...prev, newItem])
+    // Adicionar automaticamente ao selecionados quando adiciona novo item
+    setSelectedItemsForPayment((prev) => new Set([...prev, newItem.id]))
     setIsWeightModalOpen(false)
     setProductWeight("")
     setProductDescription("")
@@ -862,6 +910,24 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                 </Button>
               </div>
             </div>
+            {/* Cabeçalho com selecionar todos */}
+            {orderItems.length > 0 && (
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedItemsForPayment.size === orderItems.length && orderItems.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                    id="select-all-items"
+                  />
+                  <Label
+                    htmlFor="select-all-items"
+                    className="text-xs sm:text-sm font-semibold text-slate-900 cursor-pointer"
+                  >
+                    Selecionar todos para pagamento
+                  </Label>
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               {orderItems.map((item) => {
                 // Usar subtotal do banco se disponível (para itens por peso), senão calcular
@@ -871,10 +937,17 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                   0
                 )
                 const itemTotal = itemSubtotal + extrasTotal
+                const isSelected = selectedItemsForPayment.has(item.id)
 
                 return (
-                  <div key={item.id} className={`bg-white p-2 sm:p-3 md:p-4 rounded-lg border ${item.paid ? 'border-green-300 bg-green-50' : 'border-slate-200'}`}>
+                  <div key={item.id} className={`bg-white p-2 sm:p-3 md:p-4 rounded-lg border ${isSelected ? 'border-blue-300 bg-blue-50' : item.paid ? 'border-green-300 bg-green-50' : 'border-slate-200'}`}>
                     <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleItemSelection(item.id)}
+                        id={`item-${item.id}`}
+                        className="flex-shrink-0"
+                      />
                       <div className="flex-1 min-w-0 space-y-2">
                         {item.paid && (
                           <div className="flex items-center gap-1 text-green-700 text-xs sm:text-sm font-medium">
@@ -892,7 +965,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                                 )
                               )
                             }}
-                            className="font-medium text-xs sm:text-sm md:text-base border-slate-300 focus:border-slate-500"
+                            className={`font-medium text-xs sm:text-sm md:text-base border-slate-300 focus:border-slate-500 ${isSelected ? 'text-blue-900' : ''}`}
                             placeholder="Nome do produto"
                           />
                         </div>
@@ -920,7 +993,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                         )}
                       </div>
                       <div className="flex items-center justify-between md:justify-end gap-2 md:gap-3 flex-shrink-0">
-                        <p className="text-sm md:text-base font-semibold text-slate-700 md:min-w-[80px] md:text-right">
+                        <p className={`text-sm md:text-base font-semibold md:min-w-[80px] md:text-right ${isSelected ? 'text-blue-900' : 'text-slate-700'}`}>
                           R$ {itemTotal.toFixed(2)}
                         </p>
                         <div className="flex items-center gap-1 border border-slate-300 rounded-md">
@@ -1239,9 +1312,20 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
             <div className="flex justify-between pt-2 md:pt-3 border-t border-slate-300">
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-base md:text-lg text-slate-900">Total:</span>
+                  <span className="font-bold text-base md:text-lg text-slate-900">Total do Pedido:</span>
                   <span className="font-bold text-lg md:text-xl text-slate-900">R$ {calculatedTotal.toFixed(2)}</span>
                 </div>
+                {selectedItemsForPayment.size > 0 && (
+                  <div className="flex justify-between items-center bg-blue-50 p-2 rounded-lg border border-blue-200 mt-2">
+                    <span className="text-sm sm:text-base font-semibold text-blue-900">Total Selecionado:</span>
+                    <span className="text-base sm:text-lg font-bold text-blue-900">R$ {selectedTotalPrice.toFixed(2)}</span>
+                  </div>
+                )}
+                {selectedItemsForPayment.size > 0 && selectedItemsForPayment.size < orderItems.length && (
+                  <p className="text-[10px] sm:text-xs text-slate-600 text-center mt-1">
+                    {selectedItemsForPayment.size} de {orderItems.length} itens selecionados
+                  </p>
+                )}
                 {paidTotal > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-green-700 font-medium">Pago:</span>

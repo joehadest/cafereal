@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -74,6 +75,7 @@ export function StaffOrdersClient({
   const [isCartMinimized, setIsCartMinimized] = useState(false)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [showOrdersList, setShowOrdersList] = useState(false)
+  const [selectedItemsForPayment, setSelectedItemsForPayment] = useState<Set<string>>(new Set())
 
   // Função auxiliar para calcular o preço unitário final de um item
   const calculateFinalPrice = (item: CartItem): number => {
@@ -93,6 +95,47 @@ export function StaffOrdersClient({
     return sum + (unitPrice * (item.quantity || 0))
   }, 0)
   const totalItems = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + (item?.quantity || 0), 0)
+
+  // Função para obter o itemKey de um item
+  const getItemKey = (item: CartItem): string => {
+    return `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+  }
+
+  // Calcular o total dos itens selecionados para pagamento
+  const selectedTotalPrice = useMemo(() => {
+    return (Array.isArray(cart) ? cart : []).reduce((sum, item) => {
+      if (!item) return sum
+      const itemKey = getItemKey(item)
+      if (selectedItemsForPayment.has(itemKey)) {
+        const unitPrice = calculateFinalPrice(item)
+        return sum + (unitPrice * (item.quantity || 0))
+      }
+      return sum
+    }, 0)
+  }, [cart, selectedItemsForPayment])
+
+  // Função para alternar seleção de item
+  const toggleItemSelection = (itemKey: string) => {
+    setSelectedItemsForPayment((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(itemKey)) {
+        newSet.delete(itemKey)
+      } else {
+        newSet.add(itemKey)
+      }
+      return newSet
+    })
+  }
+
+  // Função para selecionar/desselecionar todos
+  const toggleSelectAll = () => {
+    if (selectedItemsForPayment.size === cart.length) {
+      setSelectedItemsForPayment(new Set())
+    } else {
+      const allKeys = cart.map(item => getItemKey(item))
+      setSelectedItemsForPayment(new Set(allKeys))
+    }
+  }
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -165,13 +208,19 @@ export function StaffOrdersClient({
         })
       }
       
-      return [...prevArray, { 
+      const newItem = { 
         ...product,
         quantity: 1,
         selectedVariety: options.variety || null,
         selectedExtras: options.extras || [],
         finalPrice
-      }]
+      }
+      
+      // Adicionar automaticamente ao selecionados quando adiciona novo item
+      const newItemKey = getItemKey(newItem)
+      setSelectedItemsForPayment((prev) => new Set([...prev, newItemKey]))
+      
+      return [...prevArray, newItem]
     })
   }
 
@@ -196,6 +245,12 @@ export function StaffOrdersClient({
       const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
       return currentKey !== itemKey
     }))
+    // Remover também da seleção se estiver selecionado
+    setSelectedItemsForPayment((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(itemKey)
+      return newSet
+    })
   }
 
   const handleCreateOrder = async () => {
@@ -285,6 +340,7 @@ export function StaffOrdersClient({
 
       // Limpar carrinho e resetar formulário
       setCart([])
+      setSelectedItemsForPayment(new Set())
       // Incrementar mesa automaticamente
       if (selectedTable) {
         const currentTableNum = parseInt(selectedTable)
@@ -652,7 +708,10 @@ export function StaffOrdersClient({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setCart([])}
+                  onClick={() => {
+                    setCart([])
+                    setSelectedItemsForPayment(new Set())
+                  }}
                   className="text-red-600 hover:text-red-700 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0"
                 >
                   Limpar
@@ -665,13 +724,39 @@ export function StaffOrdersClient({
           {!isCartMinimized && (
             <div className="overflow-y-auto max-h-[calc(70vh-80px)]">
               <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
+                {/* Cabeçalho com selecionar todos */}
+                {cart.length > 0 && (
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={selectedItemsForPayment.size === cart.length && cart.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        id="select-all"
+                      />
+                      <Label
+                        htmlFor="select-all"
+                        className="text-xs sm:text-sm font-semibold text-slate-900 cursor-pointer"
+                      >
+                        Selecionar todos para pagamento
+                      </Label>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {cart.map((item) => {
-                const itemKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+                const itemKey = getItemKey(item)
+                const isSelected = selectedItemsForPayment.has(itemKey)
                 return (
-                  <div key={itemKey} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                  <div key={itemKey} className={`flex items-center gap-2 p-2 rounded-lg ${isSelected ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50'}`}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleItemSelection(itemKey)}
+                      id={`item-${itemKey}`}
+                      className="flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold text-slate-900 truncate">
+                      <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
                         {item.name}
                       </p>
                       {item.selectedVariety && (
@@ -682,7 +767,7 @@ export function StaffOrdersClient({
                           {item.selectedExtras.map(e => e.extra.name).join(", ")}
                         </p>
                       )}
-                      <p className="text-xs sm:text-sm font-bold text-slate-900">
+                      <p className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
                         R$ {(calculateFinalPrice(item) * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -712,9 +797,20 @@ export function StaffOrdersClient({
 
             <div className="space-y-2 sm:space-y-3 pt-2 border-t border-slate-200">
               <div className="flex justify-between items-center">
-                <span className="text-base sm:text-lg font-bold text-slate-900">Total:</span>
+                <span className="text-base sm:text-lg font-bold text-slate-900">Total do Pedido:</span>
                 <span className="text-lg sm:text-xl font-bold text-slate-900">R$ {totalPrice.toFixed(2)}</span>
               </div>
+              {selectedItemsForPayment.size > 0 && (
+                <div className="flex justify-between items-center bg-blue-50 p-2 rounded-lg border border-blue-200">
+                  <span className="text-sm sm:text-base font-semibold text-blue-900">Total Selecionado:</span>
+                  <span className="text-base sm:text-lg font-bold text-blue-900">R$ {selectedTotalPrice.toFixed(2)}</span>
+                </div>
+              )}
+              {selectedItemsForPayment.size > 0 && selectedItemsForPayment.size < cart.length && (
+                <p className="text-[10px] sm:text-xs text-slate-600 text-center">
+                  {selectedItemsForPayment.size} de {cart.length} itens selecionados
+                </p>
+              )}
 
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="customer-name" className="text-xs sm:text-sm font-semibold">
