@@ -27,7 +27,7 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-customer hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
+    <div className="print-customer hidden print:block bg-white text-black max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm', margin: '0', padding: '2mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header do Restaurante */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">
         <div className="mb-2">
@@ -45,7 +45,7 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
 
       {/* Informações da Mesa */}
       {!isDelivery && (
-        <div className="mb-3 pb-3 border-b-2 border-gray-400 bg-gray-100 -mx-3 px-3 py-3 rounded">
+        <div className="mb-3 pb-3 border-b-2 border-gray-400 bg-gray-100 px-2 py-3 rounded">
           <div className="text-center">
             <p className="text-xl font-bold text-black mb-1">{order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}</p>
             <p className="text-xs text-black">
@@ -156,7 +156,7 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
 
       {/* Observações do Pedido */}
       {order.notes && (
-        <div className="mb-3 pb-3 border-b border-gray-300 bg-yellow-50 -mx-3 px-3 py-2 rounded">
+        <div className="mb-3 pb-3 border-b border-gray-300 bg-yellow-50 px-2 py-2 rounded">
           <h2 className="font-bold text-xs mb-1 uppercase text-black">Observações</h2>
           <p className="text-xs text-black whitespace-pre-wrap leading-tight break-words font-semibold">
             {order.notes}

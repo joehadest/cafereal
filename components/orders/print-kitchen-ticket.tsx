@@ -13,7 +13,7 @@ export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintK
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-kitchen hidden print:block bg-white text-black p-3 max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
+    <div className="print-kitchen hidden print:block bg-white text-black max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm', margin: '0', padding: '2mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header - Destacado */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1">

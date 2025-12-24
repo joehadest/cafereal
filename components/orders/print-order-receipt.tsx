@@ -35,7 +35,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
   }
 
   return (
-    <div className="print-receipt print:block bg-white text-black p-2 max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0 auto', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
+    <div className="print-receipt print:block bg-white text-black max-w-[80mm] mx-auto font-sans text-xs font-bold" style={{ width: '80mm', maxWidth: '80mm', margin: '0', padding: '2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
       {/* Header do Restaurante - Destacado */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <div className="mb-1.5">
@@ -100,7 +100,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
 
       {/* Informações do Cliente */}
       {(order.customer_name || order.payment_method) && (
-        <div className="mb-2 pb-2 border-b border-gray-300 bg-gray-50 -mx-3 px-3 py-2 rounded">
+        <div className="mb-2 pb-2 border-b border-gray-300 bg-gray-50 px-2 py-2 rounded">
           <h2 className="font-bold text-xs mb-1.5 uppercase text-black">Dados do Cliente</h2>
           <div className="space-y-1 text-xs">
             {order.customer_name && (
@@ -214,7 +214,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
 
       {/* Observações do Pedido */}
       {order.notes && (
-        <div className="mb-2 pb-2 border-b border-gray-300 bg-yellow-50 -mx-3 px-3 py-2 rounded">
+        <div className="mb-2 pb-2 border-b border-gray-300 bg-yellow-50 px-2 py-2 rounded">
           <h2 className="font-bold text-xs mb-1 uppercase text-black">Observações Gerais</h2>
           <p className="text-xs text-black whitespace-pre-wrap leading-tight break-words font-bold" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             {order.notes}
