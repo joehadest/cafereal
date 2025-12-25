@@ -664,33 +664,35 @@ function OrderCardComponent({
           </div>
         </CardContent>
 
-        <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0 space-y-2">
-          {order.status !== "delivered" && (
-            <Button
-              onClick={handleCompleteAndPay}
-              disabled={isCompleting}
-              className={`w-full bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300 text-xs xs:text-sm sm:text-base py-2 sm:py-2.5 ${
-                isCompleting ? "animate-pulse" : "hover:scale-105"
-              }`}
-            >
-              <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-              {isCompleting ? "Concluindo..." : "Pago e Concluído"}
-            </Button>
-          )}
-          {config && (
-            <Button
-              onClick={handleUpdateStatus}
-              disabled={isUpdating}
-              className={`w-full bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-xs xs:text-sm sm:text-base py-2 sm:py-2.5 ${
-                isUpdating ? "animate-pulse" : "hover:scale-105"
-              }`}
-            >
-              {isUpdating ? "Atualizando..." : nextLabel}
-              <ChevronRight
-                className={`h-3 w-3 sm:h-4 sm:w-4 ml-2 ${isUpdating ? "" : "group-hover:translate-x-1 transition-transform"}`}
-              />
-            </Button>
-          )}
+        <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0">
+          <div className="w-full flex flex-col sm:flex-row gap-2">
+            {order.status !== "delivered" && (
+              <Button
+                onClick={handleCompleteAndPay}
+                disabled={isCompleting}
+                className={`flex-1 bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300 text-[11px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
+                  isCompleting ? "animate-pulse" : "hover:scale-105"
+                }`}
+              >
+                <CheckCircle2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 mr-1 xs:mr-1.5 sm:mr-2 flex-shrink-0" />
+                <span className="truncate">{isCompleting ? "Concluindo..." : "Pago e Concluído"}</span>
+              </Button>
+            )}
+            {config && (
+              <Button
+                onClick={handleUpdateStatus}
+                disabled={isUpdating}
+                className={`flex-1 bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-[11px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
+                  isUpdating ? "animate-pulse" : "hover:scale-105"
+                }`}
+              >
+                <span className="truncate">{isUpdating ? "Atualizando..." : nextLabel}</span>
+                <ChevronRight
+                  className={`h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 ml-1 xs:ml-1.5 sm:ml-2 flex-shrink-0 ${isUpdating ? "" : "group-hover:translate-x-1 transition-transform"}`}
+                />
+              </Button>
+            )}
+          </div>
         </CardFooter>
       </Card>
 
