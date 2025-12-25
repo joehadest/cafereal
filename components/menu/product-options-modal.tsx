@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -14,16 +14,41 @@ type SelectedOptions = {
   extras: { extra: ProductExtra; quantity: number }[]
 }
 
+type CartItem = {
+  id: string
+  name: string
+  description?: string | null
+  price: number
+  quantity: number
+  selectedVariety?: ProductVariety | null
+  selectedExtras?: { extra: ProductExtra; quantity: number }[]
+  finalPrice: number
+}
+
 type ProductOptionsModalProps = {
   isOpen: boolean
   onClose: () => void
   product: Product | null
   onAddToCart: (product: Product, options: SelectedOptions) => void
+  existingItem?: CartItem | null
 }
 
-export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: ProductOptionsModalProps) {
+export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, existingItem }: ProductOptionsModalProps) {
   const [selectedVariety, setSelectedVariety] = useState<ProductVariety | null>(null)
   const [selectedExtras, setSelectedExtras] = useState<{ extra: ProductExtra; quantity: number }[]>([])
+
+  // Usar useEffect para atualizar quando existingItem mudar ou modal abrir
+  useEffect(() => {
+    if (isOpen) {
+      if (existingItem) {
+        setSelectedVariety(existingItem.selectedVariety || null)
+        setSelectedExtras(existingItem.selectedExtras || [])
+      } else {
+        setSelectedVariety(null)
+        setSelectedExtras([])
+      }
+    }
+  }, [existingItem, isOpen])
 
   if (!product) return null
 
@@ -79,9 +104,11 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
       variety: selectedVariety,
       extras: selectedExtras,
     })
-    // Reset
-    setSelectedVariety(null)
-    setSelectedExtras([])
+    // Reset apenas se não estiver editando
+    if (!existingItem) {
+      setSelectedVariety(null)
+      setSelectedExtras([])
+    }
     onClose()
   }
 
@@ -291,7 +318,7 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart }: P
             onClick={handleAddToCart}
             className="flex-1 bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg text-white transition-all duration-300"
           >
-            Adicionar ao Carrinho - R$ {totalPrice.toFixed(2)}
+            {existingItem ? `Atualizar Item - R$ ${totalPrice.toFixed(2)}` : `Adicionar ao Carrinho - R$ ${totalPrice.toFixed(2)}`}
           </Button>
         </div>
       </DialogContent>

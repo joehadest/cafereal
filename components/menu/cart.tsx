@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store, UtensilsCrossed } from "lucide-react"
+import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store, UtensilsCrossed, Edit } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { openWhatsApp } from "@/lib/utils"
@@ -42,6 +42,7 @@ export function Cart({
   tableNumber,
   onUpdateQuantity,
   onRemoveItem,
+  onEditItem,
   totalPrice,
   whatsapp,
   restaurantInfo,
@@ -55,6 +56,7 @@ export function Cart({
   deliveryFee: number
   onUpdateQuantity: (itemKey: string, quantity: number) => void
   onRemoveItem: (itemKey: string) => void
+  onEditItem?: (itemKey: string) => void
   totalPrice: number
   whatsapp?: string | null
   restaurantInfo?: {
@@ -786,6 +788,17 @@ export function Cart({
                     <p className="text-sm text-slate-700 font-medium mt-1">R$ {item.finalPrice.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    {onEditItem && (
+                      <Button
+                        onClick={() => onEditItem(itemKey)}
+                        size="icon"
+                        variant="outline"
+                        className="h-7 w-7 sm:h-8 sm:w-8 border-slate-300 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 hover:scale-110 active:scale-95"
+                        title="Editar item"
+                      >
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
+                      </Button>
+                    )}
                     <Button
                       onClick={() => onUpdateQuantity(itemKey, item.quantity - 1)}
                       size="icon"

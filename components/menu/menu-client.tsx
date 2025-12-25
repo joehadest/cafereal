@@ -84,6 +84,8 @@ export function MenuClient({
   const [selectedProductCategory, setSelectedProductCategory] = useState<string | undefined>(undefined)
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
   const [hasChosenContinueWithoutLogin, setHasChosenContinueWithoutLogin] = useState(false)
+  const [editingCartItem, setEditingCartItem] = useState<CartItem | null>(null)
+  const [editingCartItemKey, setEditingCartItemKey] = useState<string | null>(null)
   const router = useRouter()
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -239,6 +241,100 @@ export function MenuClient({
       }
       return item
     }))
+  }
+
+  const handleEditCartItem = (itemKey: string) => {
+    const item = cart.find((item) => {
+      const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+      return currentKey === itemKey
+    })
+    
+    if (item) {
+      // Buscar a categoria do produto
+      const category = categories.find(cat => 
+        cat.products.some(p => p.id === item.id)
+      )
+      
+      setEditingCartItem(item)
+      setEditingCartItemKey(itemKey)
+      setSelectedProduct(item)
+      setSelectedProductCategory(category?.name)
+      setIsOptionsModalOpen(true)
+    }
+  }
+
+  const updateCartItem = (product: Product, options: SelectedOptions) => {
+    if (!editingCartItemKey) {
+      // Se não está editando, adiciona normalmente
+      addToCart(product, options)
+      return
+    }
+
+    const basePrice = options.variety ? options.variety.price : product.price
+    const extrasPrice = options.extras.reduce((sum, item) => sum + item.extra.price * item.quantity, 0)
+    const finalPrice = basePrice + extrasPrice
+
+    // Criar a nova chave do item
+    const newItemKey = `${product.id}-${options.variety?.id || 'base'}-${options.extras.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+
+    setCart((prev) => {
+      // Encontrar o item sendo editado para manter a quantidade
+      const itemBeingEdited = prev.find((item) => {
+        const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+        return currentKey === editingCartItemKey
+      })
+
+      if (!itemBeingEdited) {
+        return prev
+      }
+
+      const quantityToKeep = itemBeingEdited.quantity
+
+      // Verificar se já existe um item com a nova combinação (diferente do que está sendo editado)
+      const existingWithNewKey = prev.find((item) => {
+        const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+        return currentKey === newItemKey && currentKey !== editingCartItemKey
+      })
+
+      if (existingWithNewKey) {
+        // Se já existe um item com a nova combinação, incrementar sua quantidade e remover o item editado
+        return prev
+          .map((item) => {
+            const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+            if (currentKey === newItemKey && currentKey !== editingCartItemKey) {
+              return { ...item, quantity: item.quantity + quantityToKeep }
+            }
+            return item
+          })
+          .filter((item) => {
+            const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+            return currentKey !== editingCartItemKey
+          })
+      }
+
+      // Se não existe, substituir o item antigo pelo novo
+      return prev.map((item) => {
+        const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
+        if (currentKey === editingCartItemKey) {
+          return {
+            ...product,
+            description: product.description,
+            categoryName: item.categoryName,
+            quantity: quantityToKeep, // Manter a quantidade
+            selectedVariety: options.variety,
+            selectedExtras: options.extras,
+            finalPrice
+          }
+        }
+        return item
+      })
+    })
+
+    // Limpar estado de edição
+    setEditingCartItem(null)
+    setEditingCartItemKey(null)
+    setSelectedProduct(null)
+    setSelectedProductCategory(undefined)
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -670,9 +766,12 @@ export function MenuClient({
           setIsOptionsModalOpen(false)
           setSelectedProduct(null)
           setSelectedProductCategory(undefined)
+          setEditingCartItem(null)
+          setEditingCartItemKey(null)
         }}
         product={selectedProduct}
-        onAddToCart={addToCart}
+        onAddToCart={editingCartItemKey ? updateCartItem : addToCart}
+        existingItem={editingCartItem}
       />
 
       <Cart
@@ -685,6 +784,7 @@ export function MenuClient({
         tableNumber={selectedTableNumber}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
+        onEditItem={handleEditCartItem}
         totalPrice={totalPrice}
         whatsapp={restaurantInfo?.whatsapp || null}
         restaurantInfo={restaurantInfo}
