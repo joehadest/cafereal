@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit, CreditCard, CheckSquare, Square } from "lucide-react"
+import { Clock, ChevronRight, Bike, MapPin, Phone, User, UtensilsCrossed, Trash2, Printer, FileText, ChefHat, Receipt, Edit, CreditCard, CheckSquare, Square, CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -68,6 +68,7 @@ function OrderCardComponent({
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isCompleting, setIsCompleting] = useState(false)
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
   const [printType, setPrintType] = useState<"receipt" | "kitchen" | "customer">("receipt")
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -99,6 +100,50 @@ function OrderCardComponent({
       alert("Erro ao atualizar pedido")
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const handleCompleteAndPay = async () => {
+    if (!confirm("Deseja marcar todos os itens como pagos e concluir o pedido?")) {
+      return
+    }
+
+    setIsCompleting(true)
+    const supabase = createClient()
+
+    try {
+      // 1. Marcar todos os itens como pagos
+      if (order.order_items && order.order_items.length > 0) {
+        const itemIds = order.order_items.map((item) => item.id)
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .update({ paid: true })
+          .in("id", itemIds)
+
+        if (itemsError) {
+          console.error("Erro ao marcar itens como pagos:", itemsError)
+          throw itemsError
+        }
+      }
+
+      // 2. Atualizar status do pedido para entregue
+      const { error: orderError } = await supabase
+        .from("orders")
+        .update({ status: "delivered" })
+        .eq("id", order.id)
+
+      if (orderError) {
+        console.error("Erro ao atualizar status do pedido:", orderError)
+        throw orderError
+      }
+
+      // 3. Atualizar a página
+      router.refresh()
+    } catch (error) {
+      console.error("Error completing order:", error)
+      alert("Erro ao concluir pedido. Tente novamente.")
+    } finally {
+      setIsCompleting(false)
     }
   }
 
@@ -619,8 +664,20 @@ function OrderCardComponent({
           </div>
         </CardContent>
 
-        {config && (
-          <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0">
+        <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0 space-y-2">
+          {order.status !== "delivered" && (
+            <Button
+              onClick={handleCompleteAndPay}
+              disabled={isCompleting}
+              className={`w-full bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300 text-xs xs:text-sm sm:text-base py-2 sm:py-2.5 ${
+                isCompleting ? "animate-pulse" : "hover:scale-105"
+              }`}
+            >
+              <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+              {isCompleting ? "Concluindo..." : "Pago e Concluído"}
+            </Button>
+          )}
+          {config && (
             <Button
               onClick={handleUpdateStatus}
               disabled={isUpdating}
@@ -633,8 +690,8 @@ function OrderCardComponent({
                 className={`h-3 w-3 sm:h-4 sm:w-4 ml-2 ${isUpdating ? "" : "group-hover:translate-x-1 transition-transform"}`}
               />
             </Button>
-          </CardFooter>
-        )}
+          )}
+        </CardFooter>
       </Card>
 
       <EditOrderModal
