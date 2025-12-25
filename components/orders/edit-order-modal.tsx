@@ -617,10 +617,20 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         updateData.table_number = 0
         updateData.customer_name = formData.customerName.trim() || null
         updateData.customer_phone = formData.customerPhone.trim() || null
+        // Limpar campos de delivery
+        updateData.delivery_address = null
+        updateData.reference_point = null
+        updateData.delivery_fee = 0
       } else if (orderType === "dine-in") {
         updateData.table_number = parseInt(tableNumber) || 0
         updateData.customer_name = formData.customerName.trim() || null
-      } else if (isDelivery) {
+        // Limpar campos de delivery
+        updateData.delivery_address = null
+        updateData.reference_point = null
+        updateData.delivery_fee = 0
+        updateData.customer_phone = null
+      } else if (orderType === "delivery") {
+        updateData.table_number = 0 // Delivery sempre usa table_number 0
         updateData.customer_name = formData.customerName.trim() || null
         updateData.customer_phone = formData.customerPhone.trim() || null
         updateData.delivery_address = formData.deliveryAddress.trim() || null
@@ -829,27 +839,38 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
           </div>
 
           {/* Tipo de Pedido */}
-          {!isDelivery && (
-            <div className="space-y-2">
-              <Label htmlFor="orderType" className="text-sm font-semibold">
-                Tipo de Pedido
-              </Label>
-              <Select value={orderType} onValueChange={(value) => {
-                setOrderType(value)
-                if (value === "pickup") {
-                  setTableNumber("0")
-                }
-              }}>
-                <SelectTrigger id="orderType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dine-in">Mesa / Balcão</SelectItem>
-                  <SelectItem value="pickup">Retirada no Local</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="orderType" className="text-sm font-semibold">
+              Tipo de Pedido
+            </Label>
+            <Select value={orderType} onValueChange={(value) => {
+              setOrderType(value)
+              if (value === "pickup") {
+                setTableNumber("0")
+              }
+              // Limpar campos específicos quando mudar de tipo
+              if (value !== "delivery") {
+                setFormData(prev => ({
+                  ...prev,
+                  deliveryAddress: "",
+                  referencePoint: "",
+                  deliveryFee: 0
+                }))
+              }
+              if (value !== "dine-in") {
+                setTableNumber("0")
+              }
+            }}>
+              <SelectTrigger id="orderType">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dine-in">Mesa / Balcão</SelectItem>
+                <SelectItem value="pickup">Retirada no Local</SelectItem>
+                <SelectItem value="delivery">Delivery</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Seleção de Mesa (apenas para dine-in) */}
           {isDineIn && (
