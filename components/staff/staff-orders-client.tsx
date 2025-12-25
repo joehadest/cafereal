@@ -911,8 +911,15 @@ export function StaffOrdersClient({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(itemKey, item.quantity - 1)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+                        onClick={() => {
+                          if (item.quantity > 1) {
+                            updateQuantity(itemKey, item.quantity - 1)
+                          } else {
+                            removeFromCart(itemKey)
+                          }
+                        }}
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
+                        title={item.quantity === 1 ? "Remover item" : "Diminuir quantidade"}
                       >
                         <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
@@ -921,7 +928,8 @@ export function StaffOrdersClient({
                         size="sm"
                         variant="outline"
                         onClick={() => updateQuantity(itemKey, item.quantity + 1)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-colors"
+                        title="Aumentar quantidade"
                       >
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
