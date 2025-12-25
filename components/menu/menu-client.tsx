@@ -41,11 +41,20 @@ type DeliveryInfo = {
   referencePoint?: string
 }
 
+type DeliveryZone = {
+  id: string
+  name: string
+  fee: number
+  active: boolean
+  display_order: number
+}
+
 export function MenuClient({
   categories,
   restaurantName,
   restaurantLogo,
   deliveryFeeSetting,
+  deliveryZones = [],
   initialTableNumber,
   restaurantInfo,
 }: {
@@ -53,6 +62,7 @@ export function MenuClient({
   restaurantName: string
   restaurantLogo: string | null
   deliveryFeeSetting?: number
+  deliveryZones?: DeliveryZone[]
   initialTableNumber?: number
   restaurantInfo?: {
     name: string
@@ -340,7 +350,12 @@ export function MenuClient({
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cart.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0)
 
-  const deliveryFee = orderType === "delivery" ? Number(deliveryFeeSetting ?? 0) : 0
+  // A taxa de entrega será calculada no Cart baseada na zona selecionada
+  // Aqui mantemos apenas para compatibilidade com código existente
+  const defaultDeliveryFee = deliveryZones.length > 0 && deliveryZones[0] 
+    ? deliveryZones[0].fee 
+    : Number(deliveryFeeSetting ?? 0)
+  const deliveryFee = orderType === "delivery" ? defaultDeliveryFee : 0
 
   const handleDeliverySubmit = (info: DeliveryInfo) => {
     setDeliveryInfo(info)
@@ -781,6 +796,7 @@ export function MenuClient({
         orderType={orderType}
         deliveryInfo={deliveryInfo}
         deliveryFee={deliveryFee}
+        deliveryZones={deliveryZones}
         tableNumber={selectedTableNumber}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}

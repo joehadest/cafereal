@@ -3,12 +3,13 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft } from "lucide-react"
+import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ProductOptionsModal } from "@/components/menu/product-options-modal"
@@ -61,8 +62,13 @@ export function StaffOrdersClient({
 }) {
   const router = useRouter()
   const [cart, setCart] = useState<CartItem[]>([])
+  const [orderType, setOrderType] = useState<"dine-in" | "delivery">("dine-in")
   const [selectedTable, setSelectedTable] = useState<string>("")
   const [customerName, setCustomerName] = useState<string>("")
+  const [customerPhone, setCustomerPhone] = useState<string>("")
+  const [deliveryAddress, setDeliveryAddress] = useState<string>("")
+  const [referencePoint, setReferencePoint] = useState<string>("")
+  const [deliveryFee, setDeliveryFee] = useState<number>(0)
   const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [notes, setNotes] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -168,7 +174,7 @@ export function StaffOrdersClient({
     setIsProductModalOpen(true)
   }
 
-  const addToCart = (product: Product, options: SelectedOptions) => {
+  const addToCart = (product: Product, options: SelectedOptions, quantity: number = 1) => {
     if (!product) return
     
     const basePrice = options.variety?.price ?? product.price ?? 0
@@ -191,7 +197,7 @@ export function StaffOrdersClient({
       })
 
       if (existing) {
-        // Se o item já existe, apenas incrementa a quantidade mantendo o finalPrice unitário
+        // Se o item já existe, incrementa a quantidade pela quantidade fornecida
         return prevArray.map((item) => {
           if (!item) return item
           const itemKey2 = `${item.id}-${item.selectedVariety?.id || 'base'}-${(item.selectedExtras || []).map(e => `${e?.extra?.id || ''}:${e?.quantity || 0}`).join(',') || 'no-extras'}`
@@ -200,7 +206,7 @@ export function StaffOrdersClient({
             const recalculatedFinalPrice = calculateFinalPrice({ ...item, selectedVariety: options.variety, selectedExtras: options.extras } as CartItem)
             return { 
               ...item, 
-              quantity: (item.quantity || 0) + 1,
+              quantity: (item.quantity || 0) + quantity,
               finalPrice: recalculatedFinalPrice
             }
           }
@@ -210,7 +216,7 @@ export function StaffOrdersClient({
       
       const newItem = { 
         ...product,
-        quantity: 1,
+        quantity: quantity,
         selectedVariety: options.variety || null,
         selectedExtras: options.extras || [],
         finalPrice
@@ -259,9 +265,24 @@ export function StaffOrdersClient({
       return
     }
 
-    if (!selectedTable || selectedTable.trim() === "") {
+    if (orderType === "dine-in" && (!selectedTable || selectedTable.trim() === "")) {
       alert("Selecione uma mesa")
       return
+    }
+
+    if (orderType === "delivery") {
+      if (!customerName.trim()) {
+        alert("Preencha o nome do cliente")
+        return
+      }
+      if (!customerPhone.trim()) {
+        alert("Preencha o telefone do cliente")
+        return
+      }
+      if (!deliveryAddress.trim()) {
+        alert("Preencha o endereço de entrega")
+        return
+      }
     }
 
     if (!paymentMethod || !paymentMethod.trim()) {
@@ -273,18 +294,28 @@ export function StaffOrdersClient({
     const supabase = createClient()
 
     try {
-      const tableNumber = parseInt(selectedTable)
+      const finalTotal = orderType === "delivery" ? totalPrice + deliveryFee : totalPrice
       const orderData: any = {
-        order_type: "dine-in",
+        order_type: orderType,
         status: "pending",
-        table_number: tableNumber,
-        total: totalPrice,
+        total: finalTotal,
         notes: notes?.trim() || null,
         payment_method: paymentMethod.trim(),
       }
 
-      if (customerName.trim()) {
+      if (orderType === "dine-in") {
+        const tableNumber = parseInt(selectedTable)
+        orderData.table_number = tableNumber
+        if (customerName.trim()) {
+          orderData.customer_name = customerName.trim()
+        }
+      } else if (orderType === "delivery") {
+        orderData.table_number = 0
         orderData.customer_name = customerName.trim()
+        orderData.customer_phone = customerPhone.trim()
+        orderData.delivery_address = deliveryAddress.trim()
+        orderData.reference_point = referencePoint?.trim() || null
+        orderData.delivery_fee = deliveryFee || 0
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
@@ -341,8 +372,8 @@ export function StaffOrdersClient({
       // Limpar carrinho e resetar formulário
       setCart([])
       setSelectedItemsForPayment(new Set())
-      // Incrementar mesa automaticamente
-      if (selectedTable) {
+      // Incrementar mesa automaticamente apenas para dine-in
+      if (orderType === "dine-in" && selectedTable) {
         const currentTableNum = parseInt(selectedTable)
         const nextTable = tables.find(t => t.table_number === currentTableNum + 1)
         if (nextTable) {
@@ -358,6 +389,10 @@ export function StaffOrdersClient({
         }
       }
       setCustomerName("")
+      setCustomerPhone("")
+      setDeliveryAddress("")
+      setReferencePoint("")
+      setDeliveryFee(0)
       setPaymentMethod("")
       setNotes("")
       setShowSuccessModal(true)
@@ -511,78 +546,179 @@ export function StaffOrdersClient({
         </div>
       )}
 
-      {/* Seleção de Mesa */}
+      {/* Seleção de Tipo de Pedido */}
       <div className="bg-white border-b border-slate-200 p-2 sm:p-4">
         <div className="space-y-2">
-          <Label htmlFor="table-select" className="text-xs sm:text-sm font-semibold text-slate-900">
-            Mesa
+          <Label htmlFor="order-type-select" className="text-xs sm:text-sm font-semibold text-slate-900">
+            Tipo de Pedido
           </Label>
-          <div className="flex gap-2">
-            <Select value={selectedTable} onValueChange={setSelectedTable}>
-              <SelectTrigger id="table-select" className="flex-1 text-sm sm:text-base">
-                <SelectValue placeholder="Selecione a mesa" />
-              </SelectTrigger>
-              <SelectContent>
-                {tables.map((table) => (
-                  <SelectItem key={table.id} value={table.table_number.toString()}>
-                    Mesa {table.table_number}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              onClick={async () => {
-                if (isCreatingTable) return
-                
-                setIsCreatingTable(true)
-                const supabase = createClient()
-
-                try {
-                  // Encontrar o maior número de mesa
-                  const maxTableNumber = tables.length > 0 
-                    ? Math.max(...tables.map(t => t.table_number))
-                    : 0
-                  
-                  const newTableNumber = maxTableNumber + 1
-
-                  // Criar nova mesa
-                  const { data: newTable, error } = await supabase
-                    .from("restaurant_tables")
-                    .insert({
-                      table_number: newTableNumber,
-                      capacity: 4,
-                      status: "available",
-                      active: true,
-                    })
-                    .select()
-                    .single()
-
-                  if (error) throw error
-
-                  // Selecionar a nova mesa criada
-                  if (newTable) {
-                    setSelectedTable(newTable.table_number.toString())
-                  }
-
-                  // Atualizar a lista de mesas
-                  router.refresh()
-                } catch (error: any) {
-                  console.error("Erro ao criar mesa:", error)
-                  alert(`Erro ao criar mesa: ${error.message || 'Erro desconhecido'}`)
-                } finally {
-                  setIsCreatingTable(false)
-                }
-              }}
-              disabled={isCreatingTable}
-              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap px-2 sm:px-3 text-xs sm:text-sm disabled:opacity-50"
-              title="Criar nova mesa (+1)"
-            >
-              {isCreatingTable ? "..." : "+1"}
-            </Button>
-          </div>
+          <Select value={orderType} onValueChange={(value) => {
+            setOrderType(value as "dine-in" | "delivery")
+            if (value === "delivery") {
+              setSelectedTable("")
+            }
+          }}>
+            <SelectTrigger id="order-type-select" className="w-full text-sm sm:text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dine-in">Mesa / Balcão</SelectItem>
+              <SelectItem value="delivery">Delivery</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+
+      {/* Seleção de Mesa (apenas para dine-in) */}
+      {orderType === "dine-in" && (
+        <div className="bg-white border-b border-slate-200 p-2 sm:p-4">
+          <div className="space-y-2">
+            <Label htmlFor="table-select" className="text-xs sm:text-sm font-semibold text-slate-900">
+              Mesa
+            </Label>
+            <div className="flex gap-2">
+              <Select value={selectedTable} onValueChange={setSelectedTable}>
+                <SelectTrigger id="table-select" className="flex-1 text-sm sm:text-base">
+                  <SelectValue placeholder="Selecione a mesa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tables.map((table) => (
+                    <SelectItem key={table.id} value={table.table_number.toString()}>
+                      Mesa {table.table_number}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                onClick={async () => {
+                  if (isCreatingTable) return
+                  
+                  setIsCreatingTable(true)
+                  const supabase = createClient()
+
+                  try {
+                    // Encontrar o maior número de mesa
+                    const maxTableNumber = tables.length > 0 
+                      ? Math.max(...tables.map(t => t.table_number))
+                      : 0
+                    
+                    const newTableNumber = maxTableNumber + 1
+
+                    // Criar nova mesa
+                    const { data: newTable, error } = await supabase
+                      .from("restaurant_tables")
+                      .insert({
+                        table_number: newTableNumber,
+                        capacity: 4,
+                        status: "available",
+                        active: true,
+                      })
+                      .select()
+                      .single()
+
+                    if (error) throw error
+
+                    // Selecionar a nova mesa criada
+                    if (newTable) {
+                      setSelectedTable(newTable.table_number.toString())
+                    }
+
+                    // Atualizar a lista de mesas
+                    router.refresh()
+                  } catch (error: any) {
+                    console.error("Erro ao criar mesa:", error)
+                    alert(`Erro ao criar mesa: ${error.message || 'Erro desconhecido'}`)
+                  } finally {
+                    setIsCreatingTable(false)
+                  }
+                }}
+                disabled={isCreatingTable}
+                className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap px-2 sm:px-3 text-xs sm:text-sm disabled:opacity-50"
+                title="Criar nova mesa (+1)"
+              >
+                {isCreatingTable ? "..." : "+1"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Campos de Delivery */}
+      {orderType === "delivery" && (
+        <div className="bg-white border-b border-slate-200 p-2 sm:p-4 space-y-3">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-900">
+            <Bike className="h-4 w-4" />
+            <span>Informações de Entrega</span>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <Label htmlFor="delivery-customer-name" className="text-xs sm:text-sm font-semibold">
+                Nome do Cliente <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="delivery-customer-name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Nome completo"
+                className="text-xs sm:text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="delivery-customer-phone" className="text-xs sm:text-sm font-semibold">
+                Telefone <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="delivery-customer-phone"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+                className="text-xs sm:text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="delivery-address" className="text-xs sm:text-sm font-semibold">
+                Endereço Completo <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="delivery-address"
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
+                placeholder="Rua, número, bairro, cidade, CEP"
+                className="text-xs sm:text-sm resize-none"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="reference-point" className="text-xs sm:text-sm font-semibold">
+                Ponto de Referência (opcional)
+              </Label>
+              <Input
+                id="reference-point"
+                value={referencePoint}
+                onChange={(e) => setReferencePoint(e.target.value)}
+                placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
+                className="text-xs sm:text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="delivery-fee" className="text-xs sm:text-sm font-semibold">
+                Taxa de Entrega (R$)
+              </Label>
+              <Input
+                id="delivery-fee"
+                type="number"
+                step="0.01"
+                min="0"
+                value={deliveryFee}
+                onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+                className="text-xs sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Busca */}
       <div className="bg-white border-b border-slate-200 p-2 sm:p-4">
@@ -700,7 +836,7 @@ export function StaffOrdersClient({
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm sm:text-lg font-bold text-slate-900 truncate">Carrinho ({totalItems})</h3>
                   {isCartMinimized && (
-                    <p className="text-xs sm:text-sm text-slate-600">Total: R$ {totalPrice.toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm text-slate-600">Total: R$ {(orderType === "delivery" ? totalPrice + deliveryFee : totalPrice).toFixed(2)}</p>
                   )}
                 </div>
               </div>
@@ -797,8 +933,18 @@ export function StaffOrdersClient({
 
             <div className="space-y-2 sm:space-y-3 pt-2 border-t border-slate-200">
               <div className="flex justify-between items-center">
+                <span className="text-base sm:text-lg font-bold text-slate-900">Subtotal:</span>
+                <span className="text-base sm:text-lg font-semibold text-slate-700">R$ {totalPrice.toFixed(2)}</span>
+              </div>
+              {orderType === "delivery" && deliveryFee > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm sm:text-base text-slate-700">Taxa de entrega:</span>
+                  <span className="text-sm sm:text-base font-semibold text-slate-700">R$ {deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-slate-300">
                 <span className="text-base sm:text-lg font-bold text-slate-900">Total do Pedido:</span>
-                <span className="text-lg sm:text-xl font-bold text-slate-900">R$ {totalPrice.toFixed(2)}</span>
+                <span className="text-lg sm:text-xl font-bold text-slate-900">R$ {(orderType === "delivery" ? totalPrice + deliveryFee : totalPrice).toFixed(2)}</span>
               </div>
               {selectedItemsForPayment.size > 0 && (
                 <div className="flex justify-between items-center bg-blue-50 p-2 rounded-lg border border-blue-200">
@@ -859,15 +1005,24 @@ export function StaffOrdersClient({
                 />
               </div>
 
-              {(!selectedTable || !paymentMethod) && (
+              {((orderType === "dine-in" && !selectedTable) || !paymentMethod || (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress))) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 text-xs sm:text-sm text-yellow-800">
-                  {!selectedTable && <p>⚠️ Selecione uma mesa</p>}
+                  {orderType === "dine-in" && !selectedTable && <p>⚠️ Selecione uma mesa</p>}
+                  {orderType === "delivery" && !customerName && <p>⚠️ Preencha o nome do cliente</p>}
+                  {orderType === "delivery" && !customerPhone && <p>⚠️ Preencha o telefone do cliente</p>}
+                  {orderType === "delivery" && !deliveryAddress && <p>⚠️ Preencha o endereço de entrega</p>}
                   {!paymentMethod && <p>⚠️ Selecione a forma de pagamento</p>}
                 </div>
               )}
               <Button
                 onClick={handleCreateOrder}
-                disabled={isSubmitting || !selectedTable || !paymentMethod || cart.length === 0}
+                disabled={
+                  isSubmitting || 
+                  cart.length === 0 || 
+                  !paymentMethod || 
+                  (orderType === "dine-in" && !selectedTable) ||
+                  (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress))
+                }
                 className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
               >
@@ -889,6 +1044,7 @@ export function StaffOrdersClient({
         }}
         product={selectedProduct}
         onAddToCart={addToCart}
+        allowQuantitySelection={true}
       />
 
       {/* Modal de Sucesso */}

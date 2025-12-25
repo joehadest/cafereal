@@ -34,6 +34,14 @@ export default async function HomePage({
     )
     .single()
 
+  // Carregar zonas de entrega ativas
+  const { data: deliveryZones } = await supabase
+    .from("delivery_zones")
+    .select("*")
+    .eq("active", true)
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true })
+
   // Debug: verificar se whatsapp está sendo carregado do banco
   console.log("[Server] WhatsApp do banco:", restaurantSettings?.whatsapp)
 
@@ -87,11 +95,12 @@ export default async function HomePage({
   }
 
   return (
-    <MenuClient
+      <MenuClient
       categories={categories || []}
       restaurantName={restaurantSettings?.name || "Cardápio Digital"}
       restaurantLogo={restaurantSettings?.logo_url || null}
       deliveryFeeSetting={restaurantSettings?.delivery_fee ?? 0}
+      deliveryZones={deliveryZones || []}
       initialTableNumber={tableNumber ?? undefined}
       restaurantInfo={{
         name: restaurantSettings?.name || "Cardápio Digital",

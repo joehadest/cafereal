@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Plus, Minus, Package, Star } from "lucide-react"
 import Image from "next/image"
@@ -29,13 +30,15 @@ type ProductOptionsModalProps = {
   isOpen: boolean
   onClose: () => void
   product: Product | null
-  onAddToCart: (product: Product, options: SelectedOptions) => void
+  onAddToCart: (product: Product, options: SelectedOptions, quantity?: number) => void
   existingItem?: CartItem | null
+  allowQuantitySelection?: boolean // Para permitir seleção de quantidade no balcão
 }
 
-export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, existingItem }: ProductOptionsModalProps) {
+export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, existingItem, allowQuantitySelection = false }: ProductOptionsModalProps) {
   const [selectedVariety, setSelectedVariety] = useState<ProductVariety | null>(null)
   const [selectedExtras, setSelectedExtras] = useState<{ extra: ProductExtra; quantity: number }[]>([])
+  const [quantity, setQuantity] = useState<number>(existingItem?.quantity || 1)
 
   // Usar useEffect para atualizar quando existingItem mudar ou modal abrir
   useEffect(() => {
@@ -43,9 +46,11 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
       if (existingItem) {
         setSelectedVariety(existingItem.selectedVariety || null)
         setSelectedExtras(existingItem.selectedExtras || [])
+        setQuantity(existingItem.quantity || 1)
       } else {
         setSelectedVariety(null)
         setSelectedExtras([])
+        setQuantity(1)
       }
     }
   }, [existingItem, isOpen])
@@ -100,14 +105,16 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
   }
 
   const handleAddToCart = () => {
+    const qty = allowQuantitySelection ? quantity : 1
     onAddToCart(product, {
       variety: selectedVariety,
       extras: selectedExtras,
-    })
+    }, qty)
     // Reset apenas se não estiver editando
     if (!existingItem) {
       setSelectedVariety(null)
       setSelectedExtras([])
+      setQuantity(1)
     }
     onClose()
   }
@@ -115,7 +122,19 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
   const handleClose = () => {
     setSelectedVariety(null)
     setSelectedExtras([])
+    setQuantity(1)
     onClose()
+  }
+
+  const handleQuantityChange = (value: string) => {
+    const numValue = parseInt(value) || 1
+    if (numValue < 1) {
+      setQuantity(1)
+    } else if (numValue > 999) {
+      setQuantity(999)
+    } else {
+      setQuantity(numValue)
+    }
   }
 
   return (
@@ -274,6 +293,49 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
             </div>
           )}
 
+          {/* Seleção de Quantidade (apenas para balcão) */}
+          {allowQuantitySelection && (
+            <div className="space-y-3 border-t border-slate-200 pt-4">
+              <Label className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <Package className="h-4 w-4 text-slate-600" />
+                Quantidade
+              </Label>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 hover:scale-110 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                  onClick={() => handleQuantityChange(String(Math.max(1, quantity - 1)))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  max="999"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  className="w-20 text-center font-semibold text-slate-900 border-slate-200"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 hover:scale-110 hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+                  onClick={() => handleQuantityChange(String(quantity + 1))}
+                  disabled={quantity >= 999}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-slate-600 ml-2">
+                  Total: R$ {(totalPrice * quantity).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Resumo do Preço */}
           <div className="border-t border-slate-200 pt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
@@ -297,8 +359,10 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
               </div>
             )}
             <div className="flex items-center justify-between text-lg font-bold border-t border-slate-200 pt-2 mt-2">
-              <span className="text-slate-900">Total:</span>
-              <span className="text-slate-600">R$ {totalPrice.toFixed(2)}</span>
+              <span className="text-slate-900">
+                {allowQuantitySelection && quantity > 1 ? `Total (${quantity}x):` : "Total:"}
+              </span>
+              <span className="text-slate-600">R$ {(totalPrice * (allowQuantitySelection ? quantity : 1)).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -318,7 +382,12 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
             onClick={handleAddToCart}
             className="flex-1 bg-slate-600 hover:bg-slate-700 hover:scale-105 hover:shadow-lg text-white transition-all duration-300"
           >
-            {existingItem ? `Atualizar Item - R$ ${totalPrice.toFixed(2)}` : `Adicionar ao Carrinho - R$ ${totalPrice.toFixed(2)}`}
+            {existingItem 
+              ? `Atualizar Item - R$ ${(totalPrice * (allowQuantitySelection ? quantity : 1)).toFixed(2)}` 
+              : allowQuantitySelection && quantity > 1
+                ? `Adicionar ${quantity}x - R$ ${(totalPrice * quantity).toFixed(2)}`
+                : `Adicionar ao Carrinho - R$ ${totalPrice.toFixed(2)}`
+            }
           </Button>
         </div>
       </DialogContent>

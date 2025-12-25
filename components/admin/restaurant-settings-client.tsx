@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Store, Clock, DollarSign, Phone, Instagram, Facebook, Upload, ImageIcon, MessageCircle, CreditCard, FileText } from "lucide-react"
+import { Store, Clock, DollarSign, Phone, Instagram, Facebook, Upload, ImageIcon, MessageCircle, CreditCard, FileText, MapPin, Plus, Trash2 } from "lucide-react"
 import Image from "next/image"
 
 export function RestaurantSettingsClient({ initialSettings }: { initialSettings: any }) {
@@ -39,6 +39,8 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(settings.logo_url || null)
   const [isUploading, setIsUploading] = useState(false)
+  const [deliveryZones, setDeliveryZones] = useState<Array<{ id?: string; name: string; fee: number; active: boolean; display_order: number }>>([])
+  const [isLoadingZones, setIsLoadingZones] = useState(true)
   const router = useRouter()
 
   // Estados de texto para números (evitar prefixo 0 e permitir edição fluida)
@@ -134,6 +136,31 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoursByDay])
 
+  // Carregar zonas de entrega
+  useEffect(() => {
+    const loadDeliveryZones = async () => {
+      setIsLoadingZones(true)
+      const supabase = createClient()
+      try {
+        const { data, error } = await supabase
+          .from("delivery_zones")
+          .select("*")
+          .order("display_order", { ascending: true })
+          .order("name", { ascending: true })
+
+        if (error) throw error
+        setDeliveryZones(data || [])
+      } catch (error) {
+        console.error("Erro ao carregar zonas de entrega:", error)
+        // Se a tabela não existir ainda, criar uma zona padrão
+        setDeliveryZones([{ name: "Zona Padrão", fee: settings.delivery_fee || 5.0, active: true, display_order: 0 }])
+      } finally {
+        setIsLoadingZones(false)
+      }
+    }
+    loadDeliveryZones()
+  }, [settings.delivery_fee])
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -188,7 +215,7 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
       const updatedSettings = {
         ...settings,
         logo_url: logoUrl,
-        delivery_fee: Number(settings.delivery_fee) || 0,
+        delivery_fee: Number(settings.delivery_fee) || 0, // Manter para compatibilidade
         min_order_value: Number(settings.min_order_value) || 0,
       }
 
@@ -203,6 +230,33 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
         if (error) throw error
       }
 
+      // Salvar zonas de entrega
+      for (const zone of deliveryZones) {
+        if (zone.id) {
+          // Atualizar zona existente
+          const { error } = await supabase
+            .from("delivery_zones")
+            .update({
+              name: zone.name,
+              fee: Number(zone.fee) || 0,
+              active: zone.active,
+              display_order: zone.display_order,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", zone.id)
+          if (error) throw error
+        } else {
+          // Criar nova zona
+          const { error } = await supabase.from("delivery_zones").insert({
+            name: zone.name,
+            fee: Number(zone.fee) || 0,
+            active: zone.active,
+            display_order: zone.display_order,
+          })
+          if (error) throw error
+        }
+      }
+
       alert("Configurações salvas com sucesso!")
       router.refresh()
     } catch (error) {
@@ -211,6 +265,43 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const addDeliveryZone = () => {
+    const maxOrder = deliveryZones.length > 0 
+      ? Math.max(...deliveryZones.map(z => z.display_order))
+      : -1
+    setDeliveryZones([...deliveryZones, { 
+      name: "", 
+      fee: 0, 
+      active: true, 
+      display_order: maxOrder + 1 
+    }])
+  }
+
+  const removeDeliveryZone = async (index: number) => {
+    const zone = deliveryZones[index]
+    if (zone.id) {
+      const supabase = createClient()
+      try {
+        const { error } = await supabase
+          .from("delivery_zones")
+          .delete()
+          .eq("id", zone.id)
+        if (error) throw error
+      } catch (error) {
+        console.error("Erro ao deletar zona:", error)
+        alert("Erro ao deletar zona de entrega")
+        return
+      }
+    }
+    setDeliveryZones(deliveryZones.filter((_, i) => i !== index))
+  }
+
+  const updateDeliveryZone = (index: number, field: string, value: any) => {
+    const updated = [...deliveryZones]
+    updated[index] = { ...updated[index], [field]: value }
+    setDeliveryZones(updated)
   }
 
   return (
@@ -414,9 +505,89 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
             Valores e Taxas
           </h2>
           <div className="space-y-4 sm:space-y-5">
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm sm:text-base font-medium text-slate-900 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Zonas de Entrega
+                </Label>
+                <Button
+                  type="button"
+                  onClick={addDeliveryZone}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar Zona
+                </Button>
+              </div>
+              {isLoadingZones ? (
+                <p className="text-sm text-slate-600">Carregando zonas...</p>
+              ) : deliveryZones.length === 0 ? (
+                <p className="text-sm text-slate-600">Nenhuma zona configurada. Adicione uma zona para começar.</p>
+              ) : (
+                <div className="space-y-3">
+                  {deliveryZones.map((zone, index) => (
+                    <div key={index} className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <Switch
+                            checked={zone.active}
+                            onCheckedChange={(checked) => updateDeliveryZone(index, "active", checked)}
+                          />
+                          <Label className="text-sm font-medium text-slate-900 cursor-pointer">
+                            Zona Ativa
+                          </Label>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => removeDeliveryZone(index)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm font-medium text-slate-700">
+                            Nome da Zona
+                          </Label>
+                          <Input
+                            value={zone.name}
+                            onChange={(e) => updateDeliveryZone(index, "name", e.target.value)}
+                            placeholder="Ex: Centro, Bairro X, Zona Norte"
+                            className="text-xs sm:text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm font-medium text-slate-700">
+                            Taxa de Entrega (R$)
+                          </Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            inputMode="decimal"
+                            value={zone.fee || ""}
+                            onChange={(e) => {
+                              const v = sanitizeNumericText(e.target.value)
+                              const n = parseFloat(v)
+                              updateDeliveryZone(index, "fee", isNaN(n) ? 0 : n)
+                            }}
+                            placeholder="0.00"
+                            className="text-xs sm:text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2 pt-2 border-t border-slate-200">
               <Label htmlFor="deliveryFee" className="text-sm sm:text-base font-medium text-slate-900">
-                Taxa de Entrega (R$)
+                Taxa de Entrega Padrão (R$) - <span className="text-xs text-slate-600">(Compatibilidade)</span>
               </Label>
               <Input
                 id="deliveryFee"
@@ -437,6 +608,9 @@ export function RestaurantSettingsClient({ initialSettings }: { initialSettings:
                 }}
                 className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 h-10 sm:h-12 text-sm sm:text-base"
               />
+              <p className="text-xs text-slate-600">
+                Esta taxa é mantida para compatibilidade. Use as zonas de entrega acima para configurar múltiplas taxas.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="minOrder" className="text-sm sm:text-base font-medium text-slate-900">

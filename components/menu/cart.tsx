@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, Minus, Plus, ShoppingBag, Bike, MapPin, Phone, User, CheckCircle, Sparkles, MessageCircle, CreditCard, Wallet, Smartphone, Store, UtensilsCrossed, Edit } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -32,6 +33,14 @@ type DeliveryInfo = {
   referencePoint?: string
 }
 
+type DeliveryZone = {
+  id: string
+  name: string
+  fee: number
+  active: boolean
+  display_order: number
+}
+
 export function Cart({
   isOpen,
   onClose,
@@ -39,6 +48,7 @@ export function Cart({
   orderType,
   deliveryInfo,
   deliveryFee,
+  deliveryZones = [],
   tableNumber,
   onUpdateQuantity,
   onRemoveItem,
@@ -54,6 +64,7 @@ export function Cart({
   tableNumber?: number | null
   deliveryInfo: DeliveryInfo | null
   deliveryFee: number
+  deliveryZones?: DeliveryZone[]
   onUpdateQuantity: (itemKey: string, quantity: number) => void
   onRemoveItem: (itemKey: string) => void
   onEditItem?: (itemKey: string) => void
@@ -85,8 +96,26 @@ export function Cart({
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [pickupCustomerName, setPickupCustomerName] = useState("")
   const [pickupCustomerPhone, setPickupCustomerPhone] = useState("")
+  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>("")
   const [lastOrderId, setLastOrderId] = useState<string | null>(null)
   const router = useRouter()
+
+  // Selecionar primeira zona por padrão quando houver zonas disponíveis
+  useEffect(() => {
+    if (deliveryZones.length > 0 && !selectedDeliveryZoneId) {
+      setSelectedDeliveryZoneId(deliveryZones[0].id)
+    }
+  }, [deliveryZones, selectedDeliveryZoneId])
+
+  // Calcular taxa de entrega baseada na zona selecionada
+  const calculatedDeliveryFee = useMemo(() => {
+    if (orderType !== "delivery") return 0
+    if (deliveryZones.length > 0 && selectedDeliveryZoneId) {
+      const selectedZone = deliveryZones.find(z => z.id === selectedDeliveryZoneId)
+      return selectedZone ? selectedZone.fee : deliveryFee
+    }
+    return deliveryFee
+  }, [orderType, deliveryZones, selectedDeliveryZoneId, deliveryFee])
 
   // Debug: verificar se whatsapp está sendo recebido
   useEffect(() => {
@@ -95,7 +124,7 @@ export function Cart({
     }
   }, [showSuccessModal, whatsapp])
 
-  const finalTotal = totalPrice + deliveryFee
+  const finalTotal = totalPrice + calculatedDeliveryFee
 
   // Usar deliveryInfo se existir (usuário logado), senão usar manualDeliveryInfo
   // IMPORTANTE: Se manualDeliveryInfo foi preenchido, ele tem prioridade sobre deliveryInfo
@@ -204,7 +233,11 @@ export function Cart({
           // Remover quebras de linha e espaços extras do endereço
           orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
           orderData.reference_point = infoToSave.referencePoint?.trim() || null
-          orderData.delivery_fee = deliveryFee || 0
+          orderData.delivery_fee = calculatedDeliveryFee || 0
+          // Adicionar zone_id se uma zona foi selecionada
+          if (selectedDeliveryZoneId) {
+            orderData.delivery_zone_id = selectedDeliveryZoneId
+          }
         }
       }
 
@@ -574,6 +607,27 @@ export function Cart({
                     </div>
                     <span>Informações de Entrega</span>
                   </div>
+
+                  {deliveryZones.length > 1 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="delivery-zone" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                        <MapPin className="h-4 w-4" />
+                        Zona de Entrega
+                      </Label>
+                      <Select value={selectedDeliveryZoneId} onValueChange={setSelectedDeliveryZoneId}>
+                        <SelectTrigger id="delivery-zone" className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base">
+                          <SelectValue placeholder="Selecione a zona" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {deliveryZones.map((zone) => (
+                            <SelectItem key={zone.id} value={zone.id}>
+                              {zone.name} - R$ {zone.fee.toFixed(2)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   
                   {shouldShowReadOnly && effectiveDeliveryInfo ? (
                     <div className="space-y-2 text-sm text-slate-800 pl-7 sm:pl-8">
@@ -914,13 +968,18 @@ export function Cart({
                 <span className="font-medium">Subtotal:</span>
                 <span className="font-semibold">R$ {totalPrice.toFixed(2)}</span>
               </div>
-              {orderType === "delivery" && deliveryFee > 0 && (
+              {orderType === "delivery" && calculatedDeliveryFee > 0 && (
                 <div className="flex justify-between items-center text-sm text-slate-800">
                   <span className="flex items-center gap-1.5 font-medium">
                     <Bike className="h-4 w-4" />
                     Taxa de entrega:
+                    {deliveryZones.length > 1 && selectedDeliveryZoneId && (
+                      <span className="text-xs text-slate-600 ml-1">
+                        ({deliveryZones.find(z => z.id === selectedDeliveryZoneId)?.name || ""})
+                      </span>
+                    )}
                   </span>
-                  <span className="font-semibold">R$ {deliveryFee.toFixed(2)}</span>
+                  <span className="font-semibold">R$ {calculatedDeliveryFee.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-2 sm:pt-3 border-t-2 border-slate-300">

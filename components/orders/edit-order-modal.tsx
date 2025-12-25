@@ -82,6 +82,48 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
   const [productDescription, setProductDescription] = useState<string>("")
   const [pricePerKg, setPricePerKg] = useState<string>("")
   const [selectedItemsForPayment, setSelectedItemsForPayment] = useState<Set<string>>(new Set())
+  const [deliveryZones, setDeliveryZones] = useState<Array<{ id: string; name: string; fee: number; active: boolean; display_order: number }>>([])
+  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>("")
+
+  // Carregar zonas de entrega
+  useEffect(() => {
+    const loadDeliveryZones = async () => {
+      const supabase = createClient()
+      try {
+        const { data, error } = await supabase
+          .from("delivery_zones")
+          .select("*")
+          .eq("active", true)
+          .order("display_order", { ascending: true })
+          .order("name", { ascending: true })
+
+        if (error) throw error
+        setDeliveryZones(data || [])
+        
+        // Se o pedido tem uma zona, selecionar ela, senão selecionar a primeira
+        if (order.delivery_zone_id) {
+          setSelectedDeliveryZoneId(order.delivery_zone_id)
+        } else if (data && data.length > 0) {
+          setSelectedDeliveryZoneId(data[0].id)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar zonas de entrega:", error)
+      }
+    }
+    if (isOpen) {
+      loadDeliveryZones()
+    }
+  }, [isOpen, order.delivery_zone_id])
+
+  // Atualizar deliveryFee quando a zona mudar
+  useEffect(() => {
+    if (selectedDeliveryZoneId && deliveryZones.length > 0) {
+      const selectedZone = deliveryZones.find(z => z.id === selectedDeliveryZoneId)
+      if (selectedZone) {
+        setFormData(prev => ({ ...prev, deliveryFee: selectedZone.fee }))
+      }
+    }
+  }, [selectedDeliveryZoneId, deliveryZones])
 
   useEffect(() => {
     if (isOpen) {
@@ -636,6 +678,12 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         updateData.delivery_address = formData.deliveryAddress.trim() || null
         updateData.reference_point = formData.referencePoint?.trim() || null
         updateData.delivery_fee = Number(formData.deliveryFee) || 0
+        // Adicionar zone_id se uma zona foi selecionada
+        if (selectedDeliveryZoneId) {
+          updateData.delivery_zone_id = selectedDeliveryZoneId
+        } else {
+          updateData.delivery_zone_id = null
+        }
       }
 
       const { error: orderError } = await supabase.from("orders").update(updateData).eq("id", order.id)
@@ -1159,21 +1207,42 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryFee" className="text-sm font-medium flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Taxa de Entrega (R$)
-                  </Label>
-                  <Input
-                    id="deliveryFee"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.deliveryFee}
-                    onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
-                    className="border-slate-200"
-                  />
-                </div>
+                {deliveryZones.length > 1 ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryZone" className="text-sm font-medium flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Zona de Entrega
+                    </Label>
+                    <Select value={selectedDeliveryZoneId} onValueChange={setSelectedDeliveryZoneId}>
+                      <SelectTrigger id="deliveryZone" className="border-slate-200">
+                        <SelectValue placeholder="Selecione a zona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryZones.map((zone) => (
+                          <SelectItem key={zone.id} value={zone.id}>
+                            {zone.name} - R$ {zone.fee.toFixed(2)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryFee" className="text-sm font-medium flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Taxa de Entrega (R$)
+                    </Label>
+                    <Input
+                      id="deliveryFee"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.deliveryFee}
+                      onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
+                      className="border-slate-200"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
