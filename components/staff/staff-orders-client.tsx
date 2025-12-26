@@ -62,7 +62,7 @@ export function StaffOrdersClient({
 }) {
   const router = useRouter()
   const [cart, setCart] = useState<CartItem[]>([])
-  const [orderType, setOrderType] = useState<"dine-in" | "delivery" | "takeout">("dine-in")
+  const [orderType, setOrderType] = useState<"dine-in" | "delivery" | "pickup">("dine-in")
   const [selectedTable, setSelectedTable] = useState<string>("")
   const [customerName, setCustomerName] = useState<string>("")
   const [customerPhone, setCustomerPhone] = useState<string>("")
@@ -285,7 +285,7 @@ export function StaffOrdersClient({
       }
     }
 
-    if (orderType === "takeout") {
+    if (orderType === "pickup") {
       if (!customerName.trim()) {
         alert("Preencha o nome do cliente")
         return
@@ -320,7 +320,7 @@ export function StaffOrdersClient({
         if (customerName.trim()) {
           orderData.customer_name = customerName.trim()
         }
-      } else if (orderType === "takeout") {
+      } else if (orderType === "pickup") {
         orderData.table_number = 0
         orderData.customer_name = customerName.trim()
         orderData.customer_phone = customerPhone.trim()
@@ -571,8 +571,8 @@ export function StaffOrdersClient({
             Tipo de Pedido
           </Label>
           <Select value={orderType} onValueChange={(value) => {
-            setOrderType(value as "dine-in" | "delivery" | "takeout")
-            if (value === "delivery" || value === "takeout") {
+            setOrderType(value as "dine-in" | "delivery" | "pickup")
+            if (value === "delivery" || value === "pickup") {
               setSelectedTable("")
             }
             if (value === "dine-in") {
@@ -582,7 +582,7 @@ export function StaffOrdersClient({
               setReferencePoint("")
               setDeliveryFee(0)
             }
-            if (value === "takeout") {
+            if (value === "pickup") {
               setDeliveryAddress("")
               setReferencePoint("")
               setDeliveryFee(0)
@@ -596,7 +596,7 @@ export function StaffOrdersClient({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="dine-in">Mesa / Balcão</SelectItem>
-              <SelectItem value="takeout">Retirada Local</SelectItem>
+              <SelectItem value="pickup">Retirada Local</SelectItem>
               <SelectItem value="delivery">Delivery</SelectItem>
             </SelectContent>
           </Select>
@@ -679,7 +679,7 @@ export function StaffOrdersClient({
       )}
 
       {/* Campos de Retirada Local */}
-      {orderType === "takeout" && (
+      {orderType === "pickup" && (
         <div className="bg-white border-b border-slate-200 p-2 sm:p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-900">
             <ShoppingBag className="h-4 w-4" />
@@ -1083,11 +1083,11 @@ export function StaffOrdersClient({
                 />
               </div>
 
-              {((orderType === "dine-in" && !selectedTable) || !paymentMethod || (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress)) || (orderType === "takeout" && (!customerName || !customerPhone))) && (
+              {((orderType === "dine-in" && !selectedTable) || !paymentMethod || (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress)) || (orderType === "pickup" && (!customerName || !customerPhone))) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 text-xs sm:text-sm text-yellow-800">
                   {orderType === "dine-in" && !selectedTable && <p>⚠️ Selecione uma mesa</p>}
-                  {(orderType === "delivery" || orderType === "takeout") && !customerName && <p>⚠️ Preencha o nome do cliente</p>}
-                  {(orderType === "delivery" || orderType === "takeout") && !customerPhone && <p>⚠️ Preencha o telefone do cliente</p>}
+                  {(orderType === "delivery" || orderType === "pickup") && !customerName && <p>⚠️ Preencha o nome do cliente</p>}
+                  {(orderType === "delivery" || orderType === "pickup") && !customerPhone && <p>⚠️ Preencha o telefone do cliente</p>}
                   {orderType === "delivery" && !deliveryAddress && <p>⚠️ Preencha o endereço de entrega</p>}
                   {!paymentMethod && <p>⚠️ Selecione a forma de pagamento</p>}
                 </div>
@@ -1100,7 +1100,7 @@ export function StaffOrdersClient({
                   !paymentMethod || 
                   (orderType === "dine-in" && !selectedTable) ||
                   (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress)) ||
-                  (orderType === "takeout" && (!customerName || !customerPhone))
+                  (orderType === "pickup" && (!customerName || !customerPhone))
                 }
                 className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
