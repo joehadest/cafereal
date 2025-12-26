@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import Link from "next/link"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -128,12 +127,6 @@ export default function LoginPage() {
                 <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700" disabled={isLoading}>
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
-                <div className="text-center mt-4">
-                  <p className="text-sm text-slate-600 mb-2">Não tem uma conta admin?</p>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/auth/sign-up">Criar Conta Admin</Link>
-                  </Button>
-                </div>
               </div>
             </form>
           </CardContent>
