@@ -319,10 +319,9 @@ export function StaffOrdersClient({
     }
 
     setCart((prev) => [...prev, newItem])
-    setIsWeightModalOpen(false)
-    setProductWeight("")
+    // Manter peso e preço/kg, limpar apenas a descrição
     setProductDescription("")
-    setPricePerKg("")
+    // Não fechar o modal automaticamente, apenas limpar a descrição para adicionar outro item
   }
 
   const handleCreateOrder = async () => {
@@ -1338,7 +1337,18 @@ export function StaffOrdersClient({
               }}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
-              Cancelar
+              Fechar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setProductWeight("")
+                setProductDescription("")
+                setPricePerKg("")
+              }}
+              className="w-full sm:w-auto text-sm sm:text-base"
+            >
+              Limpar Valores
             </Button>
             <Button
               onClick={handleAddItemByWeight}
