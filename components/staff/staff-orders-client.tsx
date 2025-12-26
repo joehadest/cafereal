@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone, ShoppingBag } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -37,6 +37,7 @@ type CartItem = Product & {
   selectedVariety?: ProductVariety | null
   selectedExtras?: { extra: ProductExtra; quantity: number }[]
   finalPrice: number
+  weight?: number // Peso em kg para produtos vendidos por peso
 }
 
 type SelectedOptions = {
@@ -82,10 +83,18 @@ export function StaffOrdersClient({
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [showOrdersList, setShowOrdersList] = useState(false)
   const [selectedItemsForPayment, setSelectedItemsForPayment] = useState<Set<string>>(new Set())
+  const [isWeightModalOpen, setIsWeightModalOpen] = useState(false)
+  const [productWeight, setProductWeight] = useState<string>("")
+  const [productDescription, setProductDescription] = useState<string>("")
+  const [pricePerKg, setPricePerKg] = useState<string>("")
 
   // Função auxiliar para calcular o preço unitário final de um item
   const calculateFinalPrice = (item: CartItem): number => {
     if (!item) return 0
+    // Se for item por peso, o preço já está calculado (peso * preço/kg)
+    if (item.weight && item.weight > 0) {
+      return (item.price || 0) * item.weight
+    }
     const basePrice = item.selectedVariety?.price ?? item.price ?? 0
     const extrasPrice = (item.selectedExtras || []).reduce((sum, extraItem) => {
       if (!extraItem || !extraItem.extra) return sum
@@ -97,6 +106,10 @@ export function StaffOrdersClient({
   // Calcular o total garantindo que o finalPrice seja sempre o preço unitário correto
   const totalPrice = (Array.isArray(cart) ? cart : []).reduce((sum, item) => {
     if (!item) return sum
+    // Para itens por peso, o finalPrice já é o total (peso * preço/kg)
+    if (item.weight && item.weight > 0) {
+      return sum + calculateFinalPrice(item)
+    }
     const unitPrice = calculateFinalPrice(item)
     return sum + (unitPrice * (item.quantity || 0))
   }, 0)
@@ -104,6 +117,10 @@ export function StaffOrdersClient({
 
   // Função para obter o itemKey de um item
   const getItemKey = (item: CartItem): string => {
+    // Para itens por peso, usar apenas o id
+    if (item.weight && item.weight > 0) {
+      return item.id
+    }
     return `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
   }
 
@@ -113,6 +130,10 @@ export function StaffOrdersClient({
       if (!item) return sum
       const itemKey = getItemKey(item)
       if (selectedItemsForPayment.has(itemKey)) {
+        // Para itens por peso, o finalPrice já é o total
+        if (item.weight && item.weight > 0) {
+          return sum + calculateFinalPrice(item)
+        }
         const unitPrice = calculateFinalPrice(item)
         return sum + (unitPrice * (item.quantity || 0))
       }
@@ -248,6 +269,10 @@ export function StaffOrdersClient({
 
   const removeFromCart = (itemKey: string) => {
     setCart((prev) => prev.filter((item) => {
+      // Para itens por peso, usar o id diretamente
+      if (item.weight && item.weight > 0) {
+        return item.id !== itemKey
+      }
       const currentKey = `${item.id}-${item.selectedVariety?.id || 'base'}-${item.selectedExtras?.map(e => `${e.extra.id}:${e.quantity}`).join(',') || 'no-extras'}`
       return currentKey !== itemKey
     }))
@@ -257,6 +282,47 @@ export function StaffOrdersClient({
       newSet.delete(itemKey)
       return newSet
     })
+  }
+
+  const handleAddItemByWeight = () => {
+    const weight = parseFloat(productWeight.replace(",", "."))
+    const price = parseFloat(pricePerKg.replace(",", "."))
+    
+    if (isNaN(weight) || weight <= 0) {
+      alert("Por favor, insira um peso válido")
+      return
+    }
+    
+    if (isNaN(price) || price <= 0) {
+      alert("Por favor, insira um preço por kg válido")
+      return
+    }
+
+    const finalPrice = price * weight
+    const description = productDescription.trim() || "Item por peso"
+    
+    // Criar item por peso
+    const newItem: CartItem = {
+      id: `weight-${Date.now()}-${Math.random()}`, // ID único para item por peso
+      name: description,
+      description: `Peso: ${weight.toFixed(3).replace(".", ",")} kg | Preço/kg: R$ ${price.toFixed(2).replace(".", ",")}`,
+      price: price, // Preço por kg
+      quantity: 1,
+      finalPrice: finalPrice, // Preço total já calculado
+      weight: weight,
+      category_id: null,
+      image_url: undefined,
+      active: true,
+      display_order: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    setCart((prev) => [...prev, newItem])
+    setIsWeightModalOpen(false)
+    setProductWeight("")
+    setProductDescription("")
+    setPricePerKg("")
   }
 
   const handleCreateOrder = async () => {
@@ -345,17 +411,27 @@ export function StaffOrdersClient({
 
       // Inserir itens do pedido
       const orderItems = cart.map((item) => {
+        let itemNotes = ""
+        if (item.weight && item.weight > 0) {
+          // Item por peso
+          itemNotes = `Peso: ${item.weight.toFixed(3).replace(".", ",")} kg | Preço/kg: R$ ${item.price.toFixed(2).replace(".", ",")}`
+        }
+        
         const unitPrice = calculateFinalPrice(item)
+        // Para itens por peso, o subtotal já está no finalPrice
+        const subtotal = item.weight && item.weight > 0 ? unitPrice : unitPrice * item.quantity
+        
         return {
           order_id: order.id,
-          product_id: item.id,
+          product_id: item.weight && item.weight > 0 ? undefined : item.id, // Itens por peso não têm product_id
           product_name: item.name,
           product_price: item.selectedVariety ? item.selectedVariety.price : item.price,
           quantity: item.quantity,
-          subtotal: unitPrice * item.quantity,
+          subtotal: subtotal,
           variety_id: item.selectedVariety?.id || null,
           variety_name: item.selectedVariety?.name || null,
           variety_price: item.selectedVariety?.price || null,
+          notes: itemNotes || null,
         }
       })
 
@@ -831,6 +907,17 @@ export function StaffOrdersClient({
         </div>
       )}
 
+      {/* Botão para adicionar item por peso */}
+      <div className="p-2 sm:p-4 border-b border-slate-200 bg-white">
+        <Button
+          onClick={() => setIsWeightModalOpen(true)}
+          className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 sm:py-3 text-xs sm:text-sm"
+        >
+          <UtensilsCrossed className="h-4 w-4 mr-2" />
+          Adicionar Item por Peso
+        </Button>
+      </div>
+
       {/* Lista de Produtos */}
       <div className="p-2 sm:p-4 space-y-3 sm:space-y-4 pb-24 sm:pb-4">
         {visibleCategories.map((category) => (
@@ -973,8 +1060,13 @@ export function StaffOrdersClient({
                           {item.selectedExtras.map(e => e.extra.name).join(", ")}
                         </p>
                       )}
+                      {item.weight && item.weight > 0 && (
+                        <p className="text-[10px] sm:text-xs text-slate-600">
+                          Peso: {item.weight.toFixed(3).replace(".", ",")} kg | Preço/kg: R$ {item.price.toFixed(2).replace(".", ",")}
+                        </p>
+                      )}
                       <p className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
-                        R$ {(calculateFinalPrice(item) * item.quantity).toFixed(2)}
+                        R$ {item.weight && item.weight > 0 ? calculateFinalPrice(item).toFixed(2) : (calculateFinalPrice(item) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                     <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 ml-auto">
@@ -1167,6 +1259,104 @@ export function StaffOrdersClient({
           }}
         />
       )}
+
+      {/* Modal de Adicionar Item por Peso */}
+      <Dialog open={isWeightModalOpen} onOpenChange={setIsWeightModalOpen}>
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg md:text-xl">Adicionar Item por Peso</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="weightDescription">Descrição do Item</Label>
+              <Input
+                id="weightDescription"
+                type="text"
+                placeholder="Ex: Prato montado, Salada, etc."
+                value={productDescription}
+                onChange={(e) => setProductDescription(e.target.value)}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weight">Peso (kg)</Label>
+              <Input
+                id="weight"
+                type="text"
+                placeholder="0,000"
+                value={productWeight}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9,]/g, "").replace(",", ".")
+                  setProductWeight(value.replace(".", ","))
+                }}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pricePerKg">Preço por kg (R$)</Label>
+              <Input
+                id="pricePerKg"
+                type="text"
+                placeholder="0,00"
+                value={pricePerKg}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9,]/g, "").replace(",", ".")
+                  setPricePerKg(value.replace(".", ","))
+                }}
+                className="text-sm sm:text-base"
+              />
+            </div>
+
+            {productWeight && pricePerKg && !isNaN(parseFloat(productWeight.replace(",", "."))) && !isNaN(parseFloat(pricePerKg.replace(",", "."))) && (
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <span className="font-semibold">Peso:</span> {parseFloat(productWeight.replace(",", ".")).toFixed(3).replace(".", ",")} kg
+                  </p>
+                  <p>
+                    <span className="font-semibold">Preço/kg:</span> R$ {parseFloat(pricePerKg.replace(",", ".")).toFixed(2).replace(".", ",")}
+                  </p>
+                  <p className="font-bold text-base mt-2">
+                    Total: R$ {(parseFloat(pricePerKg.replace(",", ".")) * parseFloat(productWeight.replace(",", "."))).toFixed(2).replace(".", ",")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsWeightModalOpen(false)
+                setProductWeight("")
+                setProductDescription("")
+                setPricePerKg("")
+              }}
+              className="w-full sm:w-auto text-sm sm:text-base"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleAddItemByWeight}
+              disabled={
+                !productWeight || 
+                !pricePerKg ||
+                isNaN(parseFloat(productWeight.replace(",", "."))) || 
+                parseFloat(productWeight.replace(",", ".")) <= 0 ||
+                isNaN(parseFloat(pricePerKg.replace(",", "."))) || 
+                parseFloat(pricePerKg.replace(",", ".")) <= 0
+              }
+              className="bg-slate-600 hover:bg-slate-700 w-full sm:w-auto text-sm sm:text-base"
+            >
+              Adicionar ao Pedido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
