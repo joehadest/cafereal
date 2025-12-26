@@ -879,19 +879,19 @@ export function StaffOrdersClient({
                   </div>
                 )}
 
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-2 max-h-48 overflow-y-auto overflow-x-visible">
                   {cart.map((item) => {
                 const itemKey = getItemKey(item)
                 const isSelected = selectedItemsForPayment.has(itemKey)
                 return (
-                  <div key={itemKey} className={`flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg ${isSelected ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50'}`}>
+                  <div key={itemKey} className={`flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg overflow-visible ${isSelected ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50'}`}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleItemSelection(itemKey)}
                       id={`item-${itemKey}`}
                       className="flex-shrink-0"
                     />
-                    <div className="flex-1 min-w-0 overflow-hidden pr-1">
+                    <div className="flex-1 min-w-0 overflow-hidden pr-2">
                       <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
                         {item.name}
                       </p>
@@ -918,20 +918,20 @@ export function StaffOrdersClient({
                             removeFromCart(itemKey)
                           }
                         }}
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 flex-shrink-0 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors border-slate-300"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors border-slate-300"
                         title={item.quantity === 1 ? "Remover item" : "Diminuir quantidade"}
                       >
-                        <Minus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
-                      <span className="w-5 sm:w-6 text-center font-bold text-xs sm:text-sm flex-shrink-0">{item.quantity}</span>
+                      <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm flex-shrink-0">{item.quantity}</span>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateQuantity(itemKey, item.quantity + 1)}
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 flex-shrink-0 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-colors border-slate-300"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-colors border-slate-300"
                         title="Aumentar quantidade"
                       >
-                        <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
