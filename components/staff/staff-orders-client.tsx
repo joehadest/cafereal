@@ -891,15 +891,15 @@ export function StaffOrdersClient({
                       id={`item-${itemKey}`}
                       className="flex-shrink-0"
                     />
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 overflow-hidden">
                       <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
                         {item.name}
                       </p>
                       {item.selectedVariety && (
-                        <p className="text-[10px] sm:text-xs text-slate-600">{item.selectedVariety.name}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-600 truncate">{item.selectedVariety.name}</p>
                       )}
                       {item.selectedExtras && item.selectedExtras.length > 0 && (
-                        <p className="text-[10px] sm:text-xs text-slate-600 line-clamp-1">
+                        <p className="text-[10px] sm:text-xs text-slate-600 line-clamp-1 truncate">
                           {item.selectedExtras.map(e => e.extra.name).join(", ")}
                         </p>
                       )}
@@ -918,20 +918,29 @@ export function StaffOrdersClient({
                             removeFromCart(itemKey)
                           }
                         }}
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
                         title={item.quantity === 1 ? "Remover item" : "Diminuir quantidade"}
                       >
                         <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                      <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm">{item.quantity}</span>
+                      <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm flex-shrink-0">{item.quantity}</span>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateQuantity(itemKey, item.quantity + 1)}
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-colors"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-colors"
                         title="Aumentar quantidade"
                       >
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeFromCart(itemKey)}
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50 ml-1"
+                        title="Remover item"
+                      >
+                        <X className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
