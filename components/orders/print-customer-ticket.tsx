@@ -27,64 +27,64 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-customer hidden print:block bg-white text-black font-mono overflow-visible" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '11px' }}>
+    <div className="print-customer hidden print:block bg-white text-black font-mono overflow-visible font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '15px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
       <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px' }}>
         <div className="mb-1">
-          <h1 className="text-base font-bold uppercase leading-tight" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+          <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '20px', letterSpacing: '0.5px', fontWeight: 'bold' }}>
             {restaurantInfo?.name || "CAFEREAL"}
           </h1>
         </div>
         {restaurantInfo?.address && (
-          <p className="text-[11px] leading-tight mb-0.5" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+          <p className="leading-tight mb-0.5 font-bold" style={{ fontSize: '13px', wordBreak: 'break-word', overflowWrap: 'break-word', fontWeight: 'bold' }}>
             {restaurantInfo.address}
           </p>
         )}
         {restaurantInfo?.phone && (
-          <p className="text-[11px]">Tel: {restaurantInfo.phone}</p>
+          <p className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Tel: {restaurantInfo.phone}</p>
         )}
         {restaurantInfo?.cnpj && (
-          <p className="text-[11px]">CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
+          <p className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
         )}
       </div>
 
       {/* Linha Separadora */}
       <div className="text-center mb-2" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
-        <p className="text-[12px] font-bold uppercase">COMANDA DO CLIENTE</p>
+        <p className="font-bold uppercase" style={{ fontSize: '16px', fontWeight: 'bold' }}>COMANDA DO CLIENTE</p>
       </div>
 
       {/* Informações do Pedido */}
       <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[12px] font-bold">PEDIDO:</span>
-          <span className="text-[12px] font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
+          <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>PEDIDO:</span>
+          <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>#{order.id.slice(0, 8).toUpperCase()}</span>
         </div>
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[12px]">Data:</span>
-          <span className="text-[12px]">{timestamp.toLocaleDateString("pt-BR")}</span>
+          <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Data:</span>
+          <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{timestamp.toLocaleDateString("pt-BR")}</span>
         </div>
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[12px]">Hora:</span>
-          <span className="text-[12px]">{timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Hora:</span>
+          <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
         </div>
         {!isDelivery && (
           <div className="flex justify-between items-center">
-            <span className="text-[12px]">Local:</span>
-            <span className="text-[12px] font-bold uppercase">
+            <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Local:</span>
+            <span className="font-bold uppercase" style={{ fontSize: '15px', fontWeight: 'bold' }}>
               {order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}
             </span>
           </div>
         )}
         {order.customer_name && (
           <div className="flex justify-between items-center mt-1">
-            <span className="text-[12px]">Cliente:</span>
-            <span className="text-[12px] font-bold">{order.customer_name}</span>
+            <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Cliente:</span>
+            <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{order.customer_name}</span>
           </div>
         )}
         {order.payment_method && (
           <div className="flex justify-between items-center mt-1">
-            <span className="text-[12px]">Pagamento:</span>
-            <span className="text-[12px] font-bold">{order.payment_method}</span>
+            <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Pagamento:</span>
+            <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{order.payment_method}</span>
           </div>
         )}
       </div>
@@ -92,13 +92,13 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
       {/* Aviso de Itens Adicionados */}
       {newItemIds && newItemIds.size > 0 && (
         <div className="mb-2 pb-2 text-center" style={{ borderBottom: '1px dashed #000' }}>
-          <p className="text-[12px] font-bold uppercase">✨ ITENS ADICIONADOS ✨</p>
+          <p className="font-bold uppercase" style={{ fontSize: '16px', fontWeight: 'bold' }}>✨ ITENS ADICIONADOS ✨</p>
         </div>
       )}
 
       {/* Itens do Pedido - Formato Tabular */}
       <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
-        <p className="text-[12px] font-bold uppercase mb-1">SEU PEDIDO</p>
+        <p className="font-bold uppercase mb-1" style={{ fontSize: '16px', fontWeight: 'bold' }}>SEU PEDIDO</p>
         <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
           {order.order_items.map((item, index) => {
             const extrasPrice = (item.order_item_extras || []).reduce(
@@ -112,37 +112,37 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
               <div key={item.id} className={index < order.order_items.length - 1 ? "mb-2 pb-2" : ""} style={index < order.order_items.length - 1 ? { borderBottom: '1px dashed #ccc' } : {}}>
                 {isNewItem && (
                   <div className="mb-1 text-center">
-                    <span className="text-[11px] font-bold uppercase" style={{ backgroundColor: '#e3f2fd', padding: '1px 4px' }}>✨ NOVO ✨</span>
+                    <span className="font-bold uppercase" style={{ fontSize: '13px', backgroundColor: '#e3f2fd', padding: '1px 4px', fontWeight: 'bold' }}>✨ NOVO ✨</span>
                   </div>
                 )}
                 {/* Linha principal: Qtd x Descrição */}
                 <div className="flex justify-between items-start mb-0.5">
-                  <div className="flex-1" style={{ maxWidth: 'calc(100% - 50px)' }}>
+                  <div className="flex-1" style={{ maxWidth: 'calc(100% - 60px)' }}>
                     {item.category_name && (
-                      <span className="text-[10px] uppercase" style={{ color: '#666' }}>[{item.category_name}] </span>
+                      <span className="uppercase font-bold" style={{ fontSize: '13px', color: '#666', fontWeight: 'bold' }}>[{item.category_name}] </span>
                     )}
-                    <span className="text-[12px] font-bold">
+                    <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>
                       {item.quantity}x {item.product_name}
                     </span>
                   </div>
-                  <div className="text-right" style={{ minWidth: '50px' }}>
-                    <span className="text-[12px] font-bold">R$ {itemTotal.toFixed(2).replace(".", ",")}</span>
+                  <div className="text-right" style={{ minWidth: '55px' }}>
+                    <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>R$ {itemTotal.toFixed(2).replace(".", ",")}</span>
                   </div>
                 </div>
                 {/* Variação */}
                 {item.variety_name && (
                   <div className="ml-2 mb-0.5">
-                    <span className="text-[11px]">Tamanho: </span>
-                    <span className="text-[11px] font-bold">{item.variety_name}</span>
+                    <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Tamanho: </span>
+                    <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{item.variety_name}</span>
                   </div>
                 )}
                 {/* Extras */}
                 {item.order_item_extras && item.order_item_extras.length > 0 && (
                   <div className="ml-2 mb-0.5">
                     {item.order_item_extras.map((extra) => (
-                      <div key={extra.id} className="text-[11px]">
+                      <div key={extra.id} className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>
                         + {extra.extra_name}
-                        {extra.quantity > 1 && <span> (x{extra.quantity})</span>}
+                        {extra.quantity > 1 && <span className="font-bold" style={{ fontWeight: 'bold' }}> (x{extra.quantity})</span>}
                       </div>
                     ))}
                   </div>
@@ -150,7 +150,7 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
                 {/* Observações do item */}
                 {item.notes && (
                   <div className="ml-2 mt-0.5">
-                    <span className="text-[11px] italic">OBS: {item.notes}</span>
+                    <span className="font-bold italic" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBS: {item.notes}</span>
                   </div>
                 )}
               </div>
@@ -162,8 +162,8 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
       {/* Observações Gerais */}
       {order.notes && (
         <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
-          <p className="text-[12px] font-bold uppercase mb-0.5">OBSERVAÇÕES</p>
-          <p className="text-[11px] whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+          <p className="font-bold uppercase mb-0.5" style={{ fontSize: '16px', fontWeight: 'bold' }}>OBSERVAÇÕES</p>
+          <p className="font-bold whitespace-pre-wrap" style={{ fontSize: '15px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             {order.notes}
           </p>
         </div>
@@ -173,34 +173,34 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
       <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
         <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[12px]">Subtotal:</span>
-            <span className="text-[12px] font-bold">
+            <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>Subtotal:</span>
+            <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>
               R$ {(isDelivery && order.delivery_fee ? order.total - order.delivery_fee : order.total).toFixed(2).replace(".", ",")}
             </span>
           </div>
           {isDelivery && order.delivery_fee && order.delivery_fee > 0 && (
             <div className="flex justify-between items-center mb-1">
-              <span className="text-[12px]">Taxa de Entrega:</span>
-              <span className="text-[12px] font-bold">R$ {order.delivery_fee.toFixed(2).replace(".", ",")}</span>
+              <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>Taxa de Entrega:</span>
+              <span className="font-bold" style={{ fontSize: '16px', fontWeight: 'bold' }}>R$ {order.delivery_fee.toFixed(2).replace(".", ",")}</span>
             </div>
           )}
           <div className="flex justify-between items-center pt-1 mt-1" style={{ borderTop: '1px solid #000' }}>
-            <span className="text-[14px] font-bold uppercase">TOTAL:</span>
-            <span className="text-[14px] font-bold">R$ {order.total.toFixed(2).replace(".", ",")}</span>
+            <span className="font-bold uppercase" style={{ fontSize: '18px', fontWeight: 'bold' }}>TOTAL:</span>
+            <span className="font-bold" style={{ fontSize: '18px', fontWeight: 'bold' }}>R$ {order.total.toFixed(2).replace(".", ",")}</span>
           </div>
         </div>
       </div>
 
       {/* Footer */}
       <div className="text-center mt-2 pt-2" style={{ borderTop: '1px solid #000' }}>
-        <p className="text-[11px] font-bold uppercase mb-0.5">{restaurantInfo?.name || "CAFEREAL"}</p>
-        <p className="text-[11px] mb-0.5">Obrigado pela preferência!</p>
-        <p className="text-[11px]">Volte sempre!</p>
+        <p className="font-bold uppercase mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>{restaurantInfo?.name || "CAFEREAL"}</p>
+        <p className="font-bold mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>Obrigado pela preferência!</p>
+        <p className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Volte sempre!</p>
       </div>
 
       {/* Linha de Corte */}
       <div className="text-center mt-2 pt-1">
-        <p className="text-[11px]" style={{ letterSpacing: '1px' }}>{"=".repeat(40)}</p>
+        <p className="font-bold" style={{ fontSize: '15px', letterSpacing: '1px', fontWeight: 'bold' }}>{"=".repeat(40)}</p>
       </div>
     </div>
   )

@@ -44,8 +44,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
         {/* Header */}
         <div className="text-center mb-4">
           <h1 className="text-2xl font-bold">RESTAURANTE</h1>
-          <p className="text-sm">Pedido #{order.id.slice(0, 8).toUpperCase()}</p>
-          <p className="text-xs">
+          <p className="text-sm font-bold">Pedido #{order.id.slice(0, 8).toUpperCase()}</p>
+          <p className="text-xs font-bold">
             {orderDate.toLocaleDateString("pt-BR")} {orderDate.toLocaleTimeString("pt-BR")}
           </p>
         </div>
@@ -57,26 +57,26 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
           {isDelivery ? (
             <>
               <p className="font-bold text-lg">DELIVERY</p>
-              <p className="text-sm">
+              <p className="text-sm font-bold">
                 <strong>Cliente:</strong> {order.customer_name}
               </p>
-              <p className="text-sm">
+              <p className="text-sm font-bold">
                 <strong>Telefone:</strong> {order.customer_phone}
               </p>
-              <p className="text-sm">
+              <p className="text-sm font-bold">
                 <strong>Endereço:</strong>
               </p>
-              <p className="text-xs ml-2">{order.delivery_address ? order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : ""}</p>
+              <p className="text-xs ml-2 font-bold">{order.delivery_address ? order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : ""}</p>
               {order.reference_point && (
                 <>
-                  <p className="text-sm">
+                  <p className="text-sm font-bold">
                     <strong>Ponto de Referência:</strong>
                   </p>
-                  <p className="text-xs ml-2">{order.reference_point.trim()}</p>
+                  <p className="text-xs ml-2 font-bold">{order.reference_point.trim()}</p>
                 </>
               )}
               {order.payment_method && (
-                <p className="text-sm">
+                <p className="text-sm font-bold">
                   <strong>Pagamento:</strong> {order.payment_method}
                 </p>
               )}
@@ -85,12 +85,12 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
             <>
               <p className="font-bold text-lg">MESA {order.table_number}</p>
               {order.customer_name && (
-                <p className="text-sm">
+                <p className="text-sm font-bold">
                   <strong>Cliente:</strong> {order.customer_name}
                 </p>
               )}
               {order.payment_method && (
-                <p className="text-sm">
+                <p className="text-sm font-bold">
                   <strong>Pagamento:</strong> {order.payment_method}
                 </p>
               )}
@@ -102,15 +102,15 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
 
         {/* Items */}
         <div className="mb-3">
-          <p className="font-bold mb-2">ITENS:</p>
+          <p className="font-bold mb-2 text-lg">ITENS:</p>
           {order.order_items.map((item, index) => (
             <div key={item.id} className="mb-2">
               <div className="flex justify-between">
-                <span>
+                <span className="font-bold text-sm">
                   {item.quantity}x {item.product_name}
                 </span>
               </div>
-              {item.notes && <p className="text-xs ml-4 italic">Obs: {item.notes}</p>}
+              {item.notes && <p className="text-xs ml-4 italic font-bold">Obs: {item.notes}</p>}
             </div>
           ))}
         </div>
@@ -121,8 +121,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
         {order.notes && (
           <>
             <div className="mb-3">
-              <p className="font-bold">OBSERVAÇÕES:</p>
-              <p className="text-sm">{order.notes}</p>
+              <p className="font-bold text-lg">OBSERVAÇÕES:</p>
+              <p className="text-sm font-bold">{order.notes}</p>
             </div>
             <div className="divider">========================================</div>
           </>
@@ -131,7 +131,7 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
         {/* Total */}
         <div className="mb-3">
           {isDelivery && order.delivery_fee && order.delivery_fee > 0 && (
-            <div className="flex justify-between text-sm mb-1">
+            <div className="flex justify-between text-sm mb-1 font-bold">
               <span>Taxa de Entrega:</span>
               <span>R$ {order.delivery_fee.toFixed(2)}</span>
             </div>
@@ -146,8 +146,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
 
         {/* Footer */}
         <div className="text-center mt-4">
-          <p className="text-sm">Obrigado pela preferência!</p>
-          <p className="text-xs mt-2">Status: {order.status.toUpperCase()}</p>
+          <p className="text-sm font-bold">Obrigado pela preferência!</p>
+          <p className="text-xs mt-2 font-bold">Status: {order.status.toUpperCase()}</p>
         </div>
       </div>
 
@@ -173,7 +173,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
             top: 0;
             width: 100%;
             font-family: "Courier New", monospace;
-            font-size: 13px;
+            font-size: 15px;
+            font-weight: bold;
             line-height: 1.4;
             color: #000;
             background: #fff;
@@ -185,7 +186,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
           }
 
           .divider {
-            font-size: 10px;
+            font-size: 13px;
+            font-weight: bold;
             margin: 8px 0;
             overflow: hidden;
           }
@@ -195,19 +197,23 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
           }
 
           .text-xs {
-            font-size: 10px;
+            font-size: 13px;
+            font-weight: bold;
           }
 
           .text-sm {
-            font-size: 11px;
+            font-size: 15px;
+            font-weight: bold;
           }
 
           .text-lg {
-            font-size: 14px;
+            font-size: 18px;
+            font-weight: bold;
           }
 
           .text-2xl {
-            font-size: 18px;
+            font-size: 22px;
+            font-weight: bold;
           }
 
           .font-bold {
