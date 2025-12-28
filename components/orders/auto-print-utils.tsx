@@ -38,7 +38,7 @@ export function autoPrintOrder(
   printContainer.style.position = "absolute"
   printContainer.style.left = "-9999px"
   printContainer.style.top = "0"
-  printContainer.style.width = "80mm"
+  printContainer.style.width = "100%"
   printContainer.id = `auto-print-container-${order.id}`
 
   document.body.appendChild(printContainer)
@@ -47,7 +47,7 @@ export function autoPrintOrder(
   const root = createRoot(printContainer)
 
   root.render(
-    <div id={`auto-print-wrapper-${order.id}`} style={{ width: "80mm", display: "block", visibility: "visible" }}>
+    <div id={`auto-print-wrapper-${order.id}`} style={{ width: "100%", display: "block", visibility: "visible" }}>
       {printType === "kitchen" ? (
         <div className="print-kitchen" style={{ display: "block", visibility: "visible", position: "relative" }}>
           <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} newItemIds={newItemIds} />
@@ -96,8 +96,8 @@ export function autoPrintOrder(
         position: relative !important; 
         left: auto !important; 
         top: auto !important; 
-        width: 80mm !important;
-        max-width: 80mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
         margin: 0 auto !important;
         padding: 0 !important;
         visibility: visible !important;
@@ -144,7 +144,7 @@ export function autoPrintOrder(
         visibility: visible !important;
       }
       @page {
-        size: 80mm auto !important;
+        size: auto !important;
         margin: 0 !important;
         padding: 0 !important;
       }

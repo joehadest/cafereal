@@ -13,145 +13,159 @@ export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintK
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-kitchen hidden print:block bg-white text-black max-w-[80mm] mx-auto font-mono overflow-visible" style={{ width: '80mm', maxWidth: '80mm', margin: '0', padding: '2mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
+    <div className="print-kitchen hidden print:block bg-white text-black font-mono overflow-visible" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '11px' }}>
       {/* Header - Destacado */}
-      <div className="text-center border-b-2 border-black pb-2 mb-2">
+      <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px' }}>
         <div className="mb-1">
-          <h1 className="text-xl font-bold uppercase tracking-wide">{restaurantName || "CAFEREAL"}</h1>
+          <h1 className="text-base font-bold uppercase leading-tight" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
+            {restaurantName || "CAFEREAL"}
+          </h1>
         </div>
-        <div className="border-t border-b border-gray-600 py-1 mt-1">
-          <p className="text-xs font-bold uppercase">Comanda de Cozinha</p>
+        <div className="mt-1 mb-1" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
+          <p className="text-[12px] font-bold uppercase">COMANDA DE COZINHA</p>
         </div>
       </div>
 
-      {/* Tipo e Mesa/Delivery */}
-      <div className="bg-black text-white p-2 mb-2 text-center">
-        <p className="text-2xl font-bold">{isDelivery ? "DELIVERY" : order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}</p>
-      </div>
-
-      {/* Pedido e Hora */}
-      <div className="text-center mb-2 pb-2 border-b-2 border-dashed border-gray-600">
-        <p className="text-base font-bold mb-0.5">PEDIDO #{order.id.slice(0, 8).toUpperCase()}</p>
-        <p className="text-sm font-bold">
-          {timestamp.toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+      {/* Tipo e Mesa/Delivery - Destaque */}
+      <div className="mb-2 pb-2 text-center" style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px 0', backgroundColor: '#f0f0f0' }}>
+        <p className="text-lg font-bold uppercase" style={{ fontSize: '18px' }}>
+          {isDelivery ? "DELIVERY" : order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}
         </p>
+      </div>
+
+      {/* Informações do Pedido */}
+      <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-[12px] font-bold">PEDIDO:</span>
+          <span className="text-[12px] font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-[12px]">Data:</span>
+          <span className="text-[12px]">{timestamp.toLocaleDateString("pt-BR")}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[12px]">Hora:</span>
+          <span className="text-[12px] font-bold">{timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+        </div>
       </div>
 
       {/* Aviso de Itens Adicionados */}
       {newItemIds && newItemIds.size > 0 && (
-        <div className="bg-red-500 text-white p-2 mb-2 text-center border-2 border-red-700">
-          <p className="text-sm font-bold uppercase">⚠️ ITENS ADICIONADOS ⚠️</p>
-          <p className="text-xs mt-1">Os itens marcados abaixo foram adicionados agora</p>
+        <div className="mb-2 pb-2 text-center" style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px 0', backgroundColor: '#ffebee' }}>
+          <p className="text-[12px] font-bold uppercase">⚠️ ITENS ADICIONADOS ⚠️</p>
         </div>
       )}
 
-      {/* Itens - Formato Cozinha */}
-      <div className="mb-2">
-        <table className="w-full text-xs">
-          <tbody>
-            {order.order_items.map((item) => {
-              const isNewItem = newItemIds?.has(item.id)
-              return (
-              <tr key={item.id} className={`border-b-2 ${isNewItem ? 'border-red-500 bg-red-50' : 'border-gray-400'}`}>
-                <td className="py-2 pr-3">
-                  {isNewItem && (
-                    <div className="bg-red-500 text-white px-2 py-1 mb-1 inline-block rounded">
-                      <span className="text-xs font-bold uppercase">✨ NOVO ✨</span>
-                    </div>
-                  )}
-                  {item.category_name && (
-                    <div className="text-[10px] text-gray-600 font-bold uppercase mb-0.5">
-                      [{item.category_name}]
-                    </div>
-                  )}
-                  <div className="flex items-start justify-between mb-1">
-                    <span className={`text-xl font-bold mr-3 ${isNewItem ? 'text-red-600' : ''}`}>{item.quantity}x</span>
-                    <span className={`text-sm font-bold flex-1 uppercase leading-tight ${isNewItem ? 'text-red-700' : ''}`}>{item.product_name}</span>
+      {/* Itens - Formato Organizado */}
+      <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
+        <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
+          {order.order_items.map((item, index) => {
+            const isNewItem = newItemIds?.has(item.id)
+            return (
+              <div key={item.id} className={index < order.order_items.length - 1 ? "mb-2 pb-2" : ""} style={index < order.order_items.length - 1 ? { borderBottom: '1px dashed #ccc' } : {}}>
+                {isNewItem && (
+                  <div className="mb-1 text-center">
+                    <span className="text-[11px] font-bold uppercase" style={{ backgroundColor: '#ffcdd2', padding: '1px 4px' }}>✨ NOVO ✨</span>
                   </div>
-                  {item.variety_name && (
-                    <div className="ml-10 mt-0.5 mb-0.5">
-                      <p className="text-xs font-bold">TAMANHO: {item.variety_name.toUpperCase()}</p>
-                    </div>
+                )}
+                {/* Quantidade e Nome do Produto */}
+                <div className="mb-0.5">
+                  {item.category_name && (
+                    <span className="text-[10px] uppercase" style={{ color: '#666' }}>[{item.category_name}] </span>
                   )}
-                  {item.order_item_extras && item.order_item_extras.length > 0 && (
-                    <div className="ml-10 mt-0.5 mb-0.5">
-                      <p className="text-xs font-bold uppercase mb-0.5">EXTRAS:</p>
-                      {item.order_item_extras.map((extra) => (
-                        <p key={extra.id} className="text-xs font-semibold">
-                          + {extra.extra_name.toUpperCase()} {extra.quantity > 1 && `(x${extra.quantity})`}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  {item.notes && (
-                    <div className="ml-10 mt-1 bg-yellow-100 border-l-4 border-yellow-500 p-1.5">
-                      <p className="text-xs font-bold uppercase mb-0.5">OBSERVAÇÃO:</p>
-                      <p className="text-xs font-semibold">{item.notes}</p>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            )})}
-          </tbody>
-        </table>
+                  <span className="text-sm font-bold uppercase" style={{ fontSize: '14px' }}>
+                    {item.quantity}x {item.product_name}
+                  </span>
+                </div>
+                {/* Variação */}
+                {item.variety_name && (
+                  <div className="ml-2 mb-0.5">
+                    <span className="text-[12px] font-bold uppercase">TAMANHO: {item.variety_name.toUpperCase()}</span>
+                  </div>
+                )}
+                {/* Extras */}
+                {item.order_item_extras && item.order_item_extras.length > 0 && (
+                  <div className="ml-2 mb-0.5">
+                    <span className="text-[11px] font-bold uppercase">EXTRAS:</span>
+                    {item.order_item_extras.map((extra) => (
+                      <div key={extra.id} className="text-[11px] ml-1">
+                        + {extra.extra_name.toUpperCase()} {extra.quantity > 1 && `(x${extra.quantity})`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Observações do item */}
+                {item.notes && (
+                  <div className="ml-2 mt-1" style={{ borderLeft: '3px solid #ff9800', paddingLeft: '4px', backgroundColor: '#fff3e0' }}>
+                    <p className="text-[11px] font-bold uppercase mb-0.5">OBSERVAÇÃO:</p>
+                    <p className="text-[11px]">{item.notes}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Observações Gerais */}
       {order.notes && (
-        <div className="bg-red-100 border-4 border-red-500 p-2 mb-2">
-          <p className="text-sm font-bold uppercase mb-1">⚠️ ATENÇÃO - OBSERVAÇÃO GERAL:</p>
-          <p className="text-sm font-bold whitespace-pre-wrap">{order.notes}</p>
+        <div className="mb-2 pb-2" style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', backgroundColor: '#ffebee' }}>
+          <p className="text-[12px] font-bold uppercase mb-1">⚠️ ATENÇÃO - OBSERVAÇÃO GERAL:</p>
+          <p className="text-[12px] font-bold whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+            {order.notes}
+          </p>
         </div>
       )}
 
       {/* Info Cliente */}
-      {(order.customer_name || order.payment_method) && (
-        <div className="border-t-2 border-dashed border-gray-600 pt-2 mt-2 space-y-0.5">
+      {(order.customer_name || order.payment_method || (isDelivery && order.customer_phone)) && (
+        <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
+          <p className="text-[12px] font-bold uppercase mb-1">INFORMAÇÕES DO CLIENTE</p>
           {order.customer_name && (
-            <p className="text-xs">
-              <strong>Cliente:</strong> {order.customer_name}
-            </p>
+            <div className="mb-0.5">
+              <span className="text-[11px]">Cliente: </span>
+              <span className="text-[11px] font-bold">{order.customer_name}</span>
+            </div>
           )}
           {order.payment_method && (
-            <p className="text-xs">
-              <strong>Pagamento:</strong> {order.payment_method}
-            </p>
+            <div className="mb-0.5">
+              <span className="text-[11px]">Pagamento: </span>
+              <span className="text-[11px] font-bold">{order.payment_method}</span>
+            </div>
           )}
           {isDelivery && order.customer_phone && (
-            <p className="text-xs">
-              <strong>Telefone:</strong> {order.customer_phone}
-            </p>
+            <div className="mb-0.5">
+              <span className="text-[11px]">Telefone: </span>
+              <span className="text-[11px]">{order.customer_phone}</span>
+            </div>
           )}
           {isDelivery && order.delivery_address && (
-            <div className="text-xs overflow-visible">
-              <p className="font-bold mb-0.5">Endereço:</p>
-              <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
+            <div className="mb-0.5">
+              <span className="text-[11px]">Endereço: </span>
+              <span className="text-[11px]" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {order.delivery_address.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
-              </p>
+              </span>
             </div>
           )}
           {isDelivery && order.reference_point && (
-            <div className="text-xs overflow-visible">
-              <p className="font-bold mb-0.5">Ponto de Referência:</p>
-              <p className="break-words overflow-wrap-anywhere word-break-break-all overflow-visible leading-tight">
+            <div>
+              <span className="text-[11px]">Ponto de Ref.: </span>
+              <span className="text-[11px]" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {order.reference_point.trim()}
-              </p>
+              </span>
             </div>
           )}
         </div>
       )}
 
       {/* Footer */}
-      <div className="text-center mt-3 pt-2 border-t-2 border-gray-600 text-xs">
-        <p className="font-bold uppercase">{restaurantName || "CAFEREAL"}</p>
+      <div className="text-center mt-2 pt-2" style={{ borderTop: '1px solid #000' }}>
+        <p className="text-[11px] font-bold uppercase">{restaurantName || "CAFEREAL"}</p>
       </div>
 
-      {/* Corte */}
-      <div className="text-center mt-2 text-xs">
-        <p>{"═══════════════════════════"}</p>
+      {/* Linha de Corte */}
+      <div className="text-center mt-2 pt-1">
+        <p className="text-[11px]" style={{ letterSpacing: '1px' }}>{"=".repeat(40)}</p>
       </div>
     </div>
   )

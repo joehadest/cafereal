@@ -27,184 +27,181 @@ export function PrintCustomerTicket({ order, restaurantInfo, newItemIds }: Print
   const timestamp = new Date(order.created_at)
 
   return (
-    <div className="print-customer hidden print:block bg-white text-black max-w-[80mm] mx-auto font-sans text-xs overflow-visible" style={{ width: '80mm', maxWidth: '80mm', margin: '0', padding: '2mm', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto' }}>
-      {/* Header do Restaurante */}
-      <div className="text-center border-b-2 border-black pb-3 mb-3">
-        <div className="mb-2">
-          <h1 className="text-2xl font-bold uppercase leading-tight text-black tracking-wide">
+    <div className="print-customer hidden print:block bg-white text-black font-mono overflow-visible" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '11px' }}>
+      {/* Header do Estabelecimento */}
+      <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px' }}>
+        <div className="mb-1">
+          <h1 className="text-base font-bold uppercase leading-tight" style={{ fontSize: '16px', letterSpacing: '0.5px' }}>
             {restaurantInfo?.name || "CAFEREAL"}
           </h1>
         </div>
-        <div className="border-t border-b border-gray-600 py-2 my-2">
-          <p className="text-sm font-bold text-black uppercase">Comanda do Cliente</p>
-        </div>
+        {restaurantInfo?.address && (
+          <p className="text-[11px] leading-tight mb-0.5" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+            {restaurantInfo.address}
+          </p>
+        )}
         {restaurantInfo?.phone && (
-          <p className="text-xs font-bold text-black">Tel: {restaurantInfo.phone}</p>
+          <p className="text-[11px]">Tel: {restaurantInfo.phone}</p>
+        )}
+        {restaurantInfo?.cnpj && (
+          <p className="text-[11px]">CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
         )}
       </div>
 
-      {/* Informações da Mesa */}
-      {!isDelivery && (
-        <div className="mb-3 pb-3 border-b-2 border-gray-400 bg-gray-100 px-2 py-3 rounded">
-          <div className="text-center">
-            <p className="text-xl font-bold text-black mb-1">{order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}</p>
-            <p className="text-xs text-black">
-              {timestamp.toLocaleDateString("pt-BR", {
-                weekday: "long",
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-            <p className="text-sm font-bold text-black mt-1">
-              {timestamp.toLocaleTimeString("pt-BR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Linha Separadora */}
+      <div className="text-center mb-2" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
+        <p className="text-[12px] font-bold uppercase">COMANDA DO CLIENTE</p>
+      </div>
 
       {/* Informações do Pedido */}
-      <div className="mb-3 pb-3 border-b border-gray-300">
-        <div className="flex justify-between items-center mb-2">
-          <span className="font-bold text-base text-black">Pedido #{order.id.slice(0, 8).toUpperCase()}</span>
+      <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-[12px] font-bold">PEDIDO:</span>
+          <span className="text-[12px] font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
         </div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-[12px]">Data:</span>
+          <span className="text-[12px]">{timestamp.toLocaleDateString("pt-BR")}</span>
+        </div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-[12px]">Hora:</span>
+          <span className="text-[12px]">{timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+        </div>
+        {!isDelivery && (
+          <div className="flex justify-between items-center">
+            <span className="text-[12px]">Local:</span>
+            <span className="text-[12px] font-bold uppercase">
+              {order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}
+            </span>
+          </div>
+        )}
         {order.customer_name && (
-          <div className="text-xs text-black">
-            <span className="font-bold">Cliente:</span> {order.customer_name}
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-[12px]">Cliente:</span>
+            <span className="text-[12px] font-bold">{order.customer_name}</span>
           </div>
         )}
         {order.payment_method && (
-          <div className="text-xs text-black">
-            <span className="font-bold">Pagamento:</span> {order.payment_method}
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-[12px]">Pagamento:</span>
+            <span className="text-[12px] font-bold">{order.payment_method}</span>
           </div>
         )}
       </div>
 
       {/* Aviso de Itens Adicionados */}
       {newItemIds && newItemIds.size > 0 && (
-        <div className="bg-blue-500 text-white p-2 mb-3 text-center border-2 border-blue-700 rounded">
-          <p className="text-sm font-bold uppercase">✨ Itens Adicionados</p>
-          <p className="text-xs mt-1">Os itens marcados abaixo foram adicionados agora</p>
+        <div className="mb-2 pb-2 text-center" style={{ borderBottom: '1px dashed #000' }}>
+          <p className="text-[12px] font-bold uppercase">✨ ITENS ADICIONADOS ✨</p>
         </div>
       )}
 
-      {/* Itens do Pedido */}
-      <div className="mb-3 pb-3 border-b-2 border-gray-800">
-        <h2 className="font-bold text-sm mb-3 uppercase text-black">Seu Pedido</h2>
-        <div className="space-y-3">
-          {order.order_items.map((item) => {
+      {/* Itens do Pedido - Formato Tabular */}
+      <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
+        <p className="text-[12px] font-bold uppercase mb-1">SEU PEDIDO</p>
+        <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
+          {order.order_items.map((item, index) => {
             const extrasPrice = (item.order_item_extras || []).reduce(
               (sum, extra) => sum + extra.extra_price * extra.quantity,
               0
             )
-            // Usar subtotal do item (já calculado corretamente, incluindo para itens por peso) e adicionar extras
             const itemTotal = item.subtotal + extrasPrice
             const isNewItem = newItemIds?.has(item.id)
 
             return (
-              <div key={item.id} className={`border-b border-dotted pb-3 last:border-0 last:pb-0 ${isNewItem ? 'border-blue-500 bg-blue-50 rounded p-2' : 'border-gray-300'}`}>
+              <div key={item.id} className={index < order.order_items.length - 1 ? "mb-2 pb-2" : ""} style={index < order.order_items.length - 1 ? { borderBottom: '1px dashed #ccc' } : {}}>
                 {isNewItem && (
-                  <div className="bg-blue-500 text-white px-2 py-1 mb-2 inline-block rounded">
-                    <span className="text-xs font-bold uppercase">✨ NOVO ✨</span>
+                  <div className="mb-1 text-center">
+                    <span className="text-[11px] font-bold uppercase" style={{ backgroundColor: '#e3f2fd', padding: '1px 4px' }}>✨ NOVO ✨</span>
                   </div>
                 )}
-                <div className="flex justify-between items-start gap-2 mb-1">
-                  <div className="flex-1 min-w-0">
+                {/* Linha principal: Qtd x Descrição */}
+                <div className="flex justify-between items-start mb-0.5">
+                  <div className="flex-1" style={{ maxWidth: 'calc(100% - 50px)' }}>
                     {item.category_name && (
-                      <div className="text-[10px] text-gray-600 font-semibold uppercase mb-0.5">
-                        [{item.category_name}]
-                      </div>
+                      <span className="text-[10px] uppercase" style={{ color: '#666' }}>[{item.category_name}] </span>
                     )}
-                    <div className="font-bold text-sm leading-tight break-words text-black">
+                    <span className="text-[12px] font-bold">
                       {item.quantity}x {item.product_name}
-                    </div>
-                    {item.variety_name && (
-                      <div className="text-xs text-black mt-1 font-semibold">
-                        Tamanho: {item.variety_name}
-                      </div>
-                    )}
-                    {item.order_item_extras && item.order_item_extras.length > 0 && (
-                      <div className="text-xs text-black mt-1 space-y-0.5 font-semibold">
-                        {item.order_item_extras.map((extra) => (
-                          <div key={extra.id} className="leading-tight">
-                            + {extra.extra_name}
-                            {extra.quantity > 1 && <span> (x{extra.quantity})</span>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {item.notes && (
-                      <div className="mt-2 ml-2 pl-2 border-l-2 border-yellow-500 bg-yellow-50 py-1 px-2 rounded">
-                        <p className="text-xs font-semibold text-black leading-tight">
-                          <span className="font-bold">OBS:</span> {item.notes}
-                        </p>
-                      </div>
-                    )}
+                    </span>
                   </div>
-                  <div className="text-right whitespace-nowrap">
-                    <span className="font-bold text-sm text-black">R$ {itemTotal.toFixed(2)}</span>
+                  <div className="text-right" style={{ minWidth: '50px' }}>
+                    <span className="text-[12px] font-bold">R$ {itemTotal.toFixed(2).replace(".", ",")}</span>
                   </div>
                 </div>
+                {/* Variação */}
+                {item.variety_name && (
+                  <div className="ml-2 mb-0.5">
+                    <span className="text-[11px]">Tamanho: </span>
+                    <span className="text-[11px] font-bold">{item.variety_name}</span>
+                  </div>
+                )}
+                {/* Extras */}
+                {item.order_item_extras && item.order_item_extras.length > 0 && (
+                  <div className="ml-2 mb-0.5">
+                    {item.order_item_extras.map((extra) => (
+                      <div key={extra.id} className="text-[11px]">
+                        + {extra.extra_name}
+                        {extra.quantity > 1 && <span> (x{extra.quantity})</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Observações do item */}
+                {item.notes && (
+                  <div className="ml-2 mt-0.5">
+                    <span className="text-[11px] italic">OBS: {item.notes}</span>
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Observações do Pedido */}
+      {/* Observações Gerais */}
       {order.notes && (
-        <div className="mb-3 pb-3 border-b border-gray-300 bg-yellow-50 px-2 py-2 rounded">
-          <h2 className="font-bold text-xs mb-1 uppercase text-black">Observações</h2>
-          <p className="text-xs text-black whitespace-pre-wrap leading-tight break-words font-semibold">
+        <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
+          <p className="text-[12px] font-bold uppercase mb-0.5">OBSERVAÇÕES</p>
+          <p className="text-[11px] whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             {order.notes}
           </p>
         </div>
       )}
 
       {/* Resumo Financeiro */}
-      <div className="mb-3 pb-3 border-b-2 border-gray-800">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-black font-bold">Subtotal:</span>
-            <span className="font-bold text-black">
-              R$ {(isDelivery && order.delivery_fee ? order.total - order.delivery_fee : order.total).toFixed(2)}
+      <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
+        <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[12px]">Subtotal:</span>
+            <span className="text-[12px] font-bold">
+              R$ {(isDelivery && order.delivery_fee ? order.total - order.delivery_fee : order.total).toFixed(2).replace(".", ",")}
             </span>
           </div>
           {isDelivery && order.delivery_fee && order.delivery_fee > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-black font-bold">Taxa de Entrega:</span>
-              <span className="font-bold text-black">R$ {order.delivery_fee.toFixed(2)}</span>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[12px]">Taxa de Entrega:</span>
+              <span className="text-[12px] font-bold">R$ {order.delivery_fee.toFixed(2).replace(".", ",")}</span>
             </div>
           )}
-          <div className="flex justify-between items-center pt-2 mt-2 border-t-2 border-gray-800">
-            <span className="text-lg font-bold uppercase text-black">Total:</span>
-            <span className="text-xl font-bold text-black">R$ {order.total.toFixed(2)}</span>
+          <div className="flex justify-between items-center pt-1 mt-1" style={{ borderTop: '1px solid #000' }}>
+            <span className="text-[14px] font-bold uppercase">TOTAL:</span>
+            <span className="text-[14px] font-bold">R$ {order.total.toFixed(2).replace(".", ",")}</span>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs mt-4 space-y-1 border-t-2 border-gray-800 pt-3">
-        <p className="font-bold text-black uppercase">{restaurantInfo?.name || "CAFEREAL"}</p>
-        {restaurantInfo?.cnpj && (
-          <p className="font-bold text-black text-[10px]">CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
-        )}
-        <p className="font-bold text-black">Obrigado pela preferência!</p>
-        <p className="font-bold text-black">Volte sempre!</p>
-        {restaurantInfo?.phone && (
-          <p className="font-bold text-black text-[10px] mt-2">Tel: {restaurantInfo.phone}</p>
-        )}
+      <div className="text-center mt-2 pt-2" style={{ borderTop: '1px solid #000' }}>
+        <p className="text-[11px] font-bold uppercase mb-0.5">{restaurantInfo?.name || "CAFEREAL"}</p>
+        <p className="text-[11px] mb-0.5">Obrigado pela preferência!</p>
+        <p className="text-[11px]">Volte sempre!</p>
       </div>
 
-      {/* Corte */}
-      <div className="text-center mt-4 pt-2 text-xs text-black font-bold">
-        <p>{"- - - - - - - - - - - - - - - - - - - -"}</p>
+      {/* Linha de Corte */}
+      <div className="text-center mt-2 pt-1">
+        <p className="text-[11px]" style={{ letterSpacing: '1px' }}>{"=".repeat(40)}</p>
       </div>
     </div>
   )
 }
-
-

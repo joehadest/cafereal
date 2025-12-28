@@ -171,13 +171,13 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
             position: absolute;
             left: 0;
             top: 0;
-            width: 80mm;
+            width: 100%;
             font-family: "Courier New", monospace;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.4;
             color: #000;
             background: #fff;
-            padding: 10mm;
+            padding: 2mm 1mm;
           }
 
           .receipt-content {
@@ -259,7 +259,7 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
           }
 
           @page {
-            size: 80mm auto;
+            size: auto;
             margin: 0;
           }
         }

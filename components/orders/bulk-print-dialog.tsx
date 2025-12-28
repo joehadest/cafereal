@@ -50,7 +50,7 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
     printContainer.style.position = "absolute"
     printContainer.style.left = "-9999px"
     printContainer.style.top = "0"
-    printContainer.style.width = "80mm"
+    printContainer.style.width = "100%"
     printContainer.id = "bulk-print-container"
 
     document.body.appendChild(printContainer)
@@ -63,7 +63,7 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
       .filter((order): order is Order => order !== undefined)
 
     root.render(
-      <div style={{ width: "80mm" }}>
+      <div style={{ width: "100%" }}>
         {ordersToPrint.map((order, index) => (
           <div
             key={order.id}
@@ -112,7 +112,7 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
           position: absolute !important; 
           left: 0 !important; 
           top: 0 !important; 
-          width: 80mm !important;
+          width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
           height: auto !important;
