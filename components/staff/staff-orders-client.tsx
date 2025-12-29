@@ -353,16 +353,6 @@ export function StaffOrdersClient({
       }
     }
 
-    if (orderType === "pickup") {
-      if (!customerName.trim()) {
-        alert("Preencha o nome do cliente")
-        return
-      }
-      if (!customerPhone.trim()) {
-        alert("Preencha o telefone do cliente")
-        return
-      }
-    }
 
     if (!paymentMethod || !paymentMethod.trim()) {
       alert("Selecione a forma de pagamento")
@@ -390,8 +380,8 @@ export function StaffOrdersClient({
         }
       } else if (orderType === "pickup") {
         orderData.table_number = 0
-        orderData.customer_name = customerName.trim()
-        orderData.customer_phone = customerPhone.trim()
+        orderData.customer_name = customerName.trim() || null
+        orderData.customer_phone = customerPhone.trim() || null
         orderData.delivery_address = null
         orderData.reference_point = null
         orderData.delivery_fee = 0
@@ -766,7 +756,7 @@ export function StaffOrdersClient({
           <div className="space-y-2">
             <div>
               <Label htmlFor="takeout-customer-name" className="text-xs sm:text-sm font-semibold">
-                Nome do Cliente <span className="text-red-500">*</span>
+                Nome do Cliente
               </Label>
               <Input
                 id="takeout-customer-name"
@@ -778,7 +768,7 @@ export function StaffOrdersClient({
             </div>
             <div>
               <Label htmlFor="takeout-customer-phone" className="text-xs sm:text-sm font-semibold">
-                Telefone <span className="text-red-500">*</span>
+                Telefone
               </Label>
               <Input
                 id="takeout-customer-phone"
@@ -1177,12 +1167,12 @@ export function StaffOrdersClient({
                 />
               </div>
 
-              {((orderType === "dine-in" && !selectedTable) || !paymentMethod || (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress)) || (orderType === "pickup" && (!customerName || !customerPhone))) && (
+              {((orderType === "dine-in" && !selectedTable) || !paymentMethod || (orderType === "delivery" && (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()))) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 text-xs sm:text-sm text-yellow-800">
                   {orderType === "dine-in" && !selectedTable && <p>⚠️ Selecione uma mesa</p>}
-                  {(orderType === "delivery" || orderType === "pickup") && !customerName && <p>⚠️ Preencha o nome do cliente</p>}
-                  {(orderType === "delivery" || orderType === "pickup") && !customerPhone && <p>⚠️ Preencha o telefone do cliente</p>}
-                  {orderType === "delivery" && !deliveryAddress && <p>⚠️ Preencha o endereço de entrega</p>}
+                  {orderType === "delivery" && !customerName.trim() && <p>⚠️ Preencha o nome do cliente</p>}
+                  {orderType === "delivery" && !customerPhone.trim() && <p>⚠️ Preencha o telefone do cliente</p>}
+                  {orderType === "delivery" && !deliveryAddress.trim() && <p>⚠️ Preencha o endereço de entrega</p>}
                   {!paymentMethod && <p>⚠️ Selecione a forma de pagamento</p>}
                 </div>
               )}
@@ -1193,8 +1183,7 @@ export function StaffOrdersClient({
                   cart.length === 0 || 
                   !paymentMethod || 
                   (orderType === "dine-in" && !selectedTable) ||
-                  (orderType === "delivery" && (!customerName || !customerPhone || !deliveryAddress)) ||
-                  (orderType === "pickup" && (!customerName || !customerPhone))
+                  (orderType === "delivery" && (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()))
                 }
                 className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
