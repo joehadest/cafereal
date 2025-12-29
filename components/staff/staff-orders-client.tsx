@@ -247,6 +247,9 @@ export function StaffOrdersClient({
       const newItemKey = getItemKey(newItem)
       setSelectedItemsForPayment((prev) => new Set([...prev, newItemKey]))
       
+      // Manter o carrinho minimizado quando adiciona item
+      setIsCartMinimized(true)
+      
       return [...prevArray, newItem]
     })
   }

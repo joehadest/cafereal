@@ -139,7 +139,10 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 animate-in zoom-in-95 fade-in duration-300">
+      <DialogContent 
+        className="bg-white border-slate-200 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 animate-in zoom-in-95 fade-in duration-300"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-slate-200 flex-shrink-0 animate-in slide-in-from-top duration-500">
           <div className="flex items-start gap-4">
             {product.image_url && (
@@ -312,12 +315,17 @@ export function ProductOptionsModal({ isOpen, onClose, product, onAddToCart, exi
                   <Minus className="h-4 w-4" />
                 </Button>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   min="1"
                   max="999"
                   value={quantity}
                   onChange={(e) => handleQuantityChange(e.target.value)}
                   className="w-20 text-center font-semibold text-slate-900 border-slate-200"
+                  autoFocus={false}
+                  readOnly
+                  onFocus={(e) => e.target.blur()}
+                  onTouchStart={(e) => e.preventDefault()}
                 />
                 <Button
                   type="button"
