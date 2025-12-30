@@ -79,15 +79,6 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
     <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '15px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
       <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px' }}>
-        {restaurantInfo?.logo_url && (
-          <div className="mb-2 flex justify-center">
-            <img 
-              src={restaurantInfo.logo_url} 
-              alt={restaurantInfo.name || "Logo"} 
-              style={{ maxHeight: '40px', maxWidth: '100%', objectFit: 'contain' }}
-            />
-          </div>
-        )}
         <div className="mb-1">
           <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '20px', letterSpacing: '0.5px', fontWeight: 'bold' }}>
             {restaurantInfo?.name || "CAFEREAL"}
