@@ -196,13 +196,13 @@ export function OrdersClient({
           // Imprimir se for novo pedido e estiver configurado para imprimir em novos pedidos
           if (isNewOrder && autoPrintSettings.printOnNewOrder && autoPrintSettings.printType !== "none") {
             printedOrderIdsRef.current.add(orderId)
-            setTimeout(() => {
+            setTimeout(async () => {
               await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
             }, 500)
           }
           // Imprimir se o status mudou e estiver configurado para imprimir em mudanças de status
           else if (statusChanged && autoPrintSettings.printOnStatusChange && autoPrintSettings.printType !== "none") {
-            setTimeout(() => {
+            setTimeout(async () => {
               await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
             }, 500)
           }
@@ -210,7 +210,7 @@ export function OrdersClient({
           else if (itemsChanged && autoPrintSettings.printOnItemsChange && autoPrintSettings.printType !== "none") {
             // Identificar itens novos para destacar na impressão
             const newItemIds = getNewItemIds(previousItems, order.order_items || [])
-            setTimeout(() => {
+            setTimeout(async () => {
               await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo, newItemIds)
             }, 500)
           }
