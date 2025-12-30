@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone, ShoppingBag, DollarSign } from "lucide-react"
+import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone, ShoppingBag, DollarSign, Copy, History } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ProductOptionsModal } from "@/components/menu/product-options-modal"
@@ -17,6 +17,7 @@ import { EditOrderModal } from "@/components/orders/edit-order-modal"
 import type { Product, ProductVariety, ProductExtra } from "@/types/product"
 import type { Order } from "@/types/order"
 import Image from "next/image"
+import { toast } from "sonner"
 
 type Category = {
   id: string
@@ -89,6 +90,8 @@ export function StaffOrdersClient({
   const [pricePerKg, setPricePerKg] = useState<string>("")
   const [deliveryZones, setDeliveryZones] = useState<Array<{ id: string; name: string; fee: number; active: boolean; display_order: number }>>([])
   const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>("")
+  const [customerHistory, setCustomerHistory] = useState<Array<{ customer_name: string; customer_phone: string; delivery_address: string; reference_point: string | null; delivery_zone_id: string | null }>>([])
+  const [showCustomerHistory, setShowCustomerHistory] = useState(false)
 
   // Função auxiliar para calcular o preço unitário final de um item
   const calculateFinalPrice = (item: CartItem): number => {
@@ -241,6 +244,236 @@ export function StaffOrdersClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.length, paymentMethod, orderType, selectedTable, customerName, customerPhone, deliveryAddress, isSubmitting, isProductModalOpen, isWeightModalOpen, showSuccessModal])
 
+  // Função para formatar telefone
+  const formatPhone = (value: string): string => {
+    const numbers = value.replace(/\D/g, "")
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, (match, p1, p2, p3) => {
+        if (p3) return `(${p1}) ${p2}-${p3}`
+        if (p2) return `(${p1}) ${p2}`
+        if (p1) return `(${p1}`
+        return numbers
+      })
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, (match, p1, p2, p3) => {
+        if (p3) return `(${p1}) ${p2}-${p3}`
+        if (p2) return `(${p1}) ${p2}`
+        if (p1) return `(${p1}`
+        return numbers
+      })
+    }
+  }
+
+  // Buscar histórico de clientes quando telefone mudar (delivery)
+  useEffect(() => {
+    const searchCustomerHistory = async () => {
+      if (orderType === "delivery" && customerPhone.trim().length >= 10) {
+        const phoneNumbers = customerPhone.replace(/\D/g, "")
+        if (phoneNumbers.length >= 10) {
+          const supabase = createClient()
+          try {
+            const { data, error } = await supabase
+              .from("orders")
+              .select("customer_name, customer_phone, delivery_address, reference_point, delivery_zone_id")
+              .eq("order_type", "delivery")
+              .not("customer_phone", "is", null)
+              .ilike("customer_phone", `%${phoneNumbers}%`)
+              .order("created_at", { ascending: false })
+              .limit(5)
+
+            if (!error && data) {
+              // Remover duplicatas e manter apenas o mais recente de cada combinação
+              const uniqueHistory = data.reduce((acc: any[], order: any) => {
+                const exists = acc.find(
+                  (o) =>
+                    o.customer_phone === order.customer_phone &&
+                    o.delivery_address === order.delivery_address
+                )
+                if (!exists) {
+                  acc.push(order)
+                }
+                return acc
+              }, [])
+              setCustomerHistory(uniqueHistory)
+              setShowCustomerHistory(uniqueHistory.length > 0)
+            }
+          } catch (error) {
+            console.error("Erro ao buscar histórico:", error)
+          }
+        }
+      } else {
+        setCustomerHistory([])
+        setShowCustomerHistory(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchCustomerHistory, 500)
+    return () => clearTimeout(timeoutId)
+  }, [customerPhone, orderType])
+
+  // Função para preencher dados do histórico
+  const fillFromHistory = (historyItem: typeof customerHistory[0]) => {
+    setCustomerName(historyItem.customer_name || "")
+    setCustomerPhone(historyItem.customer_phone || "")
+    setDeliveryAddress(historyItem.delivery_address || "")
+    setReferencePoint(historyItem.reference_point || "")
+    if (historyItem.delivery_zone_id) {
+      setSelectedDeliveryZoneId(historyItem.delivery_zone_id)
+    }
+    setShowCustomerHistory(false)
+    toast.success("Dados preenchidos do histórico")
+  }
+
+  // Função para duplicar pedido
+  const duplicateOrder = async (order: Order) => {
+    if (!order.order_items || order.order_items.length === 0) {
+      toast.error("Pedido não possui itens para duplicar")
+      return
+    }
+
+    try {
+      const supabase = createClient()
+      
+      // Buscar produtos completos com variedades e extras
+      const { data: categoriesData } = await supabase
+        .from("categories")
+        .select("*, products(*)")
+        .eq("active", true)
+
+      const { data: allVarieties } = await supabase
+        .from("product_varieties")
+        .select("*")
+        .eq("active", true)
+
+      const { data: allExtras } = await supabase
+        .from("product_extras")
+        .select("*")
+        .eq("active", true)
+
+      // Mapear produtos com variedades e extras
+      const productsMap = new Map<string, Product>()
+      if (categoriesData) {
+        categoriesData.forEach((cat: any) => {
+          if (cat.products) {
+            cat.products.forEach((prod: any) => {
+              productsMap.set(prod.id, {
+                ...prod,
+                varieties: allVarieties?.filter((v) => v.product_id === prod.id) || [],
+                extras: allExtras?.filter((e) => e.product_id === prod.id) || [],
+              })
+            })
+          }
+        })
+      }
+
+      // Limpar carrinho atual
+      setCart([])
+      setSelectedItemsForPayment(new Set())
+
+      // Adicionar itens do pedido ao carrinho
+      const newCartItems: CartItem[] = []
+      for (const item of order.order_items) {
+        const productId = (item as any).product_id
+        const product = productId ? productsMap.get(productId) : null
+        
+        if (product) {
+          // Encontrar variedade se houver
+          const variety = item.variety_id
+            ? product.varieties?.find((v) => v.id === item.variety_id)
+            : null
+
+          // Buscar extras do item
+          const itemExtras: { extra: ProductExtra; quantity: number }[] = []
+          if (item.order_item_extras) {
+            for (const extraData of item.order_item_extras) {
+              const extraId = (extraData as any).extra_id
+              const extra = product.extras?.find((e) => e.id === extraId)
+              if (extra) {
+                itemExtras.push({ extra, quantity: extraData.quantity })
+              }
+            }
+          }
+
+          const basePrice = variety?.price ?? product.price ?? 0
+          const extrasPrice = itemExtras.reduce((sum, e) => sum + e.extra.price * e.quantity, 0)
+          const finalPrice = basePrice + extrasPrice
+
+          newCartItems.push({
+            ...product,
+            quantity: item.quantity,
+            selectedVariety: variety || null,
+            selectedExtras: itemExtras,
+            finalPrice,
+          })
+        } else {
+          // Item por peso ou produto removido - criar item manual
+          const weightMatch = item.notes?.match(/Peso:\s*([\d,]+)\s*kg/)
+          const priceMatch = item.notes?.match(/Preço\/kg:\s*R\$\s*([\d,]+)/)
+          
+          if (weightMatch && priceMatch) {
+            const weight = parseFloat(weightMatch[1].replace(",", "."))
+            const pricePerKg = parseFloat(priceMatch[1].replace(",", "."))
+            
+            const manualItem: CartItem = {
+              id: `weight-${Date.now()}-${Math.random()}`,
+              name: item.product_name,
+              description: item.notes || "",
+              price: pricePerKg,
+              quantity: 1,
+              finalPrice: pricePerKg * weight,
+              weight: weight,
+              category_id: null,
+              image_url: undefined,
+              active: true,
+              display_order: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }
+            newCartItems.push(manualItem)
+          }
+        }
+      }
+
+      setCart(newCartItems)
+      setSelectedItemsForPayment(new Set(newCartItems.map(item => getItemKey(item))))
+
+      // Preencher dados do pedido
+      if (order.order_type === "delivery") {
+        setOrderType("delivery")
+        setCustomerName(order.customer_name || "")
+        setCustomerPhone(order.customer_phone || "")
+        setDeliveryAddress(order.delivery_address || "")
+        setReferencePoint(order.reference_point || "")
+        setDeliveryFee(order.delivery_fee || 0)
+        if (order.delivery_zone_id) {
+          setSelectedDeliveryZoneId(order.delivery_zone_id)
+        }
+      } else if (order.order_type === "pickup") {
+        setOrderType("pickup")
+        setCustomerName(order.customer_name || "")
+        setCustomerPhone(order.customer_phone || "")
+      } else {
+        setOrderType("dine-in")
+        setSelectedTable(order.table_number?.toString() || "")
+        setCustomerName(order.customer_name || "")
+      }
+
+      setPaymentMethod(order.payment_method || "")
+      setNotes(order.notes || "")
+      
+      // Scroll para o carrinho
+      setTimeout(() => {
+        document.getElementById("cart-section")?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+
+      toast.success("Pedido duplicado com sucesso!")
+      setShowOrdersList(false)
+    } catch (error) {
+      console.error("Erro ao duplicar pedido:", error)
+      toast.error("Erro ao duplicar pedido")
+    }
+  }
+
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -369,12 +602,12 @@ export function StaffOrdersClient({
     const price = parseFloat(pricePerKg.replace(",", "."))
     
     if (isNaN(weight) || weight <= 0) {
-      alert("Por favor, insira um peso válido")
+      toast.error("Por favor, insira um peso válido")
       return
     }
     
     if (isNaN(price) || price <= 0) {
-      alert("Por favor, insira um preço por kg válido")
+      toast.error("Por favor, insira um preço por kg válido")
       return
     }
 
@@ -406,33 +639,33 @@ export function StaffOrdersClient({
 
   const handleCreateOrder = async () => {
     if (cart.length === 0) {
-      alert("Adicione pelo menos um item ao pedido")
+      toast.error("Adicione pelo menos um item ao pedido")
       return
     }
 
     if (orderType === "dine-in" && (!selectedTable || selectedTable.trim() === "")) {
-      alert("Selecione uma mesa")
+      toast.error("Selecione uma mesa")
       return
     }
 
     if (orderType === "delivery") {
       if (!customerName.trim()) {
-        alert("Preencha o nome do cliente")
+        toast.error("Preencha o nome do cliente")
         return
       }
       if (!customerPhone.trim()) {
-        alert("Preencha o telefone do cliente")
+        toast.error("Preencha o telefone do cliente")
         return
       }
       if (!deliveryAddress.trim()) {
-        alert("Preencha o endereço de entrega")
+        toast.error("Preencha o endereço de entrega")
         return
       }
     }
 
 
     if (!paymentMethod || !paymentMethod.trim()) {
-      alert("Selecione a forma de pagamento")
+      toast.error("Selecione a forma de pagamento")
       return
     }
 
@@ -567,7 +800,7 @@ export function StaffOrdersClient({
     } catch (error: any) {
       console.error("Error creating order:", error)
       console.error("Error details:", JSON.stringify(error, null, 2))
-      alert(`Erro ao criar pedido: ${error.message || error.details || 'Erro desconhecido'}`)
+      toast.error(`Erro ao criar pedido: ${error.message || error.details || 'Erro desconhecido'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -695,15 +928,27 @@ export function StaffOrdersClient({
                       )}
                       <p className="text-xs sm:text-sm font-bold text-slate-900">R$ {order.total.toFixed(2)}</p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingOrder(order)}
-                      className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3"
-                    >
-                      <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-                      <span className="hidden sm:inline">Editar</span>
-                    </Button>
+                    <div className="flex gap-1 sm:gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => duplicateOrder(order)}
+                        className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3 text-blue-600 border-blue-300 hover:bg-blue-50"
+                        title="Duplicar pedido"
+                      >
+                        <Copy className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Duplicar</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingOrder(order)}
+                        className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3"
+                      >
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Editar</span>
+                      </Button>
+                    </div>
                   </div>
                 )
               })}
@@ -861,9 +1106,13 @@ export function StaffOrdersClient({
               <Input
                 id="takeout-customer-phone"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => {
+                  const formatted = formatPhone(e.target.value)
+                  setCustomerPhone(formatted)
+                }}
                 placeholder="(00) 00000-0000"
                 className="text-xs sm:text-sm"
+                maxLength={15}
               />
             </div>
           </div>
@@ -890,17 +1139,41 @@ export function StaffOrdersClient({
                 className="text-xs sm:text-sm"
               />
             </div>
-            <div>
+            <div className="relative">
               <Label htmlFor="delivery-customer-phone" className="text-xs sm:text-sm font-semibold">
                 Telefone <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="delivery-customer-phone"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => {
+                  const formatted = formatPhone(e.target.value)
+                  setCustomerPhone(formatted)
+                }}
                 placeholder="(00) 00000-0000"
                 className="text-xs sm:text-sm"
+                maxLength={15}
               />
+              {showCustomerHistory && customerHistory.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="p-2 border-b border-slate-200 flex items-center gap-2 text-xs font-semibold text-slate-700">
+                    <History className="h-3 w-3" />
+                    Histórico de Clientes
+                  </div>
+                  {customerHistory.map((history, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => fillFromHistory(history)}
+                      className="w-full text-left p-2 hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
+                    >
+                      <div className="text-xs font-medium text-slate-900">{history.customer_name}</div>
+                      <div className="text-[10px] text-slate-600 truncate">{history.customer_phone}</div>
+                      <div className="text-[10px] text-slate-500 truncate">{history.delivery_address}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="delivery-address" className="text-xs sm:text-sm font-semibold">
