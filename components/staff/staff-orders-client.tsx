@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone, ShoppingBag } from "lucide-react"
+import { ShoppingCart, Plus, Minus, X, UtensilsCrossed, CheckCircle, Search, ChevronUp, ChevronDown, Edit, ClipboardList, ArrowLeft, Bike, MapPin, Phone, ShoppingBag, DollarSign } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ProductOptionsModal } from "@/components/menu/product-options-modal"
@@ -87,6 +87,8 @@ export function StaffOrdersClient({
   const [productWeight, setProductWeight] = useState<string>("")
   const [productDescription, setProductDescription] = useState<string>("")
   const [pricePerKg, setPricePerKg] = useState<string>("")
+  const [deliveryZones, setDeliveryZones] = useState<Array<{ id: string; name: string; fee: number; active: boolean; display_order: number }>>([])
+  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>("")
 
   // Função auxiliar para calcular o preço unitário final de um item
   const calculateFinalPrice = (item: CartItem): number => {
@@ -163,6 +165,81 @@ export function StaffOrdersClient({
       setSelectedItemsForPayment(new Set(allKeys))
     }
   }
+
+  // Carregar zonas de entrega
+  useEffect(() => {
+    const loadDeliveryZones = async () => {
+      const supabase = createClient()
+      try {
+        const { data, error } = await supabase
+          .from("delivery_zones")
+          .select("*")
+          .eq("active", true)
+          .order("display_order", { ascending: true })
+          .order("name", { ascending: true })
+
+        if (error) throw error
+        setDeliveryZones(data || [])
+        
+        // Selecionar a primeira zona por padrão
+        if (data && data.length > 0) {
+          setSelectedDeliveryZoneId(data[0].id)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar zonas de entrega:", error)
+      }
+    }
+    loadDeliveryZones()
+  }, [])
+
+  // Atualizar deliveryFee quando a zona mudar
+  useEffect(() => {
+    if (selectedDeliveryZoneId && deliveryZones.length > 0 && orderType === "delivery") {
+      const selectedZone = deliveryZones.find(z => z.id === selectedDeliveryZoneId)
+      if (selectedZone) {
+        setDeliveryFee(selectedZone.fee)
+      }
+    }
+  }, [selectedDeliveryZoneId, deliveryZones, orderType])
+
+  // Atalhos de teclado
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Enter para finalizar pedido (quando o carrinho está aberto e não está em um input)
+      if (e.key === "Enter" && !e.shiftKey && cart.length > 0 && !isSubmitting) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA" && !target.isContentEditable) {
+          const canSubmit = 
+            paymentMethod && 
+            (orderType !== "dine-in" || selectedTable) &&
+            (orderType !== "delivery" || (customerName.trim() && customerPhone.trim() && deliveryAddress.trim()))
+          
+          if (canSubmit) {
+            e.preventDefault()
+            handleCreateOrder()
+          }
+        }
+      }
+      
+      // Esc para fechar modais
+      if (e.key === "Escape") {
+        if (isProductModalOpen) {
+          setIsProductModalOpen(false)
+          setSelectedProduct(null)
+        }
+        if (isWeightModalOpen) {
+          setIsWeightModalOpen(false)
+        }
+        if (showSuccessModal) {
+          setShowSuccessModal(false)
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart.length, paymentMethod, orderType, selectedTable, customerName, customerPhone, deliveryAddress, isSubmitting, isProductModalOpen, isWeightModalOpen, showSuccessModal])
 
   // Filtrar categorias e produtos baseado no termo de busca
   const filteredCategories = useMemo(() => {
@@ -385,13 +462,17 @@ export function StaffOrdersClient({
         orderData.delivery_address = null
         orderData.reference_point = null
         orderData.delivery_fee = 0
-      } else if (orderType === "delivery") {
+      } else       if (orderType === "delivery") {
         orderData.table_number = 0
         orderData.customer_name = customerName.trim()
         orderData.customer_phone = customerPhone.trim()
         orderData.delivery_address = deliveryAddress.trim()
         orderData.reference_point = referencePoint?.trim() || null
         orderData.delivery_fee = deliveryFee || 0
+        // Adicionar zone_id se uma zona foi selecionada
+        if (selectedDeliveryZoneId) {
+          orderData.delivery_zone_id = selectedDeliveryZoneId
+        }
       }
 
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
@@ -657,6 +738,13 @@ export function StaffOrdersClient({
             }
             if (value === "delivery") {
               // Manter nome e telefone se já preenchidos
+              // Selecionar primeira zona se disponível
+              if (deliveryZones.length > 0 && !selectedDeliveryZoneId) {
+                setSelectedDeliveryZoneId(deliveryZones[0].id)
+              }
+            } else {
+              // Limpar zona quando não for delivery
+              setSelectedDeliveryZoneId("")
             }
           }}>
             <SelectTrigger id="order-type-select" className="w-full text-sm sm:text-base">
@@ -839,21 +927,43 @@ export function StaffOrdersClient({
                 className="text-xs sm:text-sm"
               />
             </div>
-            <div>
-              <Label htmlFor="delivery-fee" className="text-xs sm:text-sm font-semibold">
-                Taxa de Entrega (R$)
-              </Label>
-              <Input
-                id="delivery-fee"
-                type="number"
-                step="0.01"
-                min="0"
-                value={deliveryFee}
-                onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
-                className="text-xs sm:text-sm"
-              />
-            </div>
+            {deliveryZones.length > 1 ? (
+              <div>
+                <Label htmlFor="delivery-zone" className="text-xs sm:text-sm font-semibold flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Zona de Entrega
+                </Label>
+                <Select value={selectedDeliveryZoneId} onValueChange={setSelectedDeliveryZoneId}>
+                  <SelectTrigger id="delivery-zone" className="text-xs sm:text-sm">
+                    <SelectValue placeholder="Selecione a zona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {deliveryZones.map((zone) => (
+                      <SelectItem key={zone.id} value={zone.id}>
+                        {zone.name} - R$ {zone.fee.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="delivery-fee" className="text-xs sm:text-sm font-semibold flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Taxa de Entrega (R$)
+                </Label>
+                <Input
+                  id="delivery-fee"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={deliveryFee}
+                  onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  className="text-xs sm:text-sm"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1185,10 +1295,15 @@ export function StaffOrdersClient({
                   (orderType === "dine-in" && !selectedTable) ||
                   (orderType === "delivery" && (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()))
                 }
-                className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed relative"
                 type="button"
               >
-                {isSubmitting ? "Enviando..." : "Finalizar Pedido"}
+                {isSubmitting ? "Enviando..." : (
+                  <>
+                    Finalizar Pedido
+                    <span className="hidden sm:inline ml-2 text-xs opacity-75">(Enter)</span>
+                  </>
+                )}
               </Button>
             </div>
             </div>
