@@ -5,10 +5,32 @@ import type { Order } from "@/types/order"
 interface PrintKitchenTicketProps {
   order: Order
   restaurantName?: string
+  deliveryZoneName?: string
   newItemIds?: Set<string>
 }
 
-export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintKitchenTicketProps) {
+// Função para formatar telefone
+const formatPhone = (phone: string | null | undefined): string | null => {
+  if (!phone) return null
+  const numbers = phone.replace(/\D/g, "")
+  if (numbers.length <= 10) {
+    return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, (match, p1, p2, p3) => {
+      if (p3) return `(${p1}) ${p2}-${p3}`
+      if (p2) return `(${p1}) ${p2}`
+      if (p1) return `(${p1}`
+      return numbers
+    })
+  } else {
+    return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, (match, p1, p2, p3) => {
+      if (p3) return `(${p1}) ${p2}-${p3}`
+      if (p2) return `(${p1}) ${p2}`
+      if (p1) return `(${p1}`
+      return numbers
+    })
+  }
+}
+
+export function PrintKitchenTicket({ order, restaurantName, deliveryZoneName, newItemIds }: PrintKitchenTicketProps) {
   const isDelivery = order.order_type === "delivery"
   const timestamp = new Date(order.created_at)
 
@@ -94,11 +116,20 @@ export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintK
                     ))}
                   </div>
                 )}
-                {/* Observações do item */}
+                {/* Observações do item ou informações de peso */}
                 {item.notes && (
                   <div className="ml-2 mt-1" style={{ borderLeft: '3px solid #ff9800', paddingLeft: '4px', backgroundColor: '#fff3e0' }}>
-                    <p className="font-bold uppercase mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBSERVAÇÃO:</p>
-                    <p className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{item.notes}</p>
+                    {item.notes.includes("Peso:") ? (
+                      <>
+                        <p className="font-bold uppercase mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>ITEM POR PESO:</p>
+                        <p className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{item.notes}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold uppercase mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBSERVAÇÃO:</p>
+                        <p className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{item.notes}</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -136,7 +167,13 @@ export function PrintKitchenTicket({ order, restaurantName, newItemIds }: PrintK
           {isDelivery && order.customer_phone && (
             <div className="mb-0.5">
               <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Telefone: </span>
-              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{order.customer_phone}</span>
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{formatPhone(order.customer_phone) || order.customer_phone}</span>
+            </div>
+          )}
+          {isDelivery && deliveryZoneName && (
+            <div className="mb-0.5">
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Zona: </span>
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{deliveryZoneName}</span>
             </div>
           )}
           {isDelivery && order.delivery_address && (

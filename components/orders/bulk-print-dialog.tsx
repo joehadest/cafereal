@@ -18,6 +18,12 @@ interface BulkPrintDialogProps {
     name: string
     phone?: string
     address?: string
+    cnpj?: string
+    logo_url?: string
+    opening_hours?: string
+    instagram?: string
+    facebook?: string
+    whatsapp?: string
   }
 }
 
@@ -41,8 +47,35 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
     setSelectedOrders((prev) => (prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]))
   }
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (selectedOrders.length === 0) return
+
+    // Buscar todas as zonas de entrega de uma vez
+    const { createClient } = await import("@/lib/supabase/client")
+    const supabase = createClient()
+    const ordersToPrint = selectedOrders
+      .map((orderId) => orders.find((o) => o.id === orderId))
+      .filter((order): order is Order => order !== undefined)
+
+    const zoneIds = [...new Set(ordersToPrint.map(o => o.delivery_zone_id).filter(Boolean) as string[])]
+    const zonesMap = new Map<string, string>()
+    
+    if (zoneIds.length > 0) {
+      try {
+        const { data: zones } = await supabase
+          .from("delivery_zones")
+          .select("id, name")
+          .in("id", zoneIds)
+        
+        if (zones) {
+          zones.forEach(zone => {
+            zonesMap.set(zone.id, zone.name)
+          })
+        }
+      } catch (error) {
+        console.error("Erro ao buscar zonas de entrega:", error)
+      }
+    }
 
     // Criar elemento temporário com todos os pedidos selecionados
     const printContainer = document.createElement("div")
@@ -57,33 +90,32 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
 
     // Renderizar todos os pedidos selecionados usando React
     const root = createRoot(printContainer)
-    
-    const ordersToPrint = selectedOrders
-      .map((orderId) => orders.find((o) => o.id === orderId))
-      .filter((order): order is Order => order !== undefined)
 
     root.render(
       <div style={{ width: "100%" }}>
-        {ordersToPrint.map((order, index) => (
-          <div
-            key={order.id}
-            className="print-item"
-            style={{
-              pageBreakAfter: index < ordersToPrint.length - 1 ? "always" : "auto",
-              pageBreakInside: "avoid",
-            }}
-          >
-            {printType === "kitchen" ? (
-              <div className="print-kitchen" style={{ display: "block" }}>
-                <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
-              </div>
-            ) : (
-              <div className="print-receipt" style={{ display: "block" }}>
-                <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
-              </div>
-            )}
-          </div>
-        ))}
+        {ordersToPrint.map((order, index) => {
+          const deliveryZoneName = order.delivery_zone_id ? zonesMap.get(order.delivery_zone_id) : undefined
+          return (
+            <div
+              key={order.id}
+              className="print-item"
+              style={{
+                pageBreakAfter: index < ordersToPrint.length - 1 ? "always" : "auto",
+                pageBreakInside: "avoid",
+              }}
+            >
+              {printType === "kitchen" ? (
+                <div className="print-kitchen" style={{ display: "block" }}>
+                  <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} deliveryZoneName={deliveryZoneName} />
+                </div>
+              ) : (
+                <div className="print-receipt" style={{ display: "block" }}>
+                  <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} deliveryZoneName={deliveryZoneName} />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     )
 

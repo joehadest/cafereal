@@ -60,7 +60,17 @@ function OrderCardComponent({
   onToggleSelection,
 }: { 
   order: Order
-  restaurantInfo?: { name: string; phone?: string; address?: string; cnpj?: string }
+  restaurantInfo?: { 
+    name: string
+    phone?: string
+    address?: string
+    cnpj?: string
+    logo_url?: string
+    opening_hours?: string
+    instagram?: string
+    facebook?: string
+    whatsapp?: string
+  }
   isSelectionMode?: boolean
   isSelected?: boolean
   onToggleSelection?: (orderId: string) => void
@@ -225,11 +235,29 @@ function OrderCardComponent({
     }
   }
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     // Verificar se o pedido tem dados
     if (!order || !order.order_items || order.order_items.length === 0) {
       alert("Erro: Pedido sem itens para imprimir")
       return
+    }
+
+    // Buscar nome da zona de entrega se houver
+    let deliveryZoneName: string | undefined = undefined
+    if (order.delivery_zone_id) {
+      try {
+        const supabase = createClient()
+        const { data: zone } = await supabase
+          .from("delivery_zones")
+          .select("name")
+          .eq("id", order.delivery_zone_id)
+          .single()
+        if (zone) {
+          deliveryZoneName = zone.name
+        }
+      } catch (error) {
+        console.error("Erro ao buscar zona de entrega:", error)
+      }
     }
 
     console.log("Imprimindo pedido:", order)
@@ -254,15 +282,15 @@ function OrderCardComponent({
       <div id={`print-wrapper-${order.id}`} style={{ width: "100%", display: "block", visibility: "visible" }}>
         {printType === "kitchen" ? (
           <div className="print-kitchen" style={{ display: "block", visibility: "visible", position: "relative" }}>
-            <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} />
+            <PrintKitchenTicket order={order} restaurantName={restaurantInfo?.name} deliveryZoneName={deliveryZoneName} />
           </div>
         ) : printType === "customer" ? (
           <div className="print-customer" style={{ display: "block", visibility: "visible", position: "relative" }}>
-            <PrintCustomerTicket order={order} restaurantInfo={restaurantInfo} />
+            <PrintCustomerTicket order={order} restaurantInfo={restaurantInfo} deliveryZoneName={deliveryZoneName} />
           </div>
         ) : (
           <div className="print-receipt" style={{ display: "block", visibility: "visible", position: "relative" }}>
-            <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} />
+            <PrintOrderReceipt order={order} restaurantInfo={restaurantInfo} deliveryZoneName={deliveryZoneName} />
           </div>
         )}
       </div>

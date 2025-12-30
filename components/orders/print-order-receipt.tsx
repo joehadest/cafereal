@@ -10,7 +10,13 @@ interface PrintOrderReceiptProps {
     phone?: string
     address?: string
     cnpj?: string
+    logo_url?: string
+    opening_hours?: string
+    instagram?: string
+    facebook?: string
+    whatsapp?: string
   }
+  deliveryZoneName?: string
   newItemIds?: Set<string>
 }
 
@@ -22,7 +28,42 @@ const formatCNPJ = (cnpj: string | null | undefined): string | null => {
   return cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
-export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOrderReceiptProps) {
+// Função para formatar telefone
+const formatPhone = (phone: string | null | undefined): string | null => {
+  if (!phone) return null
+  const numbers = phone.replace(/\D/g, "")
+  if (numbers.length <= 10) {
+    return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, (match, p1, p2, p3) => {
+      if (p3) return `(${p1}) ${p2}-${p3}`
+      if (p2) return `(${p1}) ${p2}`
+      if (p1) return `(${p1}`
+      return numbers
+    })
+  } else {
+    return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, (match, p1, p2, p3) => {
+      if (p3) return `(${p1}) ${p2}-${p3}`
+      if (p2) return `(${p1}) ${p2}`
+      if (p1) return `(${p1}`
+      return numbers
+    })
+  }
+}
+
+// Função para gerar código de barras visual simples
+const generateBarcode = (text: string): string => {
+  // Código de barras visual usando caracteres Unicode para impressão térmica
+  // Usa padrão de barras simples baseado no código
+  const barcodePattern = "█▉▊▋▌▍▎▏"
+  let result = ""
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i)
+    const patternIndex = charCode % barcodePattern.length
+    result += barcodePattern[patternIndex]
+  }
+  return result
+}
+
+export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, newItemIds }: PrintOrderReceiptProps) {
   const isDelivery = order.order_type === "delivery"
   const timestamp = new Date(order.created_at)
 
@@ -38,6 +79,15 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
     <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 1mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.3', fontSize: '15px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
       <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px' }}>
+        {restaurantInfo?.logo_url && (
+          <div className="mb-2 flex justify-center">
+            <img 
+              src={restaurantInfo.logo_url} 
+              alt={restaurantInfo.name || "Logo"} 
+              style={{ maxHeight: '40px', maxWidth: '100%', objectFit: 'contain' }}
+            />
+          </div>
+        )}
         <div className="mb-1">
           <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '20px', letterSpacing: '0.5px', fontWeight: 'bold' }}>
             {restaurantInfo?.name || "CAFEREAL"}
@@ -102,7 +152,13 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
           {isDelivery && order.customer_phone && (
             <div className="mb-0.5">
               <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Telefone: </span>
-              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{order.customer_phone}</span>
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{formatPhone(order.customer_phone) || order.customer_phone}</span>
+            </div>
+          )}
+          {isDelivery && deliveryZoneName && (
+            <div className="mb-0.5">
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Zona de Entrega: </span>
+              <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>{deliveryZoneName}</span>
             </div>
           )}
           {order.payment_method && (
@@ -188,10 +244,16 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
                     ))}
                   </div>
                 )}
-                {/* Observações do item */}
+                {/* Observações do item ou informações de peso */}
                 {item.notes && (
                   <div className="ml-2 mt-0.5">
-                    <span className="font-bold italic" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBS: {item.notes}</span>
+                    {item.notes.includes("Peso:") ? (
+                      <div style={{ backgroundColor: '#f5f5f5', padding: '2px 4px', borderLeft: '3px solid #666' }}>
+                        <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>{item.notes}</span>
+                      </div>
+                    ) : (
+                      <span className="font-bold italic" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBS: {item.notes}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -232,9 +294,36 @@ export function PrintOrderReceipt({ order, restaurantInfo, newItemIds }: PrintOr
         </div>
       </div>
 
+      {/* Código de Barras do Pedido */}
+      <div className="text-center mt-2 pt-2" style={{ borderTop: '1px dashed #000' }}>
+        <p className="font-bold mb-1" style={{ fontSize: '12px', fontWeight: 'bold' }}>CÓDIGO DO PEDIDO</p>
+        <p className="font-mono mb-1" style={{ fontSize: '18px', letterSpacing: '2px', fontWeight: 'bold' }}>
+          {order.id.slice(0, 8).toUpperCase()}
+        </p>
+        <div className="font-mono" style={{ fontSize: '10px', letterSpacing: '1px', lineHeight: '1.2' }}>
+          {generateBarcode(order.id.slice(0, 8).toUpperCase())}
+        </div>
+      </div>
+
       {/* Footer */}
       <div className="text-center mt-2 pt-2" style={{ borderTop: '1px solid #000' }}>
         <p className="font-bold uppercase mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>{restaurantInfo?.name || "CAFEREAL"}</p>
+        {restaurantInfo?.opening_hours && (
+          <p className="font-bold mb-0.5" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+            {restaurantInfo.opening_hours.split('\n').slice(0, 2).join(' | ')}
+          </p>
+        )}
+        <div className="flex justify-center gap-2 mb-0.5" style={{ fontSize: '11px' }}>
+          {restaurantInfo?.instagram && (
+            <span className="font-bold" style={{ fontWeight: 'bold' }}>📷 @{restaurantInfo.instagram.replace('@', '').split('/').pop()}</span>
+          )}
+          {restaurantInfo?.facebook && (
+            <span className="font-bold" style={{ fontWeight: 'bold' }}>👥 {restaurantInfo.facebook.split('/').pop()}</span>
+          )}
+          {restaurantInfo?.whatsapp && (
+            <span className="font-bold" style={{ fontWeight: 'bold' }}>💬 {formatPhone(restaurantInfo.whatsapp) || restaurantInfo.whatsapp}</span>
+          )}
+        </div>
         <p className="font-bold mb-0.5" style={{ fontSize: '15px', fontWeight: 'bold' }}>Obrigado pela preferência!</p>
         <p className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>Volte sempre!</p>
       </div>

@@ -36,6 +36,11 @@ export function OrdersClient({
     phone?: string
     address?: string
     cnpj?: string
+    logo_url?: string
+    opening_hours?: string
+    instagram?: string
+    facebook?: string
+    whatsapp?: string
   }
 }) {
   const router = useRouter()
@@ -192,13 +197,13 @@ export function OrdersClient({
           if (isNewOrder && autoPrintSettings.printOnNewOrder && autoPrintSettings.printType !== "none") {
             printedOrderIdsRef.current.add(orderId)
             setTimeout(() => {
-              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+              await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
             }, 500)
           }
           // Imprimir se o status mudou e estiver configurado para imprimir em mudanças de status
           else if (statusChanged && autoPrintSettings.printOnStatusChange && autoPrintSettings.printType !== "none") {
             setTimeout(() => {
-              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
+              await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo)
             }, 500)
           }
           // Imprimir se os itens mudaram e estiver configurado para imprimir em mudanças de itens
@@ -206,7 +211,7 @@ export function OrdersClient({
             // Identificar itens novos para destacar na impressão
             const newItemIds = getNewItemIds(previousItems, order.order_items || [])
             setTimeout(() => {
-              autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo, newItemIds)
+              await autoPrintOrder(order, autoPrintSettings.printType as "kitchen" | "customer" | "receipt", restaurantInfo, newItemIds)
             }, 500)
           }
 

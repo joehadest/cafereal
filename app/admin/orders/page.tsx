@@ -29,7 +29,7 @@ export default async function AdminOrdersPage() {
 
   const { data: restaurantSettings } = await supabase
     .from("restaurant_settings")
-    .select("name, phone, address, cnpj")
+    .select("name, phone, address, cnpj, logo_url, opening_hours, instagram, facebook, whatsapp")
     .single()
 
   const restaurantInfo = restaurantSettings
@@ -38,12 +38,22 @@ export default async function AdminOrdersPage() {
         phone: restaurantSettings.phone || undefined,
         address: restaurantSettings.address || undefined,
         cnpj: restaurantSettings.cnpj || undefined,
+        logo_url: restaurantSettings.logo_url || undefined,
+        opening_hours: restaurantSettings.opening_hours || undefined,
+        instagram: restaurantSettings.instagram || undefined,
+        facebook: restaurantSettings.facebook || undefined,
+        whatsapp: restaurantSettings.whatsapp || undefined,
       }
     : {
         name: "CafeReal",
         phone: undefined,
         address: undefined,
         cnpj: undefined,
+        logo_url: undefined,
+        opening_hours: undefined,
+        instagram: undefined,
+        facebook: undefined,
+        whatsapp: undefined,
       }
 
   return <OrdersClient orders={orders || []} tables={tables || []} restaurantInfo={restaurantInfo} />
