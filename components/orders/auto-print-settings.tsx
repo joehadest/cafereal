@@ -81,10 +81,10 @@ export function AutoPrintSettings() {
         <Button
           variant="outline"
           size="sm"
-          className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+          className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
         >
-          <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-          <span className="hidden sm:inline text-xs md:text-sm">Impressão Automática</span>
+          <Printer className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+          <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Impressão Automática</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

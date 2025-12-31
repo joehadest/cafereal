@@ -465,66 +465,68 @@ function OrderCardComponent({
   return (
     <>
       <Card className={`border-slate-200 hover:shadow-md hover:border-slate-400 transition-shadow overflow-hidden ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}>
-        <CardHeader className="pb-2 sm:pb-3 p-2.5 sm:p-3 md:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-            <div className="flex flex-wrap items-center gap-2">
+        <CardHeader className="pb-2 sm:pb-3 p-2 sm:p-3 md:p-6 overflow-hidden">
+          <div className="flex flex-col gap-2 sm:gap-3">
+            {/* Primeira linha: Tipo de pedido e status */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
               {isSelectionMode && (
                 <button
                   onClick={() => onToggleSelection?.(order.id)}
-                  className="flex items-center justify-center p-1 hover:bg-slate-100 rounded transition-colors"
+                  className="flex items-center justify-center p-1 hover:bg-slate-100 rounded transition-colors flex-shrink-0"
                   type="button"
                 >
                   {isSelected ? (
-                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                    <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   ) : (
-                    <Square className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
+                    <Square className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                   )}
                 </button>
               )}
               {isDelivery ? (
-                <div className="flex items-center gap-2">
-                  <Bike className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
-                  <span className="text-lg sm:text-xl font-bold text-slate-900">Delivery</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <Bike className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-slate-600 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-slate-900 whitespace-nowrap">Delivery</span>
                 </div>
               ) : order.table_number === 0 ? (
-                <div className="flex items-center gap-2">
-                  <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
-                  <span className="text-lg sm:text-xl font-bold text-slate-900">Retirada Local</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <UtensilsCrossed className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-slate-600 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-slate-900 whitespace-nowrap">Retirada Local</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
-                  <span className="text-lg sm:text-xl font-bold text-slate-900">Mesa {order.table_number}</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <UtensilsCrossed className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-slate-600 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-slate-900 whitespace-nowrap">Mesa {order.table_number}</span>
                 </div>
               )}
-              <Badge className={`${statusColor} text-white border-0 text-xs`}>
+              <Badge className={`${statusColor} text-white border-0 text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 flex-shrink-0 whitespace-nowrap`}>
                 {statusLabel}
               </Badge>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center gap-1 text-[10px] xs:text-xs sm:text-sm text-slate-700">
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            {/* Segunda linha: Hora e botões de ação */}
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full min-w-0">
+              <div className="flex items-center gap-1 text-[10px] xs:text-xs sm:text-sm text-slate-700 flex-shrink-0">
+                <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                 <span className="whitespace-nowrap">{timeAgo}</span>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 flex-shrink-0">
                 <Button
                   onClick={() => setEditModalOpen(true)}
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-green-300 text-green-600 hover:bg-green-50 bg-transparent flex-shrink-0"
+                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 border-green-300 text-green-600 hover:bg-green-50 bg-transparent flex-shrink-0 p-0"
                   title="Editar pedido"
                 >
-                  <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <Edit className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                 </Button>
                 <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent flex-shrink-0"
+                      className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent flex-shrink-0 p-0"
                       title="Imprimir pedido"
                     >
-                      <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Printer className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md mx-4">
@@ -567,17 +569,17 @@ function OrderCardComponent({
                   disabled={isDeleting}
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-10 sm:w-10 border-red-300 text-red-600 hover:bg-red-50 bg-transparent flex-shrink-0"
+                  className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 border-red-300 text-red-600 hover:bg-red-50 bg-transparent flex-shrink-0 p-0"
                   title="Excluir pedido"
                 >
-                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <Trash2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-2 sm:space-y-3 p-2.5 sm:p-3 md:p-6">
+        <CardContent className="space-y-2 sm:space-y-3 p-2 sm:p-3 md:p-6 overflow-hidden">
           {/* Informações do Cliente e Pagamento - Delivery */}
           {isDelivery && (order.customer_name || order.customer_phone || order.delivery_address) && (
             <div className="bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200 space-y-1 sm:space-y-1.5 text-[11px] xs:text-xs sm:text-sm hover:bg-slate-100 transition-colors">
@@ -692,13 +694,13 @@ function OrderCardComponent({
           </div>
         </CardContent>
 
-        <CardFooter className="p-2.5 sm:p-3 md:p-6 pt-0 overflow-hidden">
-          <div className="w-full flex flex-col sm:flex-row gap-2 min-w-0">
+        <CardFooter className="p-2 sm:p-3 md:p-6 pt-0 overflow-hidden">
+          <div className="w-full flex flex-col sm:flex-row gap-1.5 sm:gap-2 min-w-0">
             {order.status !== "delivered" && (
               <Button
                 onClick={handleCompleteAndPay}
                 disabled={isCompleting}
-                className={`flex-1 min-w-0 bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300 text-[11px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
+                className={`flex-1 min-w-0 bg-green-600 hover:bg-green-700 hover:shadow-lg transition-all duration-300 text-[10px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
                   isCompleting ? "animate-pulse" : ""
                 }`}
               >
@@ -710,7 +712,7 @@ function OrderCardComponent({
               <Button
                 onClick={handleUpdateStatus}
                 disabled={isUpdating}
-                className={`flex-1 min-w-0 bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-[11px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
+                className={`flex-1 min-w-0 bg-slate-600 hover:bg-slate-700 hover:shadow-lg transition-all duration-300 text-[10px] xs:text-xs sm:text-sm md:text-base py-1.5 xs:py-2 sm:py-2.5 ${
                   isUpdating ? "animate-pulse" : ""
                 }`}
               >

@@ -72,6 +72,7 @@ export function OrdersClient({
   }, [])
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set())
   const [isMerging, setIsMerging] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>("all")
   // Estado local para manter os pedidos mesmo durante refresh
   const [localOrders, setLocalOrders] = useState<Order[]>(orders)
   const isPrintingRef = useRef(false)
@@ -706,7 +707,7 @@ export function OrdersClient({
                 </div>
               </div>
               
-              <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
               {permission !== "granted" && (
                 <Button
                   onClick={async () => {
@@ -728,44 +729,46 @@ export function OrdersClient({
                   }}
                   variant="outline"
                   size="sm"
-                  className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent cursor-pointer text-xs sm:text-sm px-2 sm:px-3"
+                  className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent cursor-pointer text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
                   title="Clique para ativar notificações de novos pedidos"
                 >
-                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                  <span className="hidden sm:inline text-xs md:text-sm">Ativar Notificações</span>
+                  <Bell className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                  <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Ativar Notificações</span>
                 </Button>
               )}
               {permission === "granted" && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
                   title="Notificações ativadas"
                   disabled
                 >
-                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                  <span className="hidden sm:inline text-xs md:text-sm">Ativado</span>
+                  <Bell className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                  <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Ativado</span>
                 </Button>
               )}
               <Button
                 onClick={handleRefresh}
                 variant="outline"
                 size="sm"
-                className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                className="border-slate-300 text-slate-900 hover:bg-slate-50 bg-transparent text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
               >
-                <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline text-xs md:text-sm">Atualizar</span>
+                <RefreshCw className={`h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Atualizar</span>
               </Button>
-              <AutoPrintSettings />
+              <div className="flex-shrink-0">
+                <AutoPrintSettings />
+              </div>
               {filteredOrders.length > 0 && (
                 <Button
                   onClick={handleOpenMergeModal}
                   variant="outline"
                   size="sm"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
                 >
-                  <Merge className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                  <span className="hidden sm:inline text-xs md:text-sm">Juntar Pedidos</span>
+                  <Merge className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                  <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Juntar Pedidos</span>
                 </Button>
               )}
               {filteredOrders.length > 0 && (
@@ -773,10 +776,10 @@ export function OrdersClient({
                   onClick={() => setIsDeleteAllModalOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="border-red-300 text-red-700 hover:bg-red-50 bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  className="border-red-300 text-red-700 hover:bg-red-50 bg-transparent text-[10px] xs:text-xs sm:text-sm px-1.5 xs:px-2 sm:px-3 flex-shrink-0"
                 >
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                  <span className="hidden sm:inline text-xs md:text-sm">Limpar Todos</span>
+                  <Trash2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                  <span className="hidden sm:inline text-xs md:text-sm whitespace-nowrap">Limpar Todos</span>
                 </Button>
               )}
               </div>
@@ -826,30 +829,47 @@ export function OrdersClient({
         </div>
       </header>
 
+      {/* Gaveta de Filtros - Abas */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm w-full sticky top-0 z-10">
+        <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="bg-slate-50 border border-slate-200 w-full flex gap-1 p-1 overflow-x-auto scrollbar-hide">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span>Todos</span>
+              </TabsTrigger>
+              <TabsTrigger value="delivery" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Bike className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>Delivery</span>
+                </div>
+                <span className="text-slate-600 text-[9px] xs:text-[10px]">({deliveryOrders.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="dine-in" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>Mesas</span>
+                </div>
+                <span className="text-slate-600 text-[9px] xs:text-[10px]">({dineInOrders.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="balcao" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Store className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>Retirada Local</span>
+                </div>
+                <span className="text-slate-600 text-[9px] xs:text-[10px]">({balcaoOrders.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="tables" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span>Status</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+
       <main className="w-full px-2 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-6 lg:py-8">
-        <Tabs defaultValue="all" className="space-y-3 sm:space-y-6">
-          <TabsList className="bg-white border border-slate-200 w-full sm:w-auto grid grid-cols-2 sm:flex gap-1 sm:gap-0 p-1">
-            <TabsTrigger value="all" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
-              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Todos</span>
-            </TabsTrigger>
-            <TabsTrigger value="delivery" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
-              <Bike className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Delivery ({deliveryOrders.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="dine-in" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
-              <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Mesas ({dineInOrders.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="balcao" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
-              <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Retirada Local ({balcaoOrders.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="tables" className="data-[state=active]:bg-slate-100 text-[10px] xs:text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap">
-              <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span>Status</span>
-            </TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-6">
 
           <TabsContent value="all" className="space-y-4 sm:space-y-8">
             {/* Active Orders - Todos os pedidos exceto entregues */}
@@ -857,7 +877,8 @@ export function OrdersClient({
               <section>
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
                   <span className="bg-slate-600 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
-                  <span className="whitespace-nowrap">Pedidos Ativos ({activeOrders.length})</span>
+                  <span className="whitespace-nowrap">Pedidos Ativos</span>
+                  <span className="text-slate-600 font-normal whitespace-nowrap">({activeOrders.length})</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {activeOrders.map((order) => (
@@ -882,7 +903,8 @@ export function OrdersClient({
               <section>
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
                   <span className="bg-emerald-500 h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full flex-shrink-0"></span>
-                  <span className="whitespace-nowrap">Entregues ({deliveredOrders.length})</span>
+                  <span className="whitespace-nowrap">Entregues</span>
+                  <span className="text-slate-600 font-normal whitespace-nowrap">({deliveredOrders.length})</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {deliveredOrders.map((order) => (
@@ -904,7 +926,10 @@ export function OrdersClient({
               <>
                 {deliveryOrders.filter((o) => o.status !== "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pedidos Ativos ({deliveryOrders.filter((o) => o.status !== "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Pedidos Ativos</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({deliveryOrders.filter((o) => o.status !== "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status !== "delivered")
@@ -920,7 +945,10 @@ export function OrdersClient({
                 )}
                 {deliveryOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues ({deliveryOrders.filter((o) => o.status === "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Entregues</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({deliveryOrders.filter((o) => o.status === "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {deliveryOrders
                         .filter((o) => o.status === "delivered")
@@ -945,7 +973,10 @@ export function OrdersClient({
               <>
                 {dineInOrders.filter((o) => o.status !== "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pedidos Ativos ({dineInOrders.filter((o) => o.status !== "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Pedidos Ativos</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({dineInOrders.filter((o) => o.status !== "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status !== "delivered")
@@ -961,7 +992,10 @@ export function OrdersClient({
                 )}
                 {dineInOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues ({dineInOrders.filter((o) => o.status === "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Entregues</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({dineInOrders.filter((o) => o.status === "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {dineInOrders
                         .filter((o) => o.status === "delivered")
@@ -986,7 +1020,10 @@ export function OrdersClient({
               <>
                 {balcaoOrders.filter((o) => o.status !== "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Pedidos Ativos ({balcaoOrders.filter((o) => o.status !== "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Pedidos Ativos</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({balcaoOrders.filter((o) => o.status !== "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status !== "delivered")
@@ -1002,7 +1039,10 @@ export function OrdersClient({
                 )}
                 {balcaoOrders.filter((o) => o.status === "delivered").length > 0 && (
                   <section>
-                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 whitespace-nowrap">Entregues ({balcaoOrders.filter((o) => o.status === "delivered").length})</h2>
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 mb-2 sm:mb-4 flex items-center gap-2">
+                      <span className="whitespace-nowrap">Entregues</span>
+                      <span className="text-slate-600 font-normal whitespace-nowrap">({balcaoOrders.filter((o) => o.status === "delivered").length})</span>
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                       {balcaoOrders
                         .filter((o) => o.status === "delivered")
