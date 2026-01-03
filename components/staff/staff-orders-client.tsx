@@ -1350,21 +1350,19 @@ export function StaffOrdersClient({
           } overflow-hidden`}
         >
           {/* Header do Carrinho - Sempre Visível */}
-          <div className="p-2 sm:p-4 border-b border-slate-200 bg-white">
+          <div 
+            className="p-2 sm:p-4 border-b border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-colors"
+            onClick={() => setIsCartMinimized(!isCartMinimized)}
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsCartMinimized(!isCartMinimized)}
-                  className="p-1 h-auto flex-shrink-0"
-                >
+                <div className="p-1 h-auto flex-shrink-0">
                   {isCartMinimized ? (
                     <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                   ) : (
                     <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                   )}
-                </Button>
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm sm:text-lg font-bold text-slate-900 truncate">Carrinho ({totalItems})</h3>
                   {isCartMinimized && (
@@ -1376,7 +1374,8 @@ export function StaffOrdersClient({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setCart([])
                     setSelectedItemsForPayment(new Set())
                   }}
