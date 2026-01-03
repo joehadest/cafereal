@@ -143,15 +143,12 @@ export function Cart({
       return info.deliveryAddress.trim()
     }
     
-    // Caso contrário, montar a partir dos campos separados
+    // Caso contrário, montar a partir dos campos separados (sem cidade, estado e CEP)
     const parts: string[] = []
     if (info.street?.trim()) parts.push(info.street.trim())
     if (info.number?.trim()) parts.push(info.number.trim())
     if (info.complement?.trim()) parts.push(`- ${info.complement.trim()}`)
     if (info.neighborhood?.trim()) parts.push(info.neighborhood.trim())
-    if (info.city?.trim()) parts.push(info.city.trim())
-    if (info.state?.trim()) parts.push(info.state.trim())
-    if (info.zipCode?.trim()) parts.push(`CEP: ${info.zipCode.trim()}`)
     
     return parts.join(", ")
   }
@@ -220,13 +217,10 @@ export function Cart({
       const hasSavedAddress = effectiveDeliveryInfo.deliveryAddress?.trim()
       const hasSeparateFields = effectiveDeliveryInfo.street?.trim() && 
                                 effectiveDeliveryInfo.number?.trim() && 
-                                effectiveDeliveryInfo.neighborhood?.trim() && 
-                                effectiveDeliveryInfo.city?.trim() && 
-                                effectiveDeliveryInfo.state?.trim() && 
-                                effectiveDeliveryInfo.zipCode?.trim()
+                                effectiveDeliveryInfo.neighborhood?.trim()
       
       if (!hasSavedAddress && !hasSeparateFields) {
-        alert("Por favor, preencha todos os campos do endereço (rua, número, bairro, cidade, estado e CEP)")
+        alert("Por favor, preencha todos os campos do endereço (rua, número e bairro)")
         return
       }
     }
@@ -768,9 +762,6 @@ export function Cart({
                                   number: prev?.number || "",
                                   complement: prev?.complement || "",
                                   neighborhood: prev?.neighborhood || "",
-                                  city: prev?.city || "",
-                                  state: prev?.state || "",
-                                  zipCode: prev?.zipCode || "",
                                   referencePoint: prev?.referencePoint || "",
                                 }))
                               }}
@@ -796,9 +787,6 @@ export function Cart({
                                   number: e.target.value,
                                   complement: prev?.complement || "",
                                   neighborhood: prev?.neighborhood || "",
-                                  city: prev?.city || "",
-                                  state: prev?.state || "",
-                                  zipCode: prev?.zipCode || "",
                                   referencePoint: prev?.referencePoint || "",
                                 }))
                               }}
@@ -824,9 +812,6 @@ export function Cart({
                                   number: prev?.number || "",
                                   complement: e.target.value,
                                   neighborhood: prev?.neighborhood || "",
-                                  city: prev?.city || "",
-                                  state: prev?.state || "",
-                                  zipCode: prev?.zipCode || "",
                                   referencePoint: prev?.referencePoint || "",
                                 }))
                               }}
@@ -834,7 +819,7 @@ export function Cart({
                             />
                           </div>
                           
-                          <div>
+                          <div className="sm:col-span-2">
                             <Label htmlFor="cart-neighborhood" className="text-xs text-slate-700">
                               Bairro <span className="text-red-500">*</span>
                             </Label>
@@ -852,98 +837,6 @@ export function Cart({
                                   number: prev?.number || "",
                                   complement: prev?.complement || "",
                                   neighborhood: e.target.value,
-                                  city: prev?.city || "",
-                                  state: prev?.state || "",
-                                  zipCode: prev?.zipCode || "",
-                                  referencePoint: prev?.referencePoint || "",
-                                }))
-                              }}
-                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="cart-city" className="text-xs text-slate-700">
-                              Cidade <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id="cart-city"
-                              type="text"
-                              placeholder="Nome da cidade"
-                              value={manualDeliveryInfo?.city || ""}
-                              onChange={(e) => {
-                                setManualDeliveryInfo((prev) => ({
-                                  customerName: prev?.customerName || "",
-                                  customerPhone: prev?.customerPhone || "",
-                                  deliveryAddress: prev?.deliveryAddress || "",
-                                  street: prev?.street || "",
-                                  number: prev?.number || "",
-                                  complement: prev?.complement || "",
-                                  neighborhood: prev?.neighborhood || "",
-                                  city: e.target.value,
-                                  state: prev?.state || "",
-                                  zipCode: prev?.zipCode || "",
-                                  referencePoint: prev?.referencePoint || "",
-                                }))
-                              }}
-                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="cart-state" className="text-xs text-slate-700">
-                              Estado (UF) <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id="cart-state"
-                              type="text"
-                              placeholder="SP"
-                              maxLength={2}
-                              value={manualDeliveryInfo?.state || ""}
-                              onChange={(e) => {
-                                setManualDeliveryInfo((prev) => ({
-                                  customerName: prev?.customerName || "",
-                                  customerPhone: prev?.customerPhone || "",
-                                  deliveryAddress: prev?.deliveryAddress || "",
-                                  street: prev?.street || "",
-                                  number: prev?.number || "",
-                                  complement: prev?.complement || "",
-                                  neighborhood: prev?.neighborhood || "",
-                                  city: prev?.city || "",
-                                  state: e.target.value.toUpperCase(),
-                                  zipCode: prev?.zipCode || "",
-                                  referencePoint: prev?.referencePoint || "",
-                                }))
-                              }}
-                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="cart-zip-code" className="text-xs text-slate-700">
-                              CEP <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id="cart-zip-code"
-                              type="text"
-                              placeholder="00000-000"
-                              value={manualDeliveryInfo?.zipCode || ""}
-                              onChange={(e) => {
-                                let value = e.target.value.replace(/\D/g, '')
-                                if (value.length > 5) {
-                                  value = value.slice(0, 5) + '-' + value.slice(5, 8)
-                                }
-                                setManualDeliveryInfo((prev) => ({
-                                  customerName: prev?.customerName || "",
-                                  customerPhone: prev?.customerPhone || "",
-                                  deliveryAddress: prev?.deliveryAddress || "",
-                                  street: prev?.street || "",
-                                  number: prev?.number || "",
-                                  complement: prev?.complement || "",
-                                  neighborhood: prev?.neighborhood || "",
-                                  city: prev?.city || "",
-                                  state: prev?.state || "",
-                                  zipCode: value,
                                   referencePoint: prev?.referencePoint || "",
                                 }))
                               }}
@@ -971,9 +864,6 @@ export function Cart({
                                 number: prev?.number || "",
                                 complement: prev?.complement || "",
                                 neighborhood: prev?.neighborhood || "",
-                                city: prev?.city || "",
-                                state: prev?.state || "",
-                                zipCode: prev?.zipCode || "",
                                 referencePoint: e.target.value,
                               }))
                             }}
