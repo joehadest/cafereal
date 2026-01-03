@@ -13,7 +13,15 @@ import { useRouter } from "next/navigation"
 type DeliveryInfo = {
   customerName: string
   customerPhone: string
-  deliveryAddress: string
+  deliveryAddress: string // Mantido para compatibilidade com endereços salvos
+  // Campos separados para formulário
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  zipCode?: string
   referencePoint?: string
 }
 
@@ -38,6 +46,13 @@ export function DeliveryForm({ onSubmit, onBack }: DeliveryFormProps) {
     customerName: "",
     customerPhone: "",
     deliveryAddress: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zipCode: "",
   })
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
   const [customerProfile, setCustomerProfile] = useState<any>(null)
@@ -69,6 +84,13 @@ export function DeliveryForm({ onSubmit, onBack }: DeliveryFormProps) {
         customerName: profile.full_name,
         customerPhone: profile.phone,
         deliveryAddress: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zipCode: "",
       })
 
       const { data: addresses } = await supabase
@@ -85,13 +107,46 @@ export function DeliveryForm({ onSubmit, onBack }: DeliveryFormProps) {
 
   const selectAddress = (address: SavedAddress) => {
     const fullAddress = `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ""}, ${address.neighborhood}, ${address.city} - ${address.state}, CEP: ${address.zip_code}`
-    setFormData({ ...formData, deliveryAddress: fullAddress })
+    setFormData({ 
+      ...formData, 
+      deliveryAddress: fullAddress,
+      street: address.street,
+      number: address.number,
+      complement: address.complement || "",
+      neighborhood: address.neighborhood,
+      city: address.city,
+      state: address.state,
+      zipCode: address.zip_code,
+    })
     setShowNewAddress(false)
+  }
+  
+  // Função auxiliar para montar endereço completo a partir dos campos separados
+  const buildFullAddress = (info: DeliveryInfo): string => {
+    // Se já tem deliveryAddress (endereço salvo), usar ele
+    if (info.deliveryAddress?.trim()) {
+      return info.deliveryAddress.trim()
+    }
+    
+    // Caso contrário, montar a partir dos campos separados
+    const parts: string[] = []
+    if (info.street?.trim()) parts.push(info.street.trim())
+    if (info.number?.trim()) parts.push(info.number.trim())
+    if (info.complement?.trim()) parts.push(`- ${info.complement.trim()}`)
+    if (info.neighborhood?.trim()) parts.push(info.neighborhood.trim())
+    if (info.city?.trim()) parts.push(info.city.trim())
+    if (info.state?.trim()) parts.push(info.state.trim())
+    if (info.zipCode?.trim()) parts.push(`CEP: ${info.zipCode.trim()}`)
+    
+    return parts.join(", ")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (formData.customerName && formData.customerPhone && formData.deliveryAddress) {
+    const fullAddress = buildFullAddress(formData)
+    const hasAddress = formData.deliveryAddress?.trim() || (formData.street?.trim() && formData.number?.trim() && formData.neighborhood?.trim() && formData.city?.trim() && formData.state?.trim() && formData.zipCode?.trim())
+    
+    if (formData.customerName && formData.customerPhone && hasAddress) {
       if (user && !customerProfile) {
         const supabase = createClient()
         await supabase.from("customer_profiles").insert({
@@ -101,11 +156,18 @@ export function DeliveryForm({ onSubmit, onBack }: DeliveryFormProps) {
         })
       }
 
-      onSubmit(formData)
+      // Garantir que deliveryAddress esteja preenchido antes de enviar
+      const dataToSubmit: DeliveryInfo = {
+        ...formData,
+        deliveryAddress: fullAddress || formData.deliveryAddress,
+      }
+      onSubmit(dataToSubmit)
     }
   }
 
-  const isValid = formData.customerName && formData.customerPhone && formData.deliveryAddress
+  const fullAddress = buildFullAddress(formData)
+  const hasAddress = formData.deliveryAddress?.trim() || (formData.street?.trim() && formData.number?.trim() && formData.neighborhood?.trim() && formData.city?.trim() && formData.state?.trim() && formData.zipCode?.trim())
+  const isValid = formData.customerName && formData.customerPhone && hasAddress
 
   if (isLoading) {
     return (
@@ -240,20 +302,125 @@ export function DeliveryForm({ onSubmit, onBack }: DeliveryFormProps) {
         )}
 
         {(savedAddresses.length === 0 || showNewAddress) && (
-          <div className="space-y-2">
-            <Label htmlFor="address" className="text-purple-900 flex items-center gap-2">
+          <div className="space-y-3">
+            <Label className="text-purple-900 flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Endereço Completo
+              Endereço de Entrega
             </Label>
-            <Input
-              id="address"
-              type="text"
-              placeholder="Rua, número, bairro, cidade"
-              value={formData.deliveryAddress}
-              onChange={(e) => setFormData({ ...formData, deliveryAddress: e.target.value })}
-              className="border-purple-200 focus:border-purple-500"
-              required
-            />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div className="sm:col-span-2">
+                <Label htmlFor="street" className="text-xs text-purple-700">
+                  Rua <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="street"
+                  type="text"
+                  placeholder="Nome da rua"
+                  value={formData.street || ""}
+                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="number" className="text-xs text-purple-700">
+                  Número <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="number"
+                  type="text"
+                  placeholder="123"
+                  value={formData.number || ""}
+                  onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="complement" className="text-xs text-purple-700">
+                  Complemento
+                </Label>
+                <Input
+                  id="complement"
+                  type="text"
+                  placeholder="Apto, bloco, etc."
+                  value={formData.complement || ""}
+                  onChange={(e) => setFormData({ ...formData, complement: e.target.value })}
+                  className="border-purple-200 focus:border-purple-500"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="neighborhood" className="text-xs text-purple-700">
+                  Bairro <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="neighborhood"
+                  type="text"
+                  placeholder="Nome do bairro"
+                  value={formData.neighborhood || ""}
+                  onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="city" className="text-xs text-purple-700">
+                  Cidade <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="city"
+                  type="text"
+                  placeholder="Nome da cidade"
+                  value={formData.city || ""}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="state" className="text-xs text-purple-700">
+                  Estado (UF) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="state"
+                  type="text"
+                  placeholder="SP"
+                  maxLength={2}
+                  value={formData.state || ""}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="zipCode" className="text-xs text-purple-700">
+                  CEP <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="zipCode"
+                  type="text"
+                  placeholder="00000-000"
+                  value={formData.zipCode || ""}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, '')
+                    if (value.length > 5) {
+                      value = value.slice(0, 5) + '-' + value.slice(5, 8)
+                    }
+                    setFormData({ ...formData, zipCode: value })
+                  }}
+                  className="border-purple-200 focus:border-purple-500"
+                  required
+                />
+              </div>
+            </div>
+            
             {savedAddresses.length > 0 && (
               <Button
                 type="button"

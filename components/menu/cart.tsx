@@ -29,7 +29,15 @@ type CartItem = {
 type DeliveryInfo = {
   customerName: string
   customerPhone: string
-  deliveryAddress: string
+  deliveryAddress: string // Mantido para compatibilidade com endereços salvos
+  // Campos separados para formulário
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  zipCode?: string
   referencePoint?: string
 }
 
@@ -92,7 +100,7 @@ export function Cart({
   const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | null>(null)
+  const [orderTypeMessage, setOrderTypeMessage] = useState<"delivery" | "pickup" | "dine-in" | null>(null)
   const [manualDeliveryInfo, setManualDeliveryInfo] = useState<DeliveryInfo | null>(null)
   const [pickupCustomerName, setPickupCustomerName] = useState("")
   const [pickupCustomerPhone, setPickupCustomerPhone] = useState("")
@@ -125,6 +133,28 @@ export function Cart({
   }, [showSuccessModal, whatsapp])
 
   const finalTotal = totalPrice + calculatedDeliveryFee
+
+  // Função auxiliar para montar endereço completo a partir dos campos separados
+  const buildFullAddress = (info: DeliveryInfo | null): string => {
+    if (!info) return ""
+    
+    // Se já tem deliveryAddress (endereço salvo), usar ele
+    if (info.deliveryAddress?.trim()) {
+      return info.deliveryAddress.trim()
+    }
+    
+    // Caso contrário, montar a partir dos campos separados
+    const parts: string[] = []
+    if (info.street?.trim()) parts.push(info.street.trim())
+    if (info.number?.trim()) parts.push(info.number.trim())
+    if (info.complement?.trim()) parts.push(`- ${info.complement.trim()}`)
+    if (info.neighborhood?.trim()) parts.push(info.neighborhood.trim())
+    if (info.city?.trim()) parts.push(info.city.trim())
+    if (info.state?.trim()) parts.push(info.state.trim())
+    if (info.zipCode?.trim()) parts.push(`CEP: ${info.zipCode.trim()}`)
+    
+    return parts.join(", ")
+  }
 
   // Usar deliveryInfo se existir (usuário logado), senão usar manualDeliveryInfo
   // IMPORTANTE: Se manualDeliveryInfo foi preenchido, ele tem prioridade sobre deliveryInfo
@@ -185,8 +215,18 @@ export function Cart({
         alert("Por favor, preencha o telefone")
         return
       }
-      if (!effectiveDeliveryInfo.deliveryAddress?.trim()) {
-        alert("Por favor, preencha o endereço completo")
+      
+      // Validar endereço: se tem deliveryAddress (endereço salvo) ou se tem campos separados preenchidos
+      const hasSavedAddress = effectiveDeliveryInfo.deliveryAddress?.trim()
+      const hasSeparateFields = effectiveDeliveryInfo.street?.trim() && 
+                                effectiveDeliveryInfo.number?.trim() && 
+                                effectiveDeliveryInfo.neighborhood?.trim() && 
+                                effectiveDeliveryInfo.city?.trim() && 
+                                effectiveDeliveryInfo.state?.trim() && 
+                                effectiveDeliveryInfo.zipCode?.trim()
+      
+      if (!hasSavedAddress && !hasSeparateFields) {
+        alert("Por favor, preencha todos os campos do endereço (rua, número, bairro, cidade, estado e CEP)")
         return
       }
     }
@@ -230,8 +270,10 @@ export function Cart({
             : effectiveDeliveryInfo
           orderData.customer_name = infoToSave.customerName.trim()
           orderData.customer_phone = infoToSave.customerPhone.trim()
+          // Montar endereço completo (a partir de campos separados ou usar deliveryAddress se existir)
+          const fullAddress = buildFullAddress(infoToSave)
           // Remover quebras de linha e espaços extras do endereço
-          orderData.delivery_address = infoToSave.deliveryAddress.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ')
+          orderData.delivery_address = fullAddress.replace(/\n/g, ' ').replace(/\s+/g, ' ')
           orderData.reference_point = infoToSave.referencePoint?.trim() || null
           orderData.delivery_fee = calculatedDeliveryFee || 0
           // Adicionar zone_id se uma zona foi selecionada
@@ -641,7 +683,7 @@ export function Cart({
                       </div>
                       <div className="flex items-start gap-2">
                         <MapPin className="h-3.5 w-3.5 mt-0.5 text-slate-600 flex-shrink-0" />
-                        <span className="flex-1 break-words">{effectiveDeliveryInfo.deliveryAddress}</span>
+                        <span className="flex-1 break-words">{buildFullAddress(effectiveDeliveryInfo)}</span>
                       </div>
                       {effectiveDeliveryInfo.referencePoint && (
                         <div className="flex items-start gap-2">
@@ -701,50 +743,243 @@ export function Cart({
                         />
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="cart-delivery-address" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                      <div className="space-y-3">
+                        <Label className="text-slate-900 flex items-center gap-2 text-sm font-medium">
                           <MapPin className="h-4 w-4" />
-                          Endereço Completo
+                          Endereço de Entrega
                         </Label>
-                        <Textarea
-                          id="cart-delivery-address"
-                          placeholder="Rua, número, bairro, cidade, CEP"
-                          value={manualDeliveryInfo?.deliveryAddress || ""}
-                          onChange={(e) => {
-                            const newValue = e.target.value
-                            setManualDeliveryInfo((prev) => ({
-                              customerName: prev?.customerName || "",
-                              customerPhone: prev?.customerPhone || "",
-                              deliveryAddress: newValue,
-                              referencePoint: prev?.referencePoint || "",
-                            }))
-                          }}
-                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base resize-none"
-                          rows={3}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cart-reference-point" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
-                          <MapPin className="h-4 w-4" />
-                          Ponto de Referência (opcional)
-                        </Label>
-                        <Input
-                          id="cart-reference-point"
-                          type="text"
-                          placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
-                          value={manualDeliveryInfo?.referencePoint || ""}
-                          onChange={(e) => {
-                            const newValue = e.target.value
-                            setManualDeliveryInfo((prev) => ({
-                              customerName: prev?.customerName || "",
-                              customerPhone: prev?.customerPhone || "",
-                              deliveryAddress: prev?.deliveryAddress || "",
-                              referencePoint: newValue,
-                            }))
-                          }}
-                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
-                        />
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                          <div className="sm:col-span-2">
+                            <Label htmlFor="cart-street" className="text-xs text-slate-700">
+                              Rua <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-street"
+                              type="text"
+                              placeholder="Nome da rua"
+                              value={manualDeliveryInfo?.street || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: e.target.value,
+                                  number: prev?.number || "",
+                                  complement: prev?.complement || "",
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: prev?.city || "",
+                                  state: prev?.state || "",
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-number" className="text-xs text-slate-700">
+                              Número <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-number"
+                              type="text"
+                              placeholder="123"
+                              value={manualDeliveryInfo?.number || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: e.target.value,
+                                  complement: prev?.complement || "",
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: prev?.city || "",
+                                  state: prev?.state || "",
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-complement" className="text-xs text-slate-700">
+                              Complemento
+                            </Label>
+                            <Input
+                              id="cart-complement"
+                              type="text"
+                              placeholder="Apto, bloco, etc."
+                              value={manualDeliveryInfo?.complement || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: prev?.number || "",
+                                  complement: e.target.value,
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: prev?.city || "",
+                                  state: prev?.state || "",
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-neighborhood" className="text-xs text-slate-700">
+                              Bairro <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-neighborhood"
+                              type="text"
+                              placeholder="Nome do bairro"
+                              value={manualDeliveryInfo?.neighborhood || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: prev?.number || "",
+                                  complement: prev?.complement || "",
+                                  neighborhood: e.target.value,
+                                  city: prev?.city || "",
+                                  state: prev?.state || "",
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-city" className="text-xs text-slate-700">
+                              Cidade <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-city"
+                              type="text"
+                              placeholder="Nome da cidade"
+                              value={manualDeliveryInfo?.city || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: prev?.number || "",
+                                  complement: prev?.complement || "",
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: e.target.value,
+                                  state: prev?.state || "",
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-state" className="text-xs text-slate-700">
+                              Estado (UF) <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-state"
+                              type="text"
+                              placeholder="SP"
+                              maxLength={2}
+                              value={manualDeliveryInfo?.state || ""}
+                              onChange={(e) => {
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: prev?.number || "",
+                                  complement: prev?.complement || "",
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: prev?.city || "",
+                                  state: e.target.value.toUpperCase(),
+                                  zipCode: prev?.zipCode || "",
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="cart-zip-code" className="text-xs text-slate-700">
+                              CEP <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="cart-zip-code"
+                              type="text"
+                              placeholder="00000-000"
+                              value={manualDeliveryInfo?.zipCode || ""}
+                              onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '')
+                                if (value.length > 5) {
+                                  value = value.slice(0, 5) + '-' + value.slice(5, 8)
+                                }
+                                setManualDeliveryInfo((prev) => ({
+                                  customerName: prev?.customerName || "",
+                                  customerPhone: prev?.customerPhone || "",
+                                  deliveryAddress: prev?.deliveryAddress || "",
+                                  street: prev?.street || "",
+                                  number: prev?.number || "",
+                                  complement: prev?.complement || "",
+                                  neighborhood: prev?.neighborhood || "",
+                                  city: prev?.city || "",
+                                  state: prev?.state || "",
+                                  zipCode: value,
+                                  referencePoint: prev?.referencePoint || "",
+                                }))
+                              }}
+                              className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="cart-reference-point" className="text-slate-900 flex items-center gap-2 text-sm font-medium">
+                            <MapPin className="h-4 w-4" />
+                            Ponto de Referência (opcional)
+                          </Label>
+                          <Input
+                            id="cart-reference-point"
+                            type="text"
+                            placeholder="Ex: Próximo ao mercado, em frente à farmácia, etc."
+                            value={manualDeliveryInfo?.referencePoint || ""}
+                            onChange={(e) => {
+                              setManualDeliveryInfo((prev) => ({
+                                customerName: prev?.customerName || "",
+                                customerPhone: prev?.customerPhone || "",
+                                deliveryAddress: prev?.deliveryAddress || "",
+                                street: prev?.street || "",
+                                number: prev?.number || "",
+                                complement: prev?.complement || "",
+                                neighborhood: prev?.neighborhood || "",
+                                city: prev?.city || "",
+                                state: prev?.state || "",
+                                zipCode: prev?.zipCode || "",
+                                referencePoint: e.target.value,
+                              }))
+                            }}
+                            className="border-slate-200 focus:border-slate-400 focus:ring-slate-400 text-sm sm:text-base"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -995,7 +1230,7 @@ export function Cart({
                 Boolean(isSubmitting || 
                 !isRestaurantOpen(restaurantInfo?.opening_hours) ||
                 (!paymentMethod || !paymentMethod.trim()) ||
-                (orderType === "delivery" && (!effectiveDeliveryInfo || !effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || !effectiveDeliveryInfo.deliveryAddress)) ||
+                (orderType === "delivery" && (!effectiveDeliveryInfo || !effectiveDeliveryInfo.customerName || !effectiveDeliveryInfo.customerPhone || (!buildFullAddress(effectiveDeliveryInfo)?.trim()))) ||
                 (orderType === "pickup" && (!pickupCustomerName?.trim() || !pickupCustomerPhone?.trim())) ||
                 (orderType === "dine-in" && (!tableNumber || tableNumber === 0)))
               }
