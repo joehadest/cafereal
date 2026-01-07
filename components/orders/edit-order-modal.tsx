@@ -62,6 +62,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
     deliveryFee: order.delivery_fee || 0,
     total: order.total,
     paymentMethod: order.payment_method || "",
+    waiterName: order.waiter_name || "",
   })
   const [orderType, setOrderType] = useState<string>(order.order_type || "dine-in")
   const [tableNumber, setTableNumber] = useState<string>(order.table_number?.toString() || "0")
@@ -137,6 +138,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         deliveryFee: order.delivery_fee || 0,
         total: order.total,
         paymentMethod: order.payment_method || "",
+        waiterName: order.waiter_name || "",
       })
       setOrderType(order.order_type || "dine-in")
       setTableNumber(order.table_number?.toString() || "0")
@@ -651,6 +653,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
         notes: formData.notes?.trim() || null,
         total: calculatedTotal,
         payment_method: formData.paymentMethod?.trim() || null,
+        waiter_name: formData.waiterName?.trim() || null,
       }
 
       // Atualizar order_type e table_number
@@ -1369,6 +1372,21 @@ export function EditOrderModal({ order, isOpen, onClose, onSuccess }: EditOrderM
               </div>
             </div>
           )}
+
+          {/* Nome do Garçom */}
+          <div className="space-y-2">
+            <Label htmlFor="waiterName" className="text-sm font-semibold flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Nome do Garçom (opcional)
+            </Label>
+            <Input
+              id="waiterName"
+              value={formData.waiterName}
+              onChange={(e) => setFormData({ ...formData, waiterName: e.target.value })}
+              placeholder="Nome do garçom"
+              className="border-slate-200"
+            />
+          </div>
 
           {/* Observações */}
           <div className="space-y-2">

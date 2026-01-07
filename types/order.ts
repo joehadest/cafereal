@@ -35,6 +35,7 @@ export type Order = {
   delivery_fee?: number
   delivery_zone_id?: string | null
   payment_method?: string | null
+  waiter_name?: string | null
   created_at: string
   order_items: OrderItem[]
 }

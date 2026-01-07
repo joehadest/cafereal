@@ -73,6 +73,7 @@ export function StaffOrdersClient({
   const [deliveryFee, setDeliveryFee] = useState<number>(0)
   const [paymentMethod, setPaymentMethod] = useState<string>("")
   const [notes, setNotes] = useState<string>("")
+  const [waiterName, setWaiterName] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -460,6 +461,7 @@ export function StaffOrdersClient({
 
       setPaymentMethod(order.payment_method || "")
       setNotes(order.notes || "")
+      setWaiterName(order.waiter_name || "")
       
       // Scroll para o carrinho
       setTimeout(() => {
@@ -680,6 +682,7 @@ export function StaffOrdersClient({
         total: finalTotal,
         notes: notes?.trim() || null,
         payment_method: paymentMethod.trim(),
+        waiter_name: waiterName?.trim() || null,
       }
 
       if (orderType === "dine-in") {
@@ -795,6 +798,7 @@ export function StaffOrdersClient({
       setDeliveryFee(0)
       setPaymentMethod("")
       setNotes("")
+      setWaiterName("")
       setShowSuccessModal(true)
       router.refresh()
     } catch (error: any) {
@@ -1511,6 +1515,19 @@ export function StaffOrdersClient({
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Nome do cliente"
+                  className="text-xs sm:text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="waiter-name" className="text-xs sm:text-sm font-semibold">
+                  Nome do Garçom (opcional)
+                </Label>
+                <Input
+                  id="waiter-name"
+                  value={waiterName}
+                  onChange={(e) => setWaiterName(e.target.value)}
+                  placeholder="Nome do garçom"
                   className="text-xs sm:text-sm"
                 />
               </div>
