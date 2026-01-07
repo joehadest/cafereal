@@ -28,7 +28,7 @@ export default async function AdminLayout({
     redirect("/")
   }
 
-  // Buscar logo e nome do restaurante
+  // Buscar logo e nome do restaurante (cacheado por layout)
   const { data: restaurantSettings } = await supabase
     .from("restaurant_settings")
     .select("name, logo_url")

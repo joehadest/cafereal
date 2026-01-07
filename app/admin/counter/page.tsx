@@ -1,17 +1,57 @@
 import { createClient } from "@/lib/supabase/server"
 import { CounterClient } from "@/components/admin/counter-client"
 
-export const revalidate = 0
+export const revalidate = 10 // Cache por 10 segundos para melhor performance
 
 export default async function CounterPage() {
   const supabase = await createClient()
 
-  // Buscar categorias com produtos ativos
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*, products(*)")
-    .eq("active", true)
-    .order("display_order")
+  // Executar todas as consultas em paralelo para melhor performance
+  const [
+    categoriesResult,
+    allVarietiesResult,
+    allExtrasResult,
+    tablesResult,
+    restaurantSettingsResult,
+  ] = await Promise.all([
+    // Buscar categorias com produtos ativos
+    supabase
+      .from("categories")
+      .select("*, products(*)")
+      .eq("active", true)
+      .order("display_order"),
+    
+    // Fetch all varieties
+    supabase
+      .from("product_varieties")
+      .select("*")
+      .order("display_order"),
+    
+    // Fetch all extras
+    supabase
+      .from("product_extras")
+      .select("*")
+      .order("display_order"),
+    
+    // Buscar mesas (apenas ativas para o balcão)
+    supabase
+      .from("restaurant_tables")
+      .select("*")
+      .eq("active", true)
+      .order("table_number"),
+    
+    // Buscar informações do restaurante
+    supabase
+      .from("restaurant_settings")
+      .select("name, phone, address, cnpj")
+      .single(),
+  ])
+
+  const categories = categoriesResult.data
+  const allVarieties = allVarietiesResult.data
+  const allExtras = allExtrasResult.data
+  const tables = tablesResult.data
+  const restaurantSettings = restaurantSettingsResult.data
 
   // Filter products to only show active ones and sort by display_order
   if (categories) {
@@ -29,17 +69,6 @@ export default async function CounterPage() {
     })
   }
 
-  // Fetch all varieties and extras separately
-  const { data: allVarieties } = await supabase
-    .from("product_varieties")
-    .select("*")
-    .order("display_order")
-
-  const { data: allExtras } = await supabase
-    .from("product_extras")
-    .select("*")
-    .order("display_order")
-
   // Map varieties and extras to products
   if (categories && allVarieties && allExtras) {
     categories.forEach((category: any) => {
@@ -52,19 +81,6 @@ export default async function CounterPage() {
       }
     })
   }
-
-  // Buscar mesas (apenas ativas para o balcão)
-  const { data: tables } = await supabase
-    .from("restaurant_tables")
-    .select("*")
-    .eq("active", true)
-    .order("table_number")
-
-  // Buscar informações do restaurante
-  const { data: restaurantSettings } = await supabase
-    .from("restaurant_settings")
-    .select("name, phone, address, cnpj")
-    .single()
 
   const restaurantInfo = restaurantSettings
     ? {

@@ -11,47 +11,68 @@ export default async function HomePage({
   
   // Buscar informações da mesa se table estiver presente
   let tableNumber: number | null = null
+  let tableQuery: Promise<any> | null = null
   if (params.table) {
     const tableNum = parseInt(params.table)
     if (!isNaN(tableNum)) {
-      const { data: table } = await supabase
+      tableQuery = supabase
         .from("restaurant_tables")
         .select("table_number, active")
         .eq("table_number", tableNum)
         .eq("active", true)
         .single()
-      
-      if (table) {
-        tableNumber = table.table_number
-      }
     }
   }
 
-  const { data: restaurantSettings } = await supabase
-    .from("restaurant_settings")
-    .select(
-      "name, logo_url, delivery_fee, min_order_value, phone, email, address, opening_hours, instagram, facebook, whatsapp, pix_key, accepts_delivery, accepts_pickup, accepts_dine_in"
-    )
-    .single()
+  // Executar todas as consultas em paralelo para melhor performance
+  const [
+    tableResult,
+    restaurantSettingsResult,
+    categoriesResult,
+    allVarietiesResult,
+    allExtrasResult,
+    deliveryZonesResult,
+  ] = await Promise.all([
+    tableQuery || Promise.resolve({ data: null }),
+    supabase
+      .from("restaurant_settings")
+      .select(
+        "name, logo_url, delivery_fee, min_order_value, phone, email, address, opening_hours, instagram, facebook, whatsapp, pix_key, accepts_delivery, accepts_pickup, accepts_dine_in"
+      )
+      .single(),
+    supabase
+      .from("categories")
+      .select("*, products(*)")
+      .eq("active", true)
+      .order("display_order"),
+    supabase
+      .from("product_varieties")
+      .select("*")
+      .order("display_order"),
+    supabase
+      .from("product_extras")
+      .select("*")
+      .order("display_order"),
+    supabase
+      .from("delivery_zones")
+      .select("*")
+      .eq("active", true)
+      .order("display_order", { ascending: true })
+      .order("name", { ascending: true }),
+  ])
 
-  // Carregar zonas de entrega ativas
-  const { data: deliveryZones } = await supabase
-    .from("delivery_zones")
-    .select("*")
-    .eq("active", true)
-    .order("display_order", { ascending: true })
-    .order("name", { ascending: true })
+  if (tableResult.data) {
+    tableNumber = tableResult.data.table_number
+  }
+
+  const restaurantSettings = restaurantSettingsResult.data
+  const categories = categoriesResult.data
+  const allVarieties = allVarietiesResult.data
+  const allExtras = allExtrasResult.data
+  const deliveryZones = deliveryZonesResult.data
 
   // Debug: verificar se whatsapp está sendo carregado do banco
   console.log("[Server] WhatsApp do banco:", restaurantSettings?.whatsapp)
-
-  // Fetch categories with products (including inactive products for admin view)
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*, products(*)")
-    .eq("active", true)
-    .order("display_order")
-  
   
   // Filter products to only show active ones and sort by display_order, but keep all active categories
   if (categories) {
@@ -70,20 +91,9 @@ export default async function HomePage({
     })
   }
 
-  // Fetch all varieties and extras separately
-  const { data: allVarieties } = await supabase
-    .from("product_varieties")
-    .select("*")
-    .order("display_order")
-
-  const { data: allExtras } = await supabase
-    .from("product_extras")
-    .select("*")
-    .order("display_order")
-
   // Map varieties and extras to products
   if (categories && allVarieties && allExtras) {
-    categories.forEach((category) => {
+    categories.forEach((category: any) => {
       if (category.products) {
         category.products = category.products.map((product: any) => ({
           ...product,
