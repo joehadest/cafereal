@@ -76,7 +76,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
   }
 
   return (
-    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '3mm 2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'auto', height: 'auto', minHeight: 'auto', lineHeight: '1.4', fontSize: '13px', fontWeight: 'bold' }}>
+    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '3mm 2mm 0 2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'avoid', height: 'auto', minHeight: '0', lineHeight: '1.4', fontSize: '13px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
       <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px', backgroundColor: '#f5f5f5', padding: '4px 2px', borderRadius: '2px' }}>
         <div className="mb-1">
@@ -320,8 +320,8 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
       </div>
 
       {/* Linha de Corte */}
-      <div className="text-center mt-2 pt-1">
-        <p className="font-bold" style={{ fontSize: '12px', letterSpacing: '1px', fontWeight: 'bold' }}>{"=".repeat(40)}</p>
+      <div className="text-center mt-2 pt-1" style={{ marginBottom: '0', paddingBottom: '0' }}>
+        <p className="font-bold" style={{ fontSize: '12px', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '0' }}>{"=".repeat(40)}</p>
       </div>
     </div>
   )

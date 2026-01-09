@@ -334,16 +334,18 @@ function OrderCardComponent({
           padding: 0 !important;
           visibility: visible !important;
           display: block !important;
-          page-break-inside: auto !important;
-          page-break-after: auto !important;
-          page-break-before: auto !important;
-          break-inside: auto !important;
-          break-after: auto !important;
-          break-before: auto !important;
+          page-break-inside: avoid !important;
+          page-break-after: avoid !important;
+          page-break-before: avoid !important;
+          break-inside: avoid !important;
+          break-after: avoid !important;
+          break-before: avoid !important;
           height: auto !important;
-          min-height: auto !important;
+          min-height: 0 !important;
           max-height: none !important;
           overflow: visible !important;
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
         }
         #print-container-${order.id} *, 
         #print-container-${order.id} .print-kitchen,
@@ -362,23 +364,32 @@ function OrderCardComponent({
           position: relative !important;
           left: auto !important;
           top: auto !important;
-          page-break-inside: auto !important;
-          page-break-after: auto !important;
-          page-break-before: auto !important;
-          break-inside: auto !important;
-          break-after: auto !important;
-          break-before: auto !important;
+          page-break-inside: avoid !important;
+          page-break-after: avoid !important;
+          page-break-before: avoid !important;
+          break-inside: avoid !important;
+          break-after: avoid !important;
+          break-before: avoid !important;
           height: auto !important;
-          min-height: auto !important;
+          min-height: 0 !important;
           max-height: none !important;
           overflow: visible !important;
           display: block !important;
           visibility: visible !important;
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
         }
         @page {
-          size: auto !important;
+          size: 80mm auto !important;
           margin: 0 !important;
           padding: 0 !important;
+        }
+        /* Remover espaços em branco após o conteúdo */
+        #print-container-${order.id} .print-receipt:after,
+        #print-container-${order.id} .print-kitchen:after,
+        #print-container-${order.id} .print-customer:after {
+          content: "" !important;
+          display: none !important;
         }
         /* Ocultar qualquer elemento fora do container de impressão */
         body > *:not(#print-container-${order.id}) {

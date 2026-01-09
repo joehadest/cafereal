@@ -433,9 +433,25 @@ export function CounterClient({
           break-before: avoid !important;
           max-height: 100vh !important;
           height: auto !important;
+          min-height: 0 !important;
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        @page {
+          size: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          size: 80mm auto !important;
+        }
+        /* Remover espaços em branco após o conteúdo */
+        #print-container-${order.id} .print-receipt:after,
+        #print-container-${order.id} .print-kitchen:after,
+        #print-container-${order.id} .print-customer:after {
+          content: "" !important;
+          display: none !important;
         }
         @page {
           size: 80mm auto !important;
