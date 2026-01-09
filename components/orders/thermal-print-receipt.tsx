@@ -265,8 +265,17 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
           }
 
           @page {
-            size: auto;
-            margin: 0;
+            size: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          body {
+            height: auto !important;
+            min-height: 0 !important;
+          }
+          .thermal-receipt {
+            height: fit-content !important;
+            min-height: 0 !important;
           }
         }
       `}</style>

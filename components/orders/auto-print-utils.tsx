@@ -172,7 +172,7 @@ export async function autoPrintOrder(
         margin-bottom: 0 !important;
       }
       @page {
-        size: 80mm auto !important;
+        size: auto !important;
         margin: 0 !important;
         padding: 0 !important;
       }
@@ -182,6 +182,16 @@ export async function autoPrintOrder(
       #auto-print-container-${order.id} .print-customer:after {
         content: "" !important;
         display: none !important;
+      }
+      /* Garantir que o body não tenha altura mínima */
+      body {
+        height: auto !important;
+        min-height: 0 !important;
+      }
+      /* Garantir que o container se ajuste ao conteúdo */
+      #auto-print-container-${order.id} {
+        height: fit-content !important;
+        min-height: 0 !important;
       }
       /* Ocultar qualquer elemento fora do container de impressão */
       body > *:not(#auto-print-container-${order.id}) {

@@ -444,7 +444,6 @@ export function CounterClient({
           size: auto !important;
           margin: 0 !important;
           padding: 0 !important;
-          size: 80mm auto !important;
         }
         /* Remover espaços em branco após o conteúdo */
         #print-container-${order.id} .print-receipt:after,
@@ -453,10 +452,15 @@ export function CounterClient({
           content: "" !important;
           display: none !important;
         }
-        @page {
-          size: 80mm auto !important;
-          margin: 0 !important;
-          padding: 0 !important;
+        /* Garantir que o body não tenha altura mínima */
+        body {
+          height: auto !important;
+          min-height: 0 !important;
+        }
+        /* Garantir que o container se ajuste ao conteúdo */
+        #print-container-${order.id} {
+          height: fit-content !important;
+          min-height: 0 !important;
         }
         /* Ocultar qualquer elemento fora do container de impressão */
         body > *:not(#print-container-${order.id}) {
