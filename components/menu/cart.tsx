@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -277,6 +278,7 @@ export function Cart({
         }
       }
 
+      // Inserir o pedido
       const { data: order, error: orderError } = await supabase.from("orders").insert(orderData).select().single()
 
       if (orderError) {
@@ -288,7 +290,18 @@ export function Cart({
           error: orderError
         })
         console.error("Dados do pedido:", JSON.stringify(orderData, null, 2))
-        alert(`Erro ao criar pedido: ${orderError.message || 'Erro desconhecido'}. Verifique o console para mais detalhes.`)
+        
+        // Mensagens de erro mais amigáveis
+        let userMessage = "Erro ao criar pedido"
+        if (orderError.message?.includes("network") || orderError.message?.includes("fetch")) {
+          userMessage = "Erro de conexão. Verifique sua internet e tente novamente."
+        } else if (orderError.code === "PGRST301" || orderError.code === "23505") {
+          userMessage = "Erro ao processar pedido. Tente novamente."
+        } else if (orderError.message) {
+          userMessage = orderError.message
+        }
+        
+        alert(`${userMessage}. Tente novamente.`)
         throw orderError
       }
 
@@ -313,9 +326,13 @@ export function Cart({
         }
       })
 
+      // Inserir itens do pedido
       const { data: insertedItems, error: itemsError } = await supabase.from("order_items").insert(orderItems).select()
 
-      if (itemsError) throw itemsError
+      if (itemsError) {
+        console.error("Erro ao inserir itens:", itemsError)
+        throw new Error(itemsError.message || "Erro ao salvar itens do pedido")
+      }
 
       // Inserir extras de cada item
       if (insertedItems) {
@@ -336,8 +353,13 @@ export function Cart({
         })
 
         if (extrasToInsert.length > 0) {
+          // Inserir extras do pedido
           const { error: extrasError } = await supabase.from("order_item_extras").insert(extrasToInsert)
-          if (extrasError) throw extrasError
+          
+          if (extrasError) {
+            console.error("Erro ao inserir extras:", extrasError)
+            throw new Error(extrasError.message || "Erro ao salvar extras do pedido")
+          }
         }
       }
 
@@ -351,14 +373,47 @@ export function Cart({
       router.refresh()
     } catch (error: any) {
       console.error("Error submitting order:", error)
-      const errorMessage = error?.message || error?.details || error?.hint || "Erro desconhecido ao enviar pedido"
+      
+      // Detectar tipo de erro e fornecer mensagem apropriada
+      let errorMessage = "Erro desconhecido ao enviar pedido"
+      
+      if (error?.message) {
+        errorMessage = error.message
+      } else if (error?.details) {
+        errorMessage = error.details
+      } else if (error?.hint) {
+        errorMessage = error.hint
+      } else if (error instanceof TypeError && error.message?.includes("Load failed")) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente."
+      } else if (error instanceof TypeError && error.message?.includes("fetch")) {
+        errorMessage = "Erro de conexão com o servidor. Tente novamente."
+      } else if (error?.code) {
+        // Códigos de erro comuns do Supabase
+        switch (error.code) {
+          case "PGRST301":
+            errorMessage = "Erro ao processar pedido. Tente novamente."
+            break
+          case "23505":
+            errorMessage = "Erro ao processar pedido. Tente novamente."
+            break
+          case "PGRST116":
+            errorMessage = "Dados não encontrados. Tente novamente."
+            break
+          default:
+            errorMessage = error.message || `Erro ${error.code}`
+        }
+      }
+      
       console.error("Detalhes do erro:", {
         message: error?.message,
         details: error?.details,
         hint: error?.hint,
         code: error?.code,
+        name: error?.name,
+        stack: error?.stack,
         error: error
       })
+      
       alert(`Erro ao enviar pedido: ${errorMessage}. Tente novamente.`)
     } finally {
       setIsSubmitting(false)
