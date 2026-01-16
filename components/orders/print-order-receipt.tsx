@@ -76,101 +76,83 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
   }
 
   return (
-    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '3mm 2mm 0 2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'avoid', height: 'auto', minHeight: '0', lineHeight: '1.4', fontSize: '13px', fontWeight: 'bold' }}>
+    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 2mm 0 2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'avoid', height: 'auto', minHeight: '0', lineHeight: '1.2', fontSize: '12px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
-      <div className="text-center border-b border-black pb-2 mb-2" style={{ borderBottomWidth: '2px', backgroundColor: '#f5f5f5', padding: '4px 2px', borderRadius: '2px' }}>
-        <div className="mb-1">
-          <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '18px', letterSpacing: '0.5px', fontWeight: 'bold' }}>
-            {restaurantInfo?.name || "CAFEREAL"}
-          </h1>
-        </div>
+      <div className="text-center border-b border-black pb-1 mb-1" style={{ borderBottomWidth: '1px', padding: '2px 0' }}>
+        <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '16px', letterSpacing: '0.5px', fontWeight: 'bold', marginBottom: '2px' }}>
+          {restaurantInfo?.name || "CAFEREAL"}
+        </h1>
         {restaurantInfo?.address && (
-          <p className="leading-tight mb-0.5 font-bold" style={{ fontSize: '11px', wordBreak: 'break-word', overflowWrap: 'break-word', fontWeight: 'bold' }}>
+          <p className="leading-tight font-bold" style={{ fontSize: '10px', wordBreak: 'break-word', overflowWrap: 'break-word', fontWeight: 'bold', margin: '1px 0' }}>
             {restaurantInfo.address}
           </p>
         )}
-        {restaurantInfo?.phone && (
-          <p className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Tel: {restaurantInfo.phone}</p>
-        )}
-        {restaurantInfo?.cnpj && (
-          <p className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
-        )}
+        <div className="flex justify-center gap-2" style={{ fontSize: '10px', marginTop: '1px' }}>
+          {restaurantInfo?.phone && (
+            <span className="font-bold" style={{ fontWeight: 'bold' }}>Tel: {restaurantInfo.phone}</span>
+          )}
+          {restaurantInfo?.cnpj && (
+            <span className="font-bold" style={{ fontWeight: 'bold' }}>CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</span>
+          )}
+        </div>
       </div>
 
       {/* Linha Separadora */}
-      <div className="text-center mb-2" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0', backgroundColor: '#e8e8e8' }}>
-        <p className="font-bold uppercase" style={{ fontSize: '14px', fontWeight: 'bold' }}>COMPROVANTE DE PEDIDO</p>
+      <div className="text-center mb-1" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '1px 0' }}>
+        <p className="font-bold uppercase" style={{ fontSize: '12px', fontWeight: 'bold' }}>COMPROVANTE DE PEDIDO</p>
       </div>
 
-      {/* Informações do Pedido */}
-      <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000', backgroundColor: '#fafafa', padding: '3px 2px', borderRadius: '2px' }}>
-        <div className="flex justify-between items-center mb-1">
-          <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>PEDIDO:</span>
-          <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>#{order.id.slice(0, 8).toUpperCase()}</span>
-        </div>
-        <div className="flex justify-between items-center mb-1">
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Data:</span>
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{timestamp.toLocaleDateString("pt-BR")}</span>
-        </div>
-        <div className="flex justify-between items-center mb-1">
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Hora:</span>
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-        </div>
-        <div className="flex justify-between items-center mb-1">
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Tipo:</span>
-          <span className="font-bold uppercase" style={{ fontSize: '13px', fontWeight: 'bold' }}>
-            {isDelivery ? "DELIVERY" : order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}
+      {/* Informações do Pedido - Compacto */}
+      <div className="mb-1 pb-1" style={{ borderBottom: '1px dashed #000', padding: '2px 0' }}>
+        <div className="flex justify-between items-center" style={{ marginBottom: '1px' }}>
+          <span className="font-bold" style={{ fontSize: '12px', fontWeight: 'bold' }}>PEDIDO: #{order.id.slice(0, 8).toUpperCase()}</span>
+          <span className="font-bold" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+            {timestamp.toLocaleDateString("pt-BR")} {timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Status:</span>
-          <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+          <span className="font-bold uppercase" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+            {isDelivery ? "DELIVERY" : order.table_number === 0 ? "BALCÃO" : `MESA ${order.table_number}`}
+          </span>
+          <span className="font-bold" style={{ fontSize: '12px', fontWeight: 'bold' }}>
             {statusMap[order.status as keyof typeof statusMap] || order.status.toUpperCase()}
           </span>
         </div>
       </div>
 
-      {/* Informações do Cliente */}
+      {/* Informações do Cliente - Compacto */}
       {(order.customer_name || order.payment_method || (isDelivery && order.customer_phone)) && (
-        <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000', backgroundColor: '#f5f5f5', padding: '3px 2px', borderRadius: '2px' }}>
-          <p className="font-bold uppercase mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>DADOS DO CLIENTE</p>
+        <div className="mb-1 pb-1" style={{ borderBottom: '1px dashed #000', padding: '2px 0' }}>
+          <p className="font-bold uppercase" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>DADOS DO CLIENTE</p>
           {order.customer_name && (
-            <div className="mb-0.5">
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Cliente: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.customer_name}</span>
-            </div>
-          )}
-          {isDelivery && order.customer_phone && (
-            <div className="mb-0.5">
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Telefone: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatPhone(order.customer_phone) || order.customer_phone}</span>
+            <div style={{ marginBottom: '1px' }}>
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Cliente: {order.customer_name}</span>
+              {isDelivery && order.customer_phone && (
+                <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}> | Tel: {formatPhone(order.customer_phone) || order.customer_phone}</span>
+              )}
             </div>
           )}
           {isDelivery && deliveryZoneName && (
-            <div className="mb-0.5">
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Zona de Entrega: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{deliveryZoneName}</span>
+            <div style={{ marginBottom: '1px' }}>
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Zona: {deliveryZoneName}</span>
             </div>
           )}
           {order.payment_method && (
-            <div className="mb-0.5">
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Pagamento: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.payment_method}</span>
+            <div style={{ marginBottom: '1px' }}>
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Pagamento: {order.payment_method}</span>
             </div>
           )}
           {isDelivery && order.delivery_address && (
-            <div className="mb-0.5">
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Endereço: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                {order.delivery_address.replace(/\n/g, ", ").replace(/\s+/g, " ").trim()}
+            <div style={{ marginBottom: '1px' }}>
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                End: {order.delivery_address.replace(/\n/g, ", ").replace(/\s+/g, " ").trim()}
               </span>
             </div>
           )}
           {isDelivery && order.reference_point && (
             <div>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Ref.: </span>
-              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                {order.reference_point.trim()}
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                Ref: {order.reference_point.trim()}
               </span>
             </div>
           )}
@@ -179,149 +161,139 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
 
       {/* Aviso de Itens Adicionados */}
       {newItemIds && newItemIds.size > 0 && (
-        <div className="mb-2 pb-2 text-center" style={{ borderBottom: '1px dashed #000' }}>
-          <p className="font-bold uppercase" style={{ fontSize: '16px', fontWeight: 'bold' }}>⚠️ ITENS ADICIONADOS ⚠️</p>
+        <div className="mb-1 pb-1 text-center" style={{ borderBottom: '1px dashed #000', padding: '1px 0' }}>
+          <p className="font-bold uppercase" style={{ fontSize: '12px', fontWeight: 'bold' }}>⚠️ ITENS ADICIONADOS ⚠️</p>
         </div>
       )}
 
-      {/* Itens do Pedido - Formato Tabular */}
-      <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000' }}>
-        <p className="font-bold uppercase mb-1" style={{ fontSize: '16px', fontWeight: 'bold' }}>ITENS DO PEDIDO</p>
-        <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
-          {order.order_items.map((item, index) => {
-            const extrasPrice = (item.order_item_extras || []).reduce(
-              (sum, extra) => sum + extra.extra_price * extra.quantity,
-              0
-            )
-            const itemTotal = item.subtotal + extrasPrice
-            const isNewItem = newItemIds?.has(item.id)
+      {/* Itens do Pedido - Compacto */}
+      <div className="mb-1 pb-1" style={{ borderBottom: '1px solid #000', padding: '2px 0' }}>
+        <p className="font-bold uppercase" style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '2px' }}>ITENS DO PEDIDO</p>
+        {order.order_items.map((item, index) => {
+          const extrasPrice = (item.order_item_extras || []).reduce(
+            (sum, extra) => sum + extra.extra_price * extra.quantity,
+            0
+          )
+          const itemTotal = item.subtotal + extrasPrice
+          const isNewItem = newItemIds?.has(item.id)
 
-            return (
-              <div key={item.id} className={index < order.order_items.length - 1 ? "mb-2 pb-2" : ""} style={index < order.order_items.length - 1 ? { borderBottom: '1px dashed #ccc' } : {}}>
-                {isNewItem && (
-                  <div className="mb-1 text-center">
-                    <span className="font-bold uppercase" style={{ fontSize: '13px', backgroundColor: '#ffeb3b', padding: '1px 4px', fontWeight: 'bold' }}>✨ NOVO ✨</span>
-                  </div>
-                )}
-                {/* Linha principal: Qtd x Descrição */}
-                <div className="flex justify-between items-start mb-0.5" style={{ backgroundColor: '#f9f9f9', padding: '2px 3px', borderRadius: '1px' }}>
-                  <div className="flex-1" style={{ maxWidth: 'calc(100% - 60px)' }}>
-                    {item.category_name && (
-                      <span className="uppercase font-bold" style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>[{item.category_name}] </span>
-                    )}
-                    <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>
-                      {item.quantity}x {item.product_name}
-                    </span>
-                  </div>
-                  <div className="text-right" style={{ minWidth: '55px' }}>
-                    <span className="font-bold" style={{ fontSize: '15px', fontWeight: 'bold' }}>R$ {itemTotal.toFixed(2).replace(".", ",")}</span>
-                  </div>
+          return (
+            <div key={item.id} style={index < order.order_items.length - 1 ? { borderBottom: '1px dashed #ccc', paddingBottom: '2px', marginBottom: '2px' } : {}}>
+              {isNewItem && (
+                <div className="text-center" style={{ marginBottom: '1px' }}>
+                  <span className="font-bold uppercase" style={{ fontSize: '10px', backgroundColor: '#ffeb3b', padding: '1px 3px', fontWeight: 'bold' }}>✨ NOVO ✨</span>
                 </div>
-                {/* Variação */}
-                {item.variety_name && (
-                  <div className="ml-2 mb-0.5" style={{ backgroundColor: '#f0f0f0', padding: '1px 3px', borderRadius: '1px' }}>
-                    <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Tam: </span>
-                    <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{item.variety_name}</span>
-                  </div>
-                )}
-                {/* Extras */}
-                {item.order_item_extras && item.order_item_extras.length > 0 && (
-                  <div className="ml-2 mb-0.5" style={{ backgroundColor: '#f0f0f0', padding: '1px 3px', borderRadius: '1px' }}>
-                    {item.order_item_extras.map((extra) => (
-                      <div key={extra.id} className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                        + {extra.extra_name}
-                        {extra.quantity > 1 && <span className="font-bold" style={{ fontWeight: 'bold' }}> (x{extra.quantity})</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {/* Observações do item ou informações de peso */}
-                {item.notes && (
-                  <div className="ml-2 mt-0.5">
-                    {item.notes.includes("Peso:") ? (
-                      <div style={{ backgroundColor: '#f5f5f5', padding: '2px 4px', borderLeft: '3px solid #666' }}>
-                        <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>{item.notes}</span>
-                      </div>
-                    ) : (
-                      <span className="font-bold italic" style={{ fontSize: '15px', fontWeight: 'bold' }}>OBS: {item.notes}</span>
-                    )}
-                  </div>
-                )}
+              )}
+              {/* Linha principal: Qtd x Descrição + Preço */}
+              <div className="flex justify-between items-start" style={{ marginBottom: '1px' }}>
+                <div className="flex-1" style={{ maxWidth: 'calc(100% - 55px)' }}>
+                  {item.category_name && (
+                    <span className="uppercase font-bold" style={{ fontSize: '9px', color: '#666', fontWeight: 'bold' }}>[{item.category_name}] </span>
+                  )}
+                  <span className="font-bold" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                    {item.quantity}x {item.product_name}
+                  </span>
+                </div>
+                <div className="text-right" style={{ minWidth: '50px' }}>
+                  <span className="font-bold" style={{ fontSize: '12px', fontWeight: 'bold' }}>R$ {itemTotal.toFixed(2).replace(".", ",")}</span>
+                </div>
               </div>
-            )
-          })}
-        </div>
+              {/* Variação e Extras - Compacto */}
+              {(item.variety_name || (item.order_item_extras && item.order_item_extras.length > 0)) && (
+                <div style={{ marginLeft: '8px', marginBottom: '1px', fontSize: '10px' }}>
+                  {item.variety_name && (
+                    <span className="font-bold" style={{ fontWeight: 'bold' }}>Tam: {item.variety_name}</span>
+                  )}
+                  {item.order_item_extras && item.order_item_extras.length > 0 && (
+                    <span className="font-bold" style={{ fontWeight: 'bold' }}>
+                      {item.variety_name ? ' | ' : ''}
+                      {item.order_item_extras.map((extra, idx) => (
+                        <span key={extra.id}>
+                          {idx > 0 ? ', ' : ''}+ {extra.extra_name}{extra.quantity > 1 && ` (x${extra.quantity})`}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              )}
+              {/* Observações do item ou informações de peso */}
+              {item.notes && (
+                <div style={{ marginLeft: '8px', fontSize: '10px' }}>
+                  {item.notes.includes("Peso:") ? (
+                    <span className="font-bold" style={{ fontWeight: 'bold' }}>{item.notes}</span>
+                  ) : (
+                    <span className="font-bold italic" style={{ fontWeight: 'bold' }}>OBS: {item.notes}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Observações Gerais */}
       {order.notes && (
-        <div className="mb-2 pb-2" style={{ borderBottom: '1px dashed #000' }}>
-          <p className="font-bold uppercase mb-0.5" style={{ fontSize: '16px', fontWeight: 'bold' }}>OBSERVAÇÕES GERAIS</p>
-          <p className="font-bold whitespace-pre-wrap" style={{ fontSize: '15px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+        <div className="mb-1 pb-1" style={{ borderBottom: '1px dashed #000', padding: '2px 0' }}>
+          <p className="font-bold uppercase" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '1px' }}>OBSERVAÇÕES GERAIS</p>
+          <p className="font-bold whitespace-pre-wrap" style={{ fontSize: '11px', fontWeight: 'bold', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             {order.notes}
           </p>
         </div>
       )}
 
-      {/* Resumo Financeiro */}
-      <div className="mb-2 pb-2" style={{ borderBottom: '2px solid #000', backgroundColor: '#e8e8e8', padding: '4px 2px', borderRadius: '2px' }}>
-        <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
-          <div className="flex justify-between items-center mb-1">
-            <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>Subtotal:</span>
-            <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              R$ {(isDelivery && order.delivery_fee ? order.total - order.delivery_fee : order.total).toFixed(2).replace(".", ",")}
-            </span>
+      {/* Resumo Financeiro - Compacto */}
+      <div className="mb-1 pb-1" style={{ borderBottom: '1px solid #000', padding: '2px 0' }}>
+        <div className="flex justify-between items-center" style={{ marginBottom: '1px' }}>
+          <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Subtotal:</span>
+          <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>
+            R$ {(isDelivery && order.delivery_fee ? order.total - order.delivery_fee : order.total).toFixed(2).replace(".", ",")}
+          </span>
+        </div>
+        {isDelivery && order.delivery_fee && order.delivery_fee > 0 && (
+          <div className="flex justify-between items-center" style={{ marginBottom: '2px' }}>
+            <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Taxa de Entrega:</span>
+            <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>R$ {order.delivery_fee.toFixed(2).replace(".", ",")}</span>
           </div>
-          {isDelivery && order.delivery_fee && order.delivery_fee > 0 && (
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>Taxa de Entrega:</span>
-              <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>R$ {order.delivery_fee.toFixed(2).replace(".", ",")}</span>
-            </div>
-          )}
-          <div className="flex justify-between items-center pt-1 mt-1" style={{ borderTop: '1px solid #000', backgroundColor: '#d0d0d0', padding: '3px 2px', borderRadius: '1px' }}>
-            <span className="font-bold uppercase" style={{ fontSize: '17px', fontWeight: 'bold' }}>TOTAL:</span>
-            <span className="font-bold" style={{ fontSize: '17px', fontWeight: 'bold' }}>R$ {order.total.toFixed(2).replace(".", ",")}</span>
-          </div>
+        )}
+        <div className="flex justify-between items-center" style={{ borderTop: '1px solid #000', paddingTop: '2px', marginTop: '2px' }}>
+          <span className="font-bold uppercase" style={{ fontSize: '14px', fontWeight: 'bold' }}>TOTAL:</span>
+          <span className="font-bold" style={{ fontSize: '14px', fontWeight: 'bold' }}>R$ {order.total.toFixed(2).replace(".", ",")}</span>
         </div>
       </div>
 
       {/* Código de Barras do Pedido */}
-      <div className="text-center mt-2 pt-2" style={{ borderTop: '1px dashed #000' }}>
-        <p className="font-bold mb-1" style={{ fontSize: '12px', fontWeight: 'bold' }}>CÓDIGO DO PEDIDO</p>
-        <p className="font-mono mb-1" style={{ fontSize: '18px', letterSpacing: '2px', fontWeight: 'bold' }}>
+      <div className="text-center mt-1 pt-1" style={{ borderTop: '1px dashed #000', paddingTop: '2px' }}>
+        <p className="font-bold" style={{ fontSize: '10px', fontWeight: 'bold', marginBottom: '1px' }}>CÓDIGO DO PEDIDO</p>
+        <p className="font-mono" style={{ fontSize: '14px', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '1px' }}>
           {order.id.slice(0, 8).toUpperCase()}
         </p>
-        <div className="font-mono" style={{ fontSize: '10px', letterSpacing: '1px', lineHeight: '1.2' }}>
+        <div className="font-mono" style={{ fontSize: '8px', letterSpacing: '0.5px', lineHeight: '1' }}>
           {generateBarcode(order.id.slice(0, 8).toUpperCase())}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="text-center mt-2 pt-2" style={{ borderTop: '1px solid #000', backgroundColor: '#f5f5f5', padding: '3px 2px', borderRadius: '2px' }}>
-        <p className="font-bold uppercase mb-0.5" style={{ fontSize: '13px', fontWeight: 'bold' }}>{restaurantInfo?.name || "CAFEREAL"}</p>
+      {/* Footer - Compacto */}
+      <div className="text-center mt-1 pt-1" style={{ borderTop: '1px solid #000', paddingTop: '2px' }}>
+        <p className="font-bold uppercase" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '1px' }}>{restaurantInfo?.name || "CAFEREAL"}</p>
         {restaurantInfo?.opening_hours && (
-          <p className="font-bold mb-0.5" style={{ fontSize: '11px', fontWeight: 'bold' }}>
-            {restaurantInfo.opening_hours.split('\n').slice(0, 2).join(' | ')}
+          <p className="font-bold" style={{ fontSize: '9px', fontWeight: 'bold', marginBottom: '1px' }}>
+            {restaurantInfo.opening_hours.split('\n').slice(0, 1).join(' | ')}
           </p>
         )}
-        <div className="flex justify-center gap-2 mb-0.5" style={{ fontSize: '10px' }}>
+        <div className="flex justify-center gap-2" style={{ fontSize: '9px', marginBottom: '1px' }}>
           {restaurantInfo?.instagram && (
             <span className="font-bold" style={{ fontWeight: 'bold' }}>📷 @{restaurantInfo.instagram.replace('@', '').split('/').pop()}</span>
-          )}
-          {restaurantInfo?.facebook && (
-            <span className="font-bold" style={{ fontWeight: 'bold' }}>👥 {restaurantInfo.facebook.split('/').pop()}</span>
           )}
           {restaurantInfo?.whatsapp && (
             <span className="font-bold" style={{ fontWeight: 'bold' }}>💬 {formatPhone(restaurantInfo.whatsapp) || restaurantInfo.whatsapp}</span>
           )}
         </div>
-        <p className="font-bold mb-0.5" style={{ fontSize: '13px', fontWeight: 'bold' }}>Obrigado pela preferência!</p>
-        <p className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Volte sempre!</p>
+        <p className="font-bold" style={{ fontSize: '10px', fontWeight: 'bold' }}>Obrigado pela preferência!</p>
       </div>
 
       {/* Linha de Corte */}
-      <div className="text-center mt-2 pt-1" style={{ marginBottom: '0', paddingBottom: '0' }}>
-        <p className="font-bold" style={{ fontSize: '12px', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '0' }}>{"=".repeat(40)}</p>
+      <div className="text-center mt-1 pt-1" style={{ marginBottom: '0', paddingBottom: '0' }}>
+        <p className="font-bold" style={{ fontSize: '10px', letterSpacing: '0.5px', fontWeight: 'bold', marginBottom: '0' }}>{"=".repeat(35)}</p>
       </div>
     </div>
   )

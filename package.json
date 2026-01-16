@@ -48,7 +48,7 @@
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "16.0.7",
+    "next": "^16.1.3",
     "next-themes": "latest",
     "qrcode.react": "^4.2.0",
     "react": "19.2.0",

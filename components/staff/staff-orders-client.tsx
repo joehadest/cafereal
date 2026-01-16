@@ -63,17 +63,58 @@ export function StaffOrdersClient({
   }
 }) {
   const router = useRouter()
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [orderType, setOrderType] = useState<"dine-in" | "delivery" | "pickup">("dine-in")
-  const [selectedTable, setSelectedTable] = useState<string>("")
-  const [customerName, setCustomerName] = useState<string>("")
-  const [customerPhone, setCustomerPhone] = useState<string>("")
-  const [deliveryAddress, setDeliveryAddress] = useState<string>("")
-  const [referencePoint, setReferencePoint] = useState<string>("")
-  const [deliveryFee, setDeliveryFee] = useState<number>(0)
-  const [paymentMethod, setPaymentMethod] = useState<string>("")
-  const [notes, setNotes] = useState<string>("")
-  const [waiterName, setWaiterName] = useState<string>("")
+  
+  // Chave para localStorage
+  const STORAGE_KEY = "staff-order-draft"
+  
+  // Função para carregar dados salvos do localStorage
+  const loadDraftFromStorage = () => {
+    if (typeof window === "undefined") return null
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar rascunho do pedido:", error)
+    }
+    return null
+  }
+  
+  // Função para salvar dados no localStorage
+  const saveDraftToStorage = (draft: any) => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
+    } catch (error) {
+      console.error("Erro ao salvar rascunho do pedido:", error)
+    }
+  }
+  
+  // Função para limpar dados do localStorage
+  const clearDraftFromStorage = () => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (error) {
+      console.error("Erro ao limpar rascunho do pedido:", error)
+    }
+  }
+  
+  // Carregar dados salvos ao montar o componente
+  const savedDraft = loadDraftFromStorage()
+  
+  const [cart, setCart] = useState<CartItem[]>(savedDraft?.cart || [])
+  const [orderType, setOrderType] = useState<"dine-in" | "delivery" | "pickup">(savedDraft?.orderType || "dine-in")
+  const [selectedTable, setSelectedTable] = useState<string>(savedDraft?.selectedTable || "")
+  const [customerName, setCustomerName] = useState<string>(savedDraft?.customerName || "")
+  const [customerPhone, setCustomerPhone] = useState<string>(savedDraft?.customerPhone || "")
+  const [deliveryAddress, setDeliveryAddress] = useState<string>(savedDraft?.deliveryAddress || "")
+  const [referencePoint, setReferencePoint] = useState<string>(savedDraft?.referencePoint || "")
+  const [deliveryFee, setDeliveryFee] = useState<number>(savedDraft?.deliveryFee || 0)
+  const [paymentMethod, setPaymentMethod] = useState<string>(savedDraft?.paymentMethod || "")
+  const [notes, setNotes] = useState<string>(savedDraft?.notes || "")
+  const [waiterName, setWaiterName] = useState<string>(savedDraft?.waiterName || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -90,7 +131,7 @@ export function StaffOrdersClient({
   const [productDescription, setProductDescription] = useState<string>("")
   const [pricePerKg, setPricePerKg] = useState<string>("")
   const [deliveryZones, setDeliveryZones] = useState<Array<{ id: string; name: string; fee: number; active: boolean; display_order: number }>>([])
-  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>("")
+  const [selectedDeliveryZoneId, setSelectedDeliveryZoneId] = useState<string>(savedDraft?.selectedDeliveryZoneId || "")
   const [customerHistory, setCustomerHistory] = useState<Array<{ customer_name: string; customer_phone: string; delivery_address: string; reference_point: string | null; delivery_zone_id: string | null }>>([])
   const [showCustomerHistory, setShowCustomerHistory] = useState(false)
 
@@ -170,6 +211,25 @@ export function StaffOrdersClient({
     }
   }
 
+  // Salvar rascunho no localStorage sempre que os dados mudarem
+  useEffect(() => {
+    const draft = {
+      cart,
+      orderType,
+      selectedTable,
+      customerName,
+      customerPhone,
+      deliveryAddress,
+      referencePoint,
+      deliveryFee,
+      paymentMethod,
+      notes,
+      waiterName,
+      selectedDeliveryZoneId,
+    }
+    saveDraftToStorage(draft)
+  }, [cart, orderType, selectedTable, customerName, customerPhone, deliveryAddress, referencePoint, deliveryFee, paymentMethod, notes, waiterName, selectedDeliveryZoneId])
+
   // Carregar zonas de entrega
   useEffect(() => {
     const loadDeliveryZones = async () => {
@@ -185,9 +245,19 @@ export function StaffOrdersClient({
         if (error) throw error
         setDeliveryZones(data || [])
         
-        // Selecionar a primeira zona por padrão
+        // Selecionar a primeira zona por padrão se não houver uma zona salva
         if (data && data.length > 0) {
-          setSelectedDeliveryZoneId(data[0].id)
+          // Se já houver uma zona selecionada (do localStorage), verificar se ainda existe
+          if (selectedDeliveryZoneId) {
+            const savedZone = data.find(z => z.id === selectedDeliveryZoneId)
+            if (!savedZone) {
+              // Se a zona salva não existe mais, selecionar a primeira
+              setSelectedDeliveryZoneId(data[0].id)
+            }
+          } else {
+            // Se não houver zona selecionada, selecionar a primeira
+            setSelectedDeliveryZoneId(data[0].id)
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar zonas de entrega:", error)
@@ -799,6 +869,8 @@ export function StaffOrdersClient({
       setPaymentMethod("")
       setNotes("")
       setWaiterName("")
+      // Limpar rascunho do localStorage após criar o pedido com sucesso
+      clearDraftFromStorage()
       setShowSuccessModal(true)
       router.refresh()
     } catch (error: any) {
