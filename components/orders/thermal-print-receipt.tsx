@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { quickPrint } from "@/lib/print-utils"
 
 type OrderItem = {
   id: string
@@ -30,7 +31,8 @@ export function ThermalPrintReceipt({ order, autoPrint = false }: { order: Order
   useEffect(() => {
     if (autoPrint && printRef.current) {
       setTimeout(() => {
-        window.print()
+        // Usar função otimizada de impressão rápida
+        quickPrint({ focusDialog: true })
       }, 100)
     }
   }, [autoPrint])

@@ -17,6 +17,7 @@ import { PrintOrderReceipt } from "./print-order-receipt"
 import { PrintKitchenTicket } from "./print-kitchen-ticket"
 import { PrintCustomerTicket } from "./print-customer-ticket"
 import { EditOrderModal } from "./edit-order-modal"
+import { quickPrint } from "@/lib/print-utils"
 
 type OrderItem = {
   id: string
@@ -322,15 +323,19 @@ function OrderCardComponent({
         body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 80mm !important;
+          max-width: 80mm !important;
+          min-width: 80mm !important;
         }
         /* Tornar visível apenas o container de impressão e seu conteúdo */
         #print-container-${order.id} { 
           position: relative !important; 
-          left: auto !important; 
-          top: auto !important; 
-          width: 100% !important;
-          max-width: 100% !important;
-          margin: 0 auto !important;
+          left: 0 !important; 
+          top: 0 !important; 
+          width: 80mm !important;
+          max-width: 80mm !important;
+          min-width: 80mm !important;
+          margin: 0 !important;
           padding: 0 !important;
           visibility: visible !important;
           display: block !important;
@@ -346,6 +351,7 @@ function OrderCardComponent({
           overflow: visible !important;
           padding-bottom: 0 !important;
           margin-bottom: 0 !important;
+          box-sizing: border-box !important;
         }
         #print-container-${order.id} *, 
         #print-container-${order.id} .print-kitchen,
@@ -362,8 +368,14 @@ function OrderCardComponent({
         #print-container-${order.id} .print-kitchen,
         #print-container-${order.id} .print-customer {
           position: relative !important;
-          left: auto !important;
-          top: auto !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 80mm !important;
+          max-width: 80mm !important;
+          min-width: 80mm !important;
+          margin: 0 !important;
+          padding: 2mm 1mm !important;
+          box-sizing: border-box !important;
           page-break-inside: avoid !important;
           page-break-after: avoid !important;
           page-break-before: avoid !important;
@@ -380,7 +392,7 @@ function OrderCardComponent({
           margin-bottom: 0 !important;
         }
         @page {
-          size: auto !important;
+          size: 80mm auto !important;
           margin: 0 !important;
           padding: 0 !important;
         }
@@ -440,7 +452,8 @@ function OrderCardComponent({
       // Aguardar mais um pouco para garantir que os estilos foram aplicados
       setTimeout(() => {
         try {
-          window.print()
+          // Usar função otimizada de impressão rápida
+          quickPrint({ focusDialog: true })
         } catch (printError) {
           console.warn("Erro ao imprimir:", printError)
           // Limpar mesmo se houver erro

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client"
 import { PrintKitchenTicket } from "./print-kitchen-ticket"
 import { PrintCustomerTicket } from "./print-customer-ticket"
 import { PrintOrderReceipt } from "./print-order-receipt"
+import { quickPrint } from "@/lib/print-utils"
 import type { Order } from "@/types/order"
 
 type PrintType = "kitchen" | "customer" | "receipt" | "none"
@@ -114,15 +115,19 @@ export async function autoPrintOrder(
       body {
         margin: 0 !important;
         padding: 0 !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        min-width: 80mm !important;
       }
       /* Tornar visível apenas o container de impressão e seu conteúdo */
       #auto-print-container-${order.id} { 
         position: relative !important; 
-        left: auto !important; 
-        top: auto !important; 
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 auto !important;
+        left: 0 !important; 
+        top: 0 !important; 
+        width: 80mm !important;
+        max-width: 80mm !important;
+        min-width: 80mm !important;
+        margin: 0 !important;
         padding: 0 !important;
         visibility: visible !important;
         display: block !important;
@@ -138,6 +143,7 @@ export async function autoPrintOrder(
         overflow: visible !important;
         padding-bottom: 0 !important;
         margin-bottom: 0 !important;
+        box-sizing: border-box !important;
       }
       #auto-print-container-${order.id} *, 
       #auto-print-container-${order.id} .print-kitchen,
@@ -154,8 +160,14 @@ export async function autoPrintOrder(
       #auto-print-container-${order.id} .print-kitchen,
       #auto-print-container-${order.id} .print-customer {
         position: relative !important;
-        left: auto !important;
-        top: auto !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        min-width: 80mm !important;
+        margin: 0 !important;
+        padding: 2mm 1mm !important;
+        box-sizing: border-box !important;
         page-break-inside: avoid !important;
         page-break-after: avoid !important;
         page-break-before: avoid !important;
@@ -172,7 +184,7 @@ export async function autoPrintOrder(
         margin-bottom: 0 !important;
       }
       @page {
-        size: auto !important;
+        size: 80mm auto !important;
         margin: 0 !important;
         padding: 0 !important;
       }
@@ -228,7 +240,12 @@ export async function autoPrintOrder(
     // Aguardar mais um pouco para garantir que os estilos foram aplicados
     setTimeout(() => {
       try {
-        window.print()
+        // Usar função otimizada de impressão rápida
+        // - Foca automaticamente no diálogo
+        // - Configura atalho Enter para confirmar rapidamente
+        // Nota: Navegadores modernos não permitem impressão completamente silenciosa por segurança
+        // O diálogo de impressão sempre aparecerá, mas a experiência será otimizada
+        quickPrint({ focusDialog: true })
       } catch (printError) {
         console.warn("Erro ao imprimir automaticamente:", printError)
       }

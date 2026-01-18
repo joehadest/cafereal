@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { createRoot } from "react-dom/client"
 import { PrintOrderReceipt } from "@/components/orders/print-order-receipt"
 import { ProductOptionsModal } from "@/components/menu/product-options-modal"
+import { quickPrint } from "@/lib/print-utils"
 import type { Product, ProductVariety, ProductExtra } from "@/types/product"
 import type { Order } from "@/types/order"
 
@@ -387,19 +388,24 @@ export function CounterClient({
         body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 80mm !important;
+          max-width: 80mm !important;
+          min-width: 80mm !important;
         }
         /* Tornar visível apenas o container de impressão e seu conteúdo */
         #print-container-${order.id} { 
           position: relative !important; 
-          left: auto !important; 
-          top: auto !important; 
+          left: 0 !important; 
+          top: 0 !important; 
           width: 80mm !important;
           max-width: 80mm !important;
-          margin: 0 auto !important;
+          min-width: 80mm !important;
+          margin: 0 !important;
           padding: 0 !important;
           visibility: visible !important;
           display: block !important;
           opacity: 1 !important;
+          box-sizing: border-box !important;
           page-break-inside: avoid !important;
           page-break-after: avoid !important;
           page-break-before: avoid !important;
@@ -423,8 +429,14 @@ export function CounterClient({
         #print-container-${order.id} .print-kitchen,
         #print-container-${order.id} .print-customer {
           position: relative !important;
-          left: auto !important;
-          top: auto !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 80mm !important;
+          max-width: 80mm !important;
+          min-width: 80mm !important;
+          margin: 0 !important;
+          padding: 2mm 1mm !important;
+          box-sizing: border-box !important;
           page-break-inside: avoid !important;
           page-break-after: avoid !important;
           page-break-before: avoid !important;
@@ -441,7 +453,7 @@ export function CounterClient({
           margin-bottom: 0 !important;
         }
         @page {
-          size: auto !important;
+          size: 80mm auto !important;
           margin: 0 !important;
           padding: 0 !important;
         }
@@ -520,8 +532,8 @@ export function CounterClient({
 
               // Pequeno delay adicional antes de imprimir
               setTimeout(() => {
-                // Imprimir
-                window.print()
+                // Usar função otimizada de impressão rápida
+                quickPrint({ focusDialog: true })
                 
                 // Limpar após impressão
                 setTimeout(() => {

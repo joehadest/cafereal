@@ -76,7 +76,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
   }
 
   return (
-    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '100%', maxWidth: '100%', margin: '0', padding: '2mm 2mm 0 2mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'avoid', height: 'auto', minHeight: '0', lineHeight: '1.2', fontSize: '12px', fontWeight: 'bold' }}>
+    <div className="print-receipt print:block bg-white text-black font-mono font-bold" style={{ width: '80mm', maxWidth: '80mm', minWidth: '80mm', margin: '0', padding: '2mm 1mm 0 1mm', boxSizing: 'border-box', overflow: 'visible', wordWrap: 'break-word', display: 'block', visibility: 'visible', pageBreakInside: 'avoid', height: 'auto', minHeight: '0', lineHeight: '1.2', fontSize: '12px', fontWeight: 'bold' }}>
       {/* Header do Estabelecimento */}
       <div className="text-center border-b border-black pb-1 mb-1" style={{ borderBottomWidth: '1px', padding: '2px 0' }}>
         <h1 className="font-bold uppercase leading-tight" style={{ fontSize: '16px', letterSpacing: '0.5px', fontWeight: 'bold', marginBottom: '2px' }}>

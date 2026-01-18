@@ -154,13 +154,14 @@
   .print-kitchen,
   .print-customer {
     position: relative !important;
-    left: auto !important;
-    top: auto !important;
-    right: auto !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
     width: 80mm !important;
     max-width: 80mm !important;
-    margin: 0 auto !important;
-    padding: 3px 5px !important;
+    min-width: 80mm !important;
+    margin: 0 !important;
+    padding: 2mm 1mm !important;
     overflow: hidden !important;
     min-height: auto !important;
     max-height: 100vh !important;
@@ -181,14 +182,14 @@
     size: 80mm auto !important;
   }
 
-  /* Garantir que não haja páginas em branco e centralizar */
+  /* Garantir que não haja páginas em branco - sem centralizar para evitar sobras */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-width: 80mm !important;
+    display: block !important;
   }
 
   /* Ocultar qualquer elemento que possa causar páginas extras */
@@ -235,6 +236,8 @@
   .print-customer span {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     word-break: break-word !important;
     max-width: 100% !important;
     overflow: hidden !important;

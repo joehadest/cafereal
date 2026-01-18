@@ -11,6 +11,7 @@ import { Printer, FileText, ChefHat } from "lucide-react"
 import type { Order } from "@/types/order"
 import { PrintOrderReceipt } from "./print-order-receipt"
 import { PrintKitchenTicket } from "./print-kitchen-ticket"
+import { quickPrint } from "@/lib/print-utils"
 
 interface BulkPrintDialogProps {
   orders: Order[]
@@ -169,7 +170,8 @@ export function BulkPrintDialog({ orders, restaurantInfo }: BulkPrintDialogProps
 
     // Aguardar um pouco para garantir que o React renderizou tudo
     setTimeout(() => {
-      window.print()
+      // Usar função otimizada de impressão rápida
+      quickPrint({ focusDialog: true })
       // Limpar após impressão
       setTimeout(() => {
         root.unmount()
