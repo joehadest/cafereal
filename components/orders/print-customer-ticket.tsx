@@ -86,6 +86,7 @@ export function PrintCustomerTicket({ order, restaurantInfo, deliveryZoneName, n
         {restaurantInfo?.cnpj && (
           <p className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</p>
         )}
+        <p className="font-bold text-center" style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '2px', marginBottom: '1px' }}>CUPOM NÃO FISCAL</p>
       </div>
 
       {/* Linha Separadora */}
@@ -125,6 +126,12 @@ export function PrintCustomerTicket({ order, restaurantInfo, deliveryZoneName, n
           <div className="flex justify-between items-center mt-1">
             <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Pagamento:</span>
             <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.payment_method}</span>
+          </div>
+        )}
+        {order.waiter_name && (
+          <div className="flex justify-between items-center mt-1">
+            <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Garçom:</span>
+            <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.waiter_name}</span>
           </div>
         )}
       </div>

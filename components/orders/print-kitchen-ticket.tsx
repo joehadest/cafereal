@@ -46,6 +46,7 @@ export function PrintKitchenTicket({ order, restaurantName, deliveryZoneName, ne
         <div className="mt-1 mb-1" style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '2px 0' }}>
           <p className="font-bold uppercase" style={{ fontSize: '14px', fontWeight: 'bold' }}>COMANDA DE COZINHA</p>
         </div>
+        <p className="font-bold text-center" style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '2px', marginBottom: '1px' }}>CUPOM NÃO FISCAL</p>
       </div>
 
       {/* Tipo e Mesa/Delivery - Destaque */}
@@ -162,6 +163,12 @@ export function PrintKitchenTicket({ order, restaurantName, deliveryZoneName, ne
             <div className="mb-0.5">
               <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Pagamento: </span>
               <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.payment_method}</span>
+            </div>
+          )}
+          {order.waiter_name && (
+            <div className="mb-0.5">
+              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>Garçom: </span>
+              <span className="font-bold" style={{ fontSize: '13px', fontWeight: 'bold' }}>{order.waiter_name}</span>
             </div>
           )}
           {isDelivery && order.customer_phone && (

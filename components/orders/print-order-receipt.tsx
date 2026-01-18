@@ -95,6 +95,7 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
             <span className="font-bold" style={{ fontWeight: 'bold' }}>CNPJ: {formatCNPJ(restaurantInfo.cnpj)}</span>
           )}
         </div>
+        <p className="font-bold text-center" style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '2px', marginBottom: '1px' }}>CUPOM NÃO FISCAL</p>
       </div>
 
       {/* Linha Separadora */}
@@ -140,6 +141,11 @@ export function PrintOrderReceipt({ order, restaurantInfo, deliveryZoneName, new
           {order.payment_method && (
             <div style={{ marginBottom: '1px' }}>
               <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Pagamento: {order.payment_method}</span>
+            </div>
+          )}
+          {order.waiter_name && (
+            <div style={{ marginBottom: '1px' }}>
+              <span className="font-bold" style={{ fontSize: '11px', fontWeight: 'bold' }}>Garçom: {order.waiter_name}</span>
             </div>
           )}
           {isDelivery && order.delivery_address && (
