@@ -44,14 +44,14 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
         <button
           type="button"
           onClick={onLogoClick}
-          className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+          className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer border-2 border-slate-200 hover:border-slate-300"
           aria-label="Voltar para seleção de tipo de pedido"
         >
           {info.logoUrl ? (
             <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
           ) : (
-            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
-              <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700">
+              <Info className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
           )}
         </button>
@@ -59,24 +59,24 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
     }
     if (showButton) {
       return (
-        <Button variant="outline" size="sm" className="gap-2" disabled>
+        <Button variant="outline" size="sm" className="gap-2 rounded-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200" disabled>
           <Info className="h-4 w-4" />
-          <span className="hidden sm:inline">Informações</span>
+          <span className="hidden sm:inline font-medium">Informações</span>
         </Button>
       )
     }
     return (
       <button
         type="button"
-        className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+        className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer border-2 border-slate-200 hover:border-slate-300"
         aria-label="Informações do estabelecimento"
         disabled
       >
         {info.logoUrl ? (
           <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
         ) : (
-          <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
-            <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+          <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700">
+            <Info className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
         )}
       </button>
@@ -87,9 +87,13 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
     <Dialog>
       {showButton ? (
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Info className="h-4 w-4" />
-            <span className="hidden sm:inline">Informações</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 rounded-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 font-medium"
+          >
+            <Info className="h-4 w-4 text-slate-700" />
+            <span className="hidden sm:inline text-slate-700">Informações</span>
           </Button>
         </DialogTrigger>
       ) : (
@@ -98,14 +102,17 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
             <button
               type="button"
               onClick={onLogoClick}
-              className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+              className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer border-2 border-slate-200 hover:border-slate-300 group"
               aria-label="Voltar para seleção de tipo de pedido"
             >
               {info.logoUrl ? (
-                <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
+                <>
+                  <Image src={info.logoUrl} alt={info.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl" />
+                </>
               ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
-                  <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700 group-hover:from-slate-800 group-hover:via-slate-700 group-hover:to-slate-800 transition-all duration-300">
+                  <Info className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
               )}
             </button>
@@ -113,14 +120,17 @@ export function RestaurantInfoDialog({ info, showButton = false, onLogoClick }: 
             <DialogTrigger asChild>
               <button
                 type="button"
-                className="relative h-8 w-8 sm:h-12 sm:w-12 rounded-lg overflow-hidden shadow-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+                className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 cursor-pointer border-2 border-slate-200 hover:border-slate-300 group"
                 aria-label="Informações do estabelecimento"
               >
                 {info.logoUrl ? (
-                  <Image src={info.logoUrl} alt={info.name} fill className="object-cover" />
+                  <>
+                    <Image src={info.logoUrl} alt={info.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl" />
+                  </>
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-600 to-slate-500">
-                    <Info className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                  <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700 group-hover:from-slate-800 group-hover:via-slate-700 group-hover:to-slate-800 transition-all duration-300">
+                    <Info className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                 )}
               </button>

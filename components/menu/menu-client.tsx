@@ -484,11 +484,11 @@ export function MenuClient({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-lg animate-in slide-in-from-top duration-500">
-        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-left duration-700 min-w-0 flex-1">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-lg border-b border-slate-200/80 shadow-sm animate-in slide-in-from-top duration-500">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4 animate-in fade-in slide-in-from-left duration-700 min-w-0 flex-1">
               <RestaurantInfoDialog
                 info={{
                   name: restaurantName,
@@ -509,22 +509,22 @@ export function MenuClient({
                 onLogoClick={handleBackToOrderType}
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-2xl font-bold text-slate-900 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent truncate">
                   {restaurantName}
                 </h1>
                 {orderType === "delivery" && deliveryInfo && (
-                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500 truncate">
+                  <p className="text-xs sm:text-sm text-slate-600 animate-in fade-in duration-500 truncate mt-0.5">
                     Delivery - {deliveryInfo.customerName}
                   </p>
                 )}
                 {orderType === "pickup" && (
-                  <p className="text-xs sm:text-sm text-slate-700 animate-in fade-in duration-500 truncate">
+                  <p className="text-xs sm:text-sm text-slate-600 animate-in fade-in duration-500 truncate mt-0.5">
                     Retirada no Local
                   </p>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <RestaurantInfoDialog
                 info={{
                   name: restaurantName,
@@ -548,10 +548,10 @@ export function MenuClient({
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push("/customer/orders")}
-                className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 px-2 sm:px-3 rounded-lg transition-all duration-200"
               >
                 <Package className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-                <span className="hidden sm:inline">Meus Pedidos</span>
+                <span className="hidden sm:inline text-sm font-medium">Pedidos</span>
               </Button>
               {user && (
                 <>
@@ -559,19 +559,19 @@ export function MenuClient({
                     variant="ghost"
                     size="sm"
                     onClick={() => router.push("/customer/profile")}
-                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
+                    className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 px-2 sm:px-3 rounded-lg transition-all duration-200"
                   >
                     <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-                    <span className="hidden sm:inline">Perfil</span>
+                    <span className="hidden sm:inline text-sm font-medium">Perfil</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
+                    className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 px-2 sm:px-3 rounded-lg transition-all duration-200"
                   >
                     <LogOut className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-                    <span className="hidden sm:inline">Sair</span>
+                    <span className="hidden sm:inline text-sm font-medium">Sair</span>
                   </Button>
                 </>
               )}
@@ -580,20 +580,20 @@ export function MenuClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => router.push("/customer/login")}
-                  className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 px-2 sm:px-4 cursor-pointer"
+                  className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 px-2 sm:px-3 rounded-lg transition-all duration-200"
                 >
                   <User className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-                  <span className="hidden sm:inline">Entrar</span>
+                  <span className="hidden sm:inline text-sm font-medium">Entrar</span>
                 </Button>
               )}
               <Button
                 size="sm"
                 onClick={() => setIsCartOpen(true)}
-                className="relative bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-2 sm:px-4 cursor-pointer"
+                className="relative bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-800 hover:to-slate-700 text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 animate-in fade-in slide-in-from-right duration-700 px-3 sm:px-4 rounded-lg font-medium"
               >
                 <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-600 text-white text-xs font-bold rounded-full h-4 w-4 sm:h-6 sm:w-6 flex items-center justify-center animate-in zoom-in duration-300 animate-pulse">
+                  <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-lg animate-in zoom-in duration-300">
                     {totalItems}
                   </span>
                 )}
@@ -627,28 +627,26 @@ export function MenuClient({
 
 
       {showMenu && (
-        <div className="sticky top-[48px] sm:top-[63px] z-30 bg-white">
-          <div className="border-b border-slate-200 shadow-sm">
-            <div className="container mx-auto px-4 py-3 sm:py-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-                <Input
-                  type="text"
-                  placeholder="Buscar produtos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-10 sm:pl-12 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-slate-300 focus:border-slate-500 focus:ring-slate-500 rounded-lg"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    aria-label="Limpar busca"
-                  >
-                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                )}
-              </div>
+        <div className="sticky top-[56px] sm:top-[72px] z-30 bg-white/98 backdrop-blur-lg border-b border-slate-200/80 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-12 h-12 sm:h-14 text-sm sm:text-base border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100"
+                  aria-label="Limpar busca"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
           {filteredCategories.length > 0 && !searchTerm && (
@@ -671,9 +669,9 @@ export function MenuClient({
       )}
 
       {showMenu && (
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {filteredCategories.length > 0 ? (
-            <div className="space-y-12">
+            <div className="space-y-12 sm:space-y-16 md:space-y-20">
               {filteredCategories
                 .sort((a: any, b: any) => {
                   // Ordenar categorias por display_order, e se for igual, por ID para garantir ordem consistente
@@ -693,16 +691,16 @@ export function MenuClient({
                 ))}
             </div>
           ) : searchTerm ? (
-            <div className="text-center py-16">
-              <div className="mb-4 inline-block p-6 bg-slate-100 rounded-full">
-                <Search className="h-16 w-16 text-slate-300" />
+            <div className="text-center py-20 sm:py-24">
+              <div className="mb-6 inline-block p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl shadow-sm">
+                <Search className="h-16 w-16 text-slate-400" />
               </div>
-              <p className="text-lg font-medium text-slate-700">Nenhum produto encontrado</p>
-              <p className="text-sm text-slate-600 mt-2">
+              <p className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2">Nenhum produto encontrado</p>
+              <p className="text-sm sm:text-base text-slate-600">
                 Tente buscar com outros termos ou{" "}
                 <button
                   onClick={() => setSearchTerm("")}
-                  className="text-slate-700 font-medium hover:underline"
+                  className="text-slate-700 font-semibold hover:text-slate-900 hover:underline transition-colors"
                 >
                   limpar a busca
                 </button>

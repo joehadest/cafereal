@@ -220,22 +220,24 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="space-y-4">
-        <div className="space-y-2 text-center animate-in fade-in slide-in-from-top duration-700">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom duration-500">
+        <div className="space-y-3 text-center animate-in fade-in slide-in-from-top duration-700">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom duration-500">
             Dashboard
           </h1>
-          <p className="text-slate-700 text-sm sm:text-base lg:text-lg animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg animate-in fade-in slide-in-from-bottom duration-700 delay-100 font-medium">
             Visão geral do restaurante em tempo real
           </p>
         </div>
 
         {/* Filter Section */}
-        <Card className="border-slate-200 shadow-md">
-          <CardHeader className="pb-3">
+        <Card className="border-slate-200/80 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl bg-gradient-to-br from-white to-slate-50/50">
+          <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-slate-600" />
-                <CardTitle className="text-slate-900 text-base sm:text-lg">Filtrar por Período</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg">
+                  <Filter className="h-5 w-5 text-slate-700" />
+                </div>
+                <CardTitle className="text-slate-900 text-base sm:text-lg font-semibold">Filtrar por Período</CardTitle>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Select value={period} onValueChange={(value: "today" | "week" | "month" | "custom") => setPeriod(value)}>
@@ -287,59 +289,59 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
 
       {/* Revenue Overview - Daily, Weekly, Monthly */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="border-green-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-green-50 to-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-green-900">Receita Diária</CardTitle>
-            <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 rounded-lg">
-              <Calendar className="h-5 w-5 text-green-600" />
+        <Card className="border-green-200/80 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-green-50 via-white to-green-50/50 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-semibold text-green-900">Receita Diária</CardTitle>
+            <div className="p-2.5 bg-gradient-to-br from-green-100 to-green-200 rounded-xl shadow-sm">
+              <Calendar className="h-5 w-5 text-green-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700 mb-1">
+            <div className="text-3xl sm:text-4xl font-bold text-green-700 mb-2">
               {isLoading ? "..." : `R$ ${stats.todayRevenue.toFixed(2)}`}
             </div>
-            <p className="text-xs text-green-600 mt-1">{stats.todayCompletedOrders} pedidos concluídos hoje</p>
-            <div className="mt-3 pt-3 border-t border-green-200">
-              <p className="text-xs text-green-700">
-                Média diária ({periodLabel}): <span className="font-semibold">R$ {stats.dailyAverage.toFixed(2)}</span>
+            <p className="text-xs text-green-600 mt-1 font-medium">{stats.todayCompletedOrders} pedidos concluídos hoje</p>
+            <div className="mt-4 pt-4 border-t border-green-200/80">
+              <p className="text-xs text-green-700 font-medium">
+                Média diária ({periodLabel}): <span className="font-bold">R$ {stats.dailyAverage.toFixed(2)}</span>
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-blue-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-blue-50 to-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-900">Receita do Período</CardTitle>
-            <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+        <Card className="border-blue-200/80 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-blue-50 via-white to-blue-50/50 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-semibold text-blue-900">Receita do Período</CardTitle>
+            <div className="p-2.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl shadow-sm">
+              <BarChart3 className="h-5 w-5 text-blue-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-700 mb-1">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-700 mb-2">
               {isLoading ? "..." : `R$ ${stats.periodRevenue.toFixed(2)}`}
             </div>
-            <p className="text-xs text-blue-600 mt-1">{stats.periodCompletedOrders} pedidos no período</p>
-            <div className="mt-3 pt-3 border-t border-blue-200">
-              <p className="text-xs text-blue-700">
-                Período: <span className="font-semibold">{periodLabel}</span>
+            <p className="text-xs text-blue-600 mt-1 font-medium">{stats.periodCompletedOrders} pedidos no período</p>
+            <div className="mt-4 pt-4 border-t border-blue-200/80">
+              <p className="text-xs text-blue-700 font-medium">
+                Período: <span className="font-bold">{periodLabel}</span>
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-purple-50 to-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-purple-900">Estatísticas Gerais</CardTitle>
-            <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+        <Card className="border-purple-200/80 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-semibold text-purple-900">Estatísticas Gerais</CardTitle>
+            <div className="p-2.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl shadow-sm">
+              <TrendingUp className="h-5 w-5 text-purple-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-700 mb-1">{stats.totalOrders} pedidos</div>
-            <p className="text-xs text-purple-600 mt-1">Total de pedidos registrados</p>
-            <div className="mt-3 pt-3 border-t border-purple-200">
-              <p className="text-xs text-purple-700">
-                Média por dia: <span className="font-semibold">R$ {stats.dailyAverage.toFixed(2)}</span>
+            <div className="text-2xl sm:text-3xl font-bold text-purple-700 mb-2">{stats.totalOrders} pedidos</div>
+            <p className="text-xs text-purple-600 mt-1 font-medium">Total de pedidos registrados</p>
+            <div className="mt-4 pt-4 border-t border-purple-200/80">
+              <p className="text-xs text-purple-700 font-medium">
+                Média por dia: <span className="font-bold">R$ {stats.dailyAverage.toFixed(2)}</span>
               </p>
             </div>
           </CardContent>
@@ -347,11 +349,13 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
       </div>
 
       {/* Revenue Chart - Period Days */}
-      <Card className="border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-slate-600" />
-            <CardTitle className="text-slate-900">Receita do Período - {periodLabel}</CardTitle>
+      <Card className="border-slate-200/80 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl bg-gradient-to-br from-white to-slate-50/50">
+        <CardHeader className="bg-gradient-to-r from-slate-50 via-slate-100/50 to-slate-50 border-b border-slate-200/80 rounded-t-xl">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg">
+              <BarChart3 className="h-5 w-5 text-slate-700" />
+            </div>
+            <CardTitle className="text-slate-900 font-semibold">Receita do Período - {periodLabel}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -417,11 +421,13 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
       {/* Recent and Completed Orders Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
-        <Card className="border-slate-200 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-left duration-500">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-            <div className="flex items-center gap-2 justify-center text-center">
-              <Clock className="h-5 w-5 text-slate-600" />
-              <CardTitle className="text-slate-900">Pedidos Recentes</CardTitle>
+        <Card className="border-slate-200/80 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-left duration-500 rounded-xl bg-gradient-to-br from-white to-slate-50/50">
+          <CardHeader className="bg-gradient-to-r from-slate-50 via-slate-100/50 to-slate-50 border-b border-slate-200/80 rounded-t-xl">
+            <div className="flex items-center gap-3 justify-center text-center">
+              <div className="p-2 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg">
+                <Clock className="h-5 w-5 text-slate-700" />
+              </div>
+              <CardTitle className="text-slate-900 font-semibold">Pedidos Recentes</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -480,11 +486,13 @@ export function DashboardClient({ initialStats }: { initialStats: DashboardStats
         </Card>
 
         {/* Completed Orders Today */}
-        <Card className="border-green-200 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-right duration-500">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
-            <div className="flex items-center gap-2 justify-center text-center">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <CardTitle className="text-green-900">Concluídos Hoje</CardTitle>
+        <Card className="border-green-200/80 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 animate-in fade-in slide-in-from-right duration-500 rounded-xl bg-gradient-to-br from-green-50/50 via-white to-green-50/50">
+          <CardHeader className="bg-gradient-to-r from-green-50 via-green-100/50 to-green-50 border-b border-green-200/80 rounded-t-xl">
+            <div className="flex items-center gap-3 justify-center text-center">
+              <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 rounded-lg">
+                <CheckCircle2 className="h-5 w-5 text-green-700" />
+              </div>
+              <CardTitle className="text-green-900 font-semibold">Concluídos Hoje</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-6">

@@ -656,15 +656,15 @@ export function Cart({
       <div className="fixed inset-0 bg-black/60 z-50 animate-in fade-in duration-300" onClick={onClose} />
 
       <div className="fixed right-0 top-0 h-full w-full sm:max-w-md bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-        <div className="relative flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-500 to-slate-600 text-white overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30" />
-          <div className="relative flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-              <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="relative flex items-center justify-between p-5 sm:p-6 border-b border-slate-200/80 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/20 via-transparent to-slate-900/10" />
+          <div className="relative flex items-center gap-3 sm:gap-4">
+            <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
+              <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold">Seu Pedido</h2>
-              <p className="text-xs text-slate-100">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Seu Pedido</h2>
+              <p className="text-xs sm:text-sm text-slate-200 mt-0.5">
                 {cart.length} {cart.length === 1 ? "item" : "itens"}
               </p>
             </div>
@@ -673,20 +673,20 @@ export function Cart({
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="relative text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
+            className="relative text-white hover:bg-white/20 transition-all duration-200 hover:scale-110 rounded-lg"
           >
             <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
           {cart.length === 0 ? (
-            <div className="text-center py-12 text-slate-700 animate-in fade-in duration-500">
-              <div className="mb-4 inline-block p-6 bg-slate-100 rounded-full">
-                <ShoppingBag className="h-16 w-16 text-slate-300" />
+            <div className="text-center py-16 sm:py-20 text-slate-700 animate-in fade-in duration-500">
+              <div className="mb-6 inline-block p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl shadow-sm">
+                <ShoppingBag className="h-16 w-16 text-slate-400" />
               </div>
-              <p className="text-lg font-medium">Seu carrinho está vazio</p>
-              <p className="text-sm text-slate-600 mt-2">Adicione itens do cardápio para começar</p>
+              <p className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2">Seu carrinho está vazio</p>
+              <p className="text-sm sm:text-base text-slate-600">Adicione itens do cardápio para começar</p>
             </div>
           ) : (
             <>
@@ -1000,26 +1000,26 @@ export function Cart({
                 return (
                 <div
                   key={itemKey}
-                  className="group flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-lg hover:scale-[1.01] transition-all duration-300 hover:border-slate-400 animate-in fade-in slide-in-from-right duration-500"
+                  className="group flex gap-3 sm:gap-4 p-4 sm:p-5 bg-gradient-to-br from-white to-slate-50/50 rounded-2xl border border-slate-200 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 hover:border-slate-300 animate-in fade-in slide-in-from-right duration-500"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate group-hover:text-slate-600 transition-colors">
+                    <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate group-hover:text-slate-700 transition-colors">
                       {item.name}
                     </h3>
                     {item.selectedVariety && (
-                      <p className="text-xs text-slate-600 mt-0.5">Tamanho: {item.selectedVariety.name}</p>
+                      <p className="text-xs text-slate-600 mt-1 font-medium">Tamanho: {item.selectedVariety.name}</p>
                     )}
                     {item.selectedExtras && item.selectedExtras.length > 0 && (
-                      <div className="text-xs text-slate-600 mt-0.5 space-y-0.5">
+                      <div className="text-xs text-slate-600 mt-1 space-y-0.5">
                         {item.selectedExtras.map((extraItem) => (
-                          <p key={extraItem.extra.id}>
+                          <p key={extraItem.extra.id} className="font-medium">
                             {extraItem.extra.name} {extraItem.quantity > 1 && `(x${extraItem.quantity})`}
                           </p>
                         ))}
                       </div>
                     )}
-                    <p className="text-sm text-slate-700 font-medium mt-1">R$ {item.finalPrice.toFixed(2)}</p>
+                    <p className="text-base sm:text-lg text-slate-800 font-bold mt-2">R$ {item.finalPrice.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {onEditItem && (
@@ -1135,36 +1135,36 @@ export function Cart({
         </div>
 
         {cart.length > 0 && (
-          <div className="border-t border-slate-200 p-4 sm:p-6 space-y-3 sm:space-y-4 bg-gradient-to-br from-stone-50 to-white shadow-lg">
+          <div className="border-t border-slate-200/80 p-5 sm:p-6 space-y-4 sm:space-y-5 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-2xl">
             {!isRestaurantOpen(restaurantInfo?.opening_hours) && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
-                <p className="text-sm sm:text-base text-red-800 font-medium text-center">
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 shadow-sm">
+                <p className="text-sm sm:text-base text-red-800 font-semibold text-center">
                   ⚠️ O estabelecimento está fechado no momento. Não é possível realizar pedidos fora do horário de funcionamento.
                 </p>
               </div>
             )}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex justify-between items-center text-sm text-slate-800">
-                <span className="font-medium">Subtotal:</span>
-                <span className="font-semibold">R$ {totalPrice.toFixed(2)}</span>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between items-center text-sm sm:text-base text-slate-800">
+                <span className="font-semibold">Subtotal:</span>
+                <span className="font-bold text-slate-900">R$ {totalPrice.toFixed(2)}</span>
               </div>
               {orderType === "delivery" && calculatedDeliveryFee > 0 && (
-                <div className="flex justify-between items-center text-sm text-slate-800">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Bike className="h-4 w-4" />
+                <div className="flex justify-between items-center text-sm sm:text-base text-slate-800">
+                  <span className="flex items-center gap-2 font-semibold">
+                    <Bike className="h-4 w-4 text-slate-600" />
                     Taxa de entrega:
                     {deliveryZones.length > 1 && selectedDeliveryZoneId && (
-                      <span className="text-xs text-slate-600 ml-1">
+                      <span className="text-xs text-slate-600 ml-1 font-normal">
                         ({deliveryZones.find(z => z.id === selectedDeliveryZoneId)?.name || ""})
                       </span>
                     )}
                   </span>
-                  <span className="font-semibold">R$ {calculatedDeliveryFee.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900">R$ {calculatedDeliveryFee.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center pt-2 sm:pt-3 border-t-2 border-slate-300">
-                <span className="text-base sm:text-lg font-bold text-slate-900">Total:</span>
-                <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-600 to-slate-500 bg-clip-text text-transparent">
+              <div className="flex justify-between items-center pt-3 sm:pt-4 border-t-2 border-slate-300">
+                <span className="text-lg sm:text-xl font-bold text-slate-900">Total:</span>
+                <span className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-clip-text text-transparent">
                   R$ {finalTotal.toFixed(2)}
                 </span>
               </div>
@@ -1179,10 +1179,10 @@ export function Cart({
                 (orderType === "pickup" && (!pickupCustomerName?.trim() || !pickupCustomerPhone?.trim())) ||
                 (orderType === "dine-in" && (!tableNumber || tableNumber === 0)))
               }
-              className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white text-base sm:text-lg py-5 sm:py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold"
+              className="w-full bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-800 hover:to-slate-700 text-white text-base sm:text-lg py-6 sm:py-7 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-bold"
             >
               {isSubmitting ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-3">
                   <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Enviando...
                 </span>

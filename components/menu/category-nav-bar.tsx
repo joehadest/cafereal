@@ -71,17 +71,17 @@ export function CategoryNavBar({
   }
 
   return (
-    <div className="bg-white border-b border-slate-200 shadow-sm">
+    <div className="bg-white/98 backdrop-blur-sm border-b border-slate-200/80">
       <div className="relative container mx-auto">
         {/* Left Arrow */}
         {showLeftArrow && (
           <button
             onClick={() => scroll("left")}
-            className="absolute left-0 top-0 bottom-0 z-10 px-2 sm:px-4 bg-white/90 hover:bg-slate-50 transition-colors flex items-center"
+            className="absolute left-0 top-0 bottom-0 z-10 px-2 sm:px-4 bg-gradient-to-r from-white via-white/95 to-transparent hover:from-slate-50 transition-colors flex items-center"
             aria-label="Scroll left"
           >
-            <div className="p-1.5 sm:p-2 bg-white rounded-full shadow-sm border border-slate-200 hover:shadow-md">
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+            <div className="p-2 bg-white rounded-full shadow-md border border-slate-200 hover:shadow-lg hover:scale-110 transition-all duration-200">
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" />
             </div>
           </button>
         )}
@@ -90,18 +90,18 @@ export function CategoryNavBar({
         {showRightArrow && (
           <button
             onClick={() => scroll("right")}
-            className="absolute right-0 top-0 bottom-0 z-10 px-2 sm:px-4 bg-white/90 hover:bg-slate-50 transition-colors flex items-center"
+            className="absolute right-0 top-0 bottom-0 z-10 px-2 sm:px-4 bg-gradient-to-l from-white via-white/95 to-transparent hover:from-slate-50 transition-colors flex items-center"
             aria-label="Scroll right"
           >
-            <div className="p-1.5 sm:p-2 bg-white rounded-full shadow-sm border border-slate-200 hover:shadow-md">
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+            <div className="p-2 bg-white rounded-full shadow-md border border-slate-200 hover:shadow-lg hover:scale-110 transition-all duration-200">
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" />
             </div>
           </button>
         )}
 
         <div
           ref={navRef}
-          className="px-2 sm:px-6 md:px-8 py-3 sm:py-4 overflow-x-auto scrollbar-hide scroll-smooth"
+          className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 overflow-x-auto scrollbar-hide scroll-smooth"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -118,14 +118,14 @@ export function CategoryNavBar({
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   className={`
-                    whitespace-nowrap transition-colors flex-shrink-0
-                    text-xs sm:text-sm font-medium
-                    px-3 sm:px-4 md:px-5 py-2 sm:py-2.5
+                    whitespace-nowrap transition-all duration-300 flex-shrink-0
+                    text-xs sm:text-sm font-semibold
+                    px-4 sm:px-5 md:px-6 py-2.5 sm:py-3
                     rounded-full
                     ${
                       isActive
-                        ? "bg-slate-600 text-white border-0 hover:bg-slate-700"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-400"
+                        ? "bg-gradient-to-r from-slate-700 to-slate-600 text-white border-0 hover:from-slate-800 hover:to-slate-700 shadow-md hover:shadow-lg hover:scale-105"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-400 hover:shadow-sm hover:scale-105"
                     }
                   `}
                 >

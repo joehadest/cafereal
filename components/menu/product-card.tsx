@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Check } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
 
@@ -27,51 +27,71 @@ export function ProductCard({
   const handleAddToCart = () => {
     setIsAdding(true)
     onAddToCart(product)
-    setTimeout(() => setIsAdding(false), 600)
+    setTimeout(() => setIsAdding(false), 800)
   }
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden border-slate-200 hover:shadow-md hover:border-slate-400 transition-shadow">
-      <div className="h-24 sm:h-28 md:h-32 bg-slate-50 relative overflow-hidden flex-shrink-0">
+    <Card className="group h-full flex flex-col overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 bg-white rounded-2xl transform hover:-translate-y-1">
+      {/* Imagem do produto com overlay sutil */}
+      <div className="relative h-32 sm:h-36 md:h-40 bg-gradient-to-br from-slate-100 to-slate-50 overflow-hidden flex-shrink-0">
         {product.image_url ? (
-          <Image
-            src={product.image_url || "/placeholder.svg"}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
-            loading="lazy"
-          />
+          <>
+            <Image
+              src={product.image_url || "/placeholder.svg"}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-500"
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-xl sm:text-2xl">🍽️</span>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+            <span className="text-3xl sm:text-4xl opacity-60">🍽️</span>
           </div>
         )}
+        {/* Badge de preço flutuante */}
+        <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg">
+          <span className="text-xs font-bold text-slate-900">
+            R$ {product.price.toFixed(2)}
+          </span>
+        </div>
       </div>
-      <CardContent className="p-2 space-y-1 flex-1 flex flex-col">
-        <h3 className="font-bold text-xs sm:text-sm text-slate-900 text-balance line-clamp-2 min-h-[2rem]">
+      
+      <CardContent className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col">
+        <h3 className="font-bold text-sm sm:text-base text-slate-900 text-balance line-clamp-2 leading-tight group-hover:text-slate-700 transition-colors">
           {product.name}
         </h3>
-        <p className="text-xs text-slate-700 line-clamp-1 text-pretty hidden sm:block">
-          {product.description}
-        </p>
-        <p className="text-sm sm:text-base font-bold text-slate-600 inline-block mt-auto">
-          R$ {product.price.toFixed(2)}
-        </p>
+        {product.description && (
+          <p className="text-xs text-slate-600 line-clamp-2 text-pretty leading-relaxed hidden sm:block">
+            {product.description}
+          </p>
+        )}
       </CardContent>
-      <CardFooter className="p-2 pt-0 flex-shrink-0">
+      
+      <CardFooter className="p-3 sm:p-4 pt-0 flex-shrink-0">
         <Button
           onClick={handleAddToCart}
           disabled={isAdding}
           size="sm"
-          className={`w-full bg-slate-600 hover:bg-slate-700 text-[10px] sm:text-xs h-7 px-1 sm:px-2 justify-center ${
-            isAdding ? "opacity-75" : ""
+          className={`w-full h-9 sm:h-10 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 ${
+            isAdding
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-md hover:shadow-lg hover:scale-105"
           }`}
         >
-          <Plus className="h-3 w-3 sm:mr-1" />
-          <span className="hidden sm:inline">
-            {isAdding ? "Adicionado!" : "Adicionar"}
-          </span>
+          {isAdding ? (
+            <>
+              <Check className="h-4 w-4 mr-1.5" />
+              <span>Adicionado!</span>
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span>Adicionar</span>
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

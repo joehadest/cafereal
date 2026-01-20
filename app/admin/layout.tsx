@@ -35,7 +35,7 @@ export default async function AdminLayout({
     .single()
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-slate-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <SessionRefresher />
       <PWAInstallButton />
       <AdminSidebar 
@@ -43,7 +43,7 @@ export default async function AdminLayout({
         restaurantName={restaurantSettings?.name || "Admin Panel"}
         restaurantLogo={restaurantSettings?.logo_url || null}
       />
-      <main className="flex-1 w-full pt-16 lg:pt-0 lg:ml-64 overflow-x-hidden">
+      <main className="flex-1 w-full pt-16 lg:pt-0 lg:ml-64 overflow-x-hidden bg-gradient-to-br from-slate-50/50 via-white to-slate-50/50">
         {children}
       </main>
     </div>
